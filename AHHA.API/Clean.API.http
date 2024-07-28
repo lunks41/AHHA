@@ -1,0 +1,6 @@
+@AHHA.API_HostAddress = http://localhost:5189
+
+GET {{AHHA.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
