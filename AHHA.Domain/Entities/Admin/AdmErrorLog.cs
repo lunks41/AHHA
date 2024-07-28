@@ -20,6 +20,6 @@ namespace AHHA.Core.Entities.Admin
         public byte ModeId { get; set; }
         public string Remarks { get; set; }
         public short CreateById { get; set; }
-        public DateTime CreateDate { get; set; }
+        //public DateTime CreateDate { get; set; }
     }
 }

@@ -50,7 +50,7 @@ namespace AHHA.Application.Services.Masters.Countries
                     ModeId = 0,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = 0,
-                    CreateDate = DateTime.Now
+                    //CreateDate = DateTime.Now
 
                 };
 
@@ -87,7 +87,7 @@ namespace AHHA.Application.Services.Masters.Countries
                     ModeId = 0,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = 0,
-                    CreateDate = DateTime.Now
+                    //CreateDate = DateTime.Now
 
                 };
 
@@ -253,8 +253,8 @@ namespace AHHA.Application.Services.Masters.Countries
                     TblName = "M_Country",
                     ModeId = 0,
                     Remarks = ex.Message + ex.InnerException,
-                    CreateById = 0,
-                    CreateDate = DateTime.Now
+                    CreateById = 1,
+                    //CreateDate = DateTime.Now
 
                 };
 
@@ -283,8 +283,8 @@ namespace AHHA.Application.Services.Masters.Countries
                     TblName = "M_Country",
                     ModeId = 0,
                     Remarks = ex.Message + ex.InnerException,
-                    CreateById = 0,
-                    CreateDate = DateTime.Now
+                    CreateById = 1,
+                    //CreateDate = DateTime.Now
 
                 };
 

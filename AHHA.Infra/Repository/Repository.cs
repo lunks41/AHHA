@@ -64,41 +64,32 @@ namespace AHHA.Infra.Repository
 
         public async Task<T> CreateAsync(T entity)
         {
-            // Begin a transaction asynchronously
-            await using (var transaction = await _context.Database.BeginTransactionAsync())
-                try
-                {
-                    await _dbSet.AddAsync(entity);
-                    await _context.SaveChangesAsync();
-
-                    await transaction.CommitAsync();
-                }
-                catch (Exception)
-                {
-                    // If there is any error, roll back all changes
-                    await transaction.RollbackAsync();
-                }
-            return entity;
+            try
+            {
+                await _dbSet.AddAsync(entity);
+                await _context.SaveChangesAsync();
+                return entity;
+            }
+            catch (Exception)
+            {
+                _context.ChangeTracker.Clear();
+                throw;
+            }
         }
-       
 
         public async Task<T> UpdateAsync(T entity)
         {
-            // Begin a transaction asynchronously
-            await using (var transaction = await _context.Database.BeginTransactionAsync())
-                try
-                {
-                    _dbSet.Update(entity);
-                    await _context.SaveChangesAsync();
-
-                    await transaction.CommitAsync();
-                }
-                catch (Exception)
-                {
-                    // If there is any error, roll back all changes
-                    await transaction.RollbackAsync();
-                }
-            return entity;
+            try
+            {
+                _dbSet.Update(entity);
+                await _context.SaveChangesAsync();
+                return entity;
+            }
+            catch (Exception)
+            {
+                _context.ChangeTracker.Clear();
+                throw;
+            }
         }
 
         public async Task DeleteAsync(int id)
