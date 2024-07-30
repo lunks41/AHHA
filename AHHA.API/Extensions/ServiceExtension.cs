@@ -3,7 +3,6 @@
 using AutoMapper;
 using AHHA.API.ExceptionHandling;
 using AHHA.API.Mapping;
-using AHHA.API.Models;
 using AHHA.Application.CommonServices;
 using AHHA.Application.Extensions;
 using AHHA.Application.Services.Masters.Countries;

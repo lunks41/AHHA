@@ -8,6 +8,7 @@ namespace AHHA.Core.Common
 {
     public class SqlMissingResponce
     {
-        public long Id { get; set; }
+        public long MissId { get; set; }
+        public Int32 IsExist { get; set; }
     }
 }

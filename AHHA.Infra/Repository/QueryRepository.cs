@@ -3,6 +3,7 @@
 
 using AHHA.Application.CommonServices;
 using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Infra.Data;
 using Dapper;
@@ -11,8 +12,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using static Dapper.SqlMapper;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace AHHA.Infra.Repository
 {
@@ -98,19 +101,69 @@ namespace AHHA.Infra.Repository
             return rowsAffected > 0 ? true : false;
         }
 
-        #endregion
-
-        #region Private Methods        
-        private IDbConnection CreateConnection(string ConStr)
+        public async Task<IEnumerable<SqlMissingResponce>> GetAllFromSqlExecuteReaderAsyn<T, P>(string spName, P Parameters)
         {
-            IDbConnection db = new SqlConnection(_configuration.GetConnectionString(ConStr));
-            if (db.State == ConnectionState.Closed)
-                db.Open();
-            return db;
+            List<SqlMissingResponce> items = new List<SqlMissingResponce>();
+            try
+            {
+                using (IDbConnection connection = new SqlConnection(_configuration.GetConnectionString("DbConnection")))
+                {
+                    connection.Open();
+                    using (var reader = connection.ExecuteReader(spName,Parameters))
+                    {
+                        if (reader.FieldCount > 0)
+                        {
+                            while (reader.Read())
+                            {
+                                SqlMissingResponce obj = new SqlMissingResponce
+                                {
+                                    IsExist = reader.GetInt32(reader.GetOrdinal("IsExist")),
+                                };
+
+                                items.Add(obj);
+                            }
+                        }
+                    }
+                }
+                return items;
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
+        public async Task<DataSet> ExecuteDataSetQuery(string storedProcedureName)
+        {
+            using IDbConnection connection = CreateConnection("DbConnection");
+            var dataSet = new DataSet();
+            using (var sqlDataAdapter = new SqlDataAdapter(storedProcedureName, connection as SqlConnection))
+            {
+                sqlDataAdapter.Fill(dataSet);
+            }
+            return await Task.FromResult(dataSet);
+        }
 
-        #endregion
+        public async Task<DataSet> ExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters parameters = null)
+        {
+            using IDbConnection connection = CreateConnection("DbConnection");
+            var dataSet = new DataSet();
+            using (var sqlDataAdapter = new SqlDataAdapter(storedProcedureName, connection as SqlConnection))
+            {
+                sqlDataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+                if (parameters != null)
+                {
+                    foreach (var paramName in parameters.ParameterNames)
+                    {
+                        var paramValue = parameters.Get<object>(paramName);
+                        sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@" + paramName, paramValue);
+                    }
+                }
+                sqlDataAdapter.Fill(dataSet);
+            }
+            return await Task.FromResult(dataSet);
+        }
 
         public async Task<IEnumerable<T>> GetAllFromSqlQueryAsync<T, P>(string spName, P Parameters)
         {
@@ -183,6 +236,20 @@ namespace AHHA.Infra.Repository
 
             return resultSQLReponce;
         }
+
+        #endregion
+
+        #region Private Methods        
+        private IDbConnection CreateConnection(string ConStr)
+        {
+            IDbConnection db = new SqlConnection(_configuration.GetConnectionString(ConStr));
+            if (db.State == ConnectionState.Closed)
+                db.Open();
+            return db;
+        }
+
+
+        #endregion
 
     }
 }

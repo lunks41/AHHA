@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using AHHA.API.Models;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models;
 
 
 namespace AHHA.API.Mapping

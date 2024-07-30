@@ -9,10 +9,10 @@ using System.Net;
 using Microsoft.OpenApi.Models;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Primitives;
-using AHHA.API.Models;
 using AutoMapper;
 using AHHA.Application.CommonServices;
 using Microsoft.EntityFrameworkCore;
+using AHHA.Core.Models;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -34,32 +34,39 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetCountry")]
-        [ProducesResponseType(typeof(List<CountryViewModel>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult> GetAllCountrys()
         {
+            byte pageSize = 10;
+            byte pageNumber = 1;
             byte CompanyId = 0;
             try
             {
+                //var getAll = Request.Headers.ToList();
                 //Get the data from header
                 if (Request.Headers.TryGetValue("CompanyId", out StringValues headerValue))
                     CompanyId = Convert.ToByte(headerValue[0]);
                 else
                     return NoContent();
 
+                pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToByte(pageSizeValue[0]) : Convert.ToByte(10);
+                pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToByte(pageNumberValue[0]) : Convert.ToByte(10);
+
                 //Get the data from cache memory
-                var cacheData = _memoryCache.Get<IEnumerable<CountryViewModel>>("country");
+                var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
 
                 if (cacheData != null)
                     return Ok(cacheData);
                 else
                 {
                     var expirationTime = DateTimeOffset.Now.AddMinutes(5.0);
-                    cacheData = _mapper.Map<IEnumerable<CountryViewModel>>(await _countryService.GetCountryListAsync(Convert.ToByte(CompanyId)));
+                    cacheData = await _countryService.GetCountryListAsync(Convert.ToByte(CompanyId),pageSize,pageNumber);
+                    //cacheData = _mapper.Map<IEnumerable<CountryViewModel>>(await _countryService.GetCountryListAsync(Convert.ToByte(CompanyId)));
 
                     if (cacheData == null)
                         return NotFound();
 
-                    _memoryCache.Set<IEnumerable<CountryViewModel>>("country", cacheData, expirationTime);
+                    _memoryCache.Set<CountryViewModelCount>("country", cacheData, expirationTime);
+
                     return Ok(cacheData);
                 }
 
@@ -141,7 +148,7 @@ namespace AHHA.API.Controllers.Masters
                     Remarks = country.Remarks
                 };
 
-                var createdCountry = await _countryService.AddCountryAsyncV1(countryEntity);
+                var createdCountry = await _countryService.AddCountryAsyncV1(countryEntity, CompanyId);
 
                 return CreatedAtAction(nameof(GetCountryById), new { id = createdCountry.Id }, createdCountry);
             }
@@ -195,7 +202,7 @@ namespace AHHA.API.Controllers.Masters
                     Remarks = country.Remarks
                 };
 
-                await _countryService.UpdateCountryAsyncV1(countryEntity);
+                await _countryService.UpdateCountryAsyncV1(countryEntity, CompanyId);
                 return NoContent();
             }
             catch (Exception ex)

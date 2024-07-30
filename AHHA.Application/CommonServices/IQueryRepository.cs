@@ -1,7 +1,9 @@
 ﻿
 using AHHA.Core.Common;
+using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -22,6 +24,10 @@ namespace AHHA.Application.CommonServices
         Task<SqlResponce> QuerySqlResponseModelAsync(string SpName, Object Parameters, string ConStr = "DbConnection");
         Task<bool> ExecuteScalarAsync(string SpName, Object Parameters, string ConStr = "DbConnection");
 
+        Task<DataSet> ExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters parameters = null);
+        Task<DataSet> ExecuteDataSetQuery(string storedProcedureName);
+
+        Task<IEnumerable<SqlMissingResponce>> GetAllFromSqlExecuteReaderAsyn<T, P>(string spName, P Parameters);
         Task<IEnumerable<T>> GetAllFromSqlQueryAsync<T, P>(string spName, P Parameters);
         Task<T> GetAllFromSqlQueryAsyncV1<T, P>(string spName, P Parameters);
         Task<IEnumerable<T>> GetAllAsync<T, P>(string spName, P Parameters);
