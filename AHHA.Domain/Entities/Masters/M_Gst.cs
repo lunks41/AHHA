@@ -10,16 +10,16 @@ namespace AHHA.Core.Entities.Masters
     public class M_Gst
     {
         [Key]
-        public byte GstId { get; set; }
-        public byte CompanyId { get; set; }
-        public byte GstCategoryId { get; set; }
+        public Int16 GstId { get; set; }
+        public Int16 CompanyId { get; set; }
+        public Int16 GstCategoryId { get; set; }
         public string GstCode { get; set; }
         public string GstName { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

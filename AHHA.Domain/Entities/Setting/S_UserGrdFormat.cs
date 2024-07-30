@@ -8,15 +8,15 @@ namespace AHHA.Core.Entities.Setting
 {
     public class S_UserGrdFormat
     {
-        public byte CompanyId { get; set; }
-        public short UserId { get; set; }
-        public byte ModuleId { get; set; }
-        public short TransactionId { get; set; }
+        public Int16 CompanyId { get; set; }
+        public Int32 UserId { get; set; }
+        public Int16 ModuleId { get; set; }
+        public Int32 TransactionId { get; set; }
         public string GrdName { get; set; }
         public string GrdString { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

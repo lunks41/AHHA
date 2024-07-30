@@ -11,15 +11,15 @@ namespace AHHA.Core.Entities.Masters
     [Keyless]
     public class M_UomDt
     {
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         [Key]
-        public byte UomId { get; set; }
+        public Int16 UomId { get; set; }
         [Key]
-        public byte PackUomId { get; set; }
+        public Int16 PackUomId { get; set; }
         public decimal UomFactor { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

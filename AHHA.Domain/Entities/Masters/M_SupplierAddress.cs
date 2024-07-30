@@ -14,13 +14,13 @@ namespace AHHA.Core.Entities.Masters
         [Key]
         public int SupplierId { get; set; }
         [Key]
-        public short AddressId { get; set; }
+        public Int32 AddressId { get; set; }
         public string Address1 { get; set; }
         public string Address2 { get; set; }
         public string Address3 { get; set; }
         public string Address4 { get; set; }
         public string PinCode { get; set; }
-        public short CountryId { get; set; }
+        public Int32 CountryId { get; set; }
         public string PhoneNo { get; set; }
         public string FaxNo { get; set; }
         public string EmailAdd { get; set; }
@@ -30,9 +30,9 @@ namespace AHHA.Core.Entities.Masters
         public bool IsFinAdd { get; set; }
         public bool IsSalesAdd { get; set; }
         public bool IsActive { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

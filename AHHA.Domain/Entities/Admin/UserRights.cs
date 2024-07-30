@@ -12,11 +12,11 @@ namespace AHHA.Core.Entities.Admin
     public class UserRights
     {
         [Key]
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         [Key]
-        public short UserId { get; set; }
-        public short CreateById { get; set; }
+        public Int32 UserId { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short UserGroupId { get; set; }
+        public Int32 UserGroupId { get; set; }
     }
 }

@@ -8,20 +8,20 @@ namespace AHHA.Core.Entities.Setting
 {
     public class S_NumberIdDt
     {
-        public byte ModuleId { get; set; }
-        public short TransactionId { get; set; }
-        public short NumYear { get; set; }
-        public short Month1 { get; set; }
-        public short Month2 { get; set; }
-        public short Month3 { get; set; }
-        public short Month4 { get; set; }
-        public short Month5 { get; set; }
-        public short Month6 { get; set; }
-        public short Month7 { get; set; }
-        public short Month8 { get; set; }
-        public short Month9 { get; set; }
-        public short Month10 { get; set; }
-        public short Month11 { get; set; }
-        public short Month12 { get; set; }
+        public Int16 ModuleId { get; set; }
+        public Int32 TransactionId { get; set; }
+        public Int32 NumYear { get; set; }
+        public Int32 Month1 { get; set; }
+        public Int32 Month2 { get; set; }
+        public Int32 Month3 { get; set; }
+        public Int32 Month4 { get; set; }
+        public Int32 Month5 { get; set; }
+        public Int32 Month6 { get; set; }
+        public Int32 Month7 { get; set; }
+        public Int32 Month8 { get; set; }
+        public Int32 Month9 { get; set; }
+        public Int32 Month10 { get; set; }
+        public Int32 Month11 { get; set; }
+        public Int32 Month12 { get; set; }
     }
 }

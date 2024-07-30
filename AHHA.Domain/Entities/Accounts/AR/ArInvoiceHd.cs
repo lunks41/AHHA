@@ -8,7 +8,7 @@ namespace AHHA.Core.Entities.Accounts.AR
 {
     public class ArInvoiceHd
     {
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         public long InvoiceId { get; set; }
         public string InvoiceNo { get; set; }
         public string ReferenceNo { get; set; }
@@ -17,11 +17,11 @@ namespace AHHA.Core.Entities.Accounts.AR
         public DateTime DeliveryDate { get; set; }
         public DateTime DueDate { get; set; }
         public int CustomerId { get; set; }
-        public byte CurrencyId { get; set; }
+        public Int16 CurrencyId { get; set; }
         public decimal ExhRate { get; set; }
         public decimal CtyExhRate { get; set; }
-        public byte CreditTermId { get; set; }
-        public short BankId { get; set; }
+        public Int16 CreditTermId { get; set; }
+        public Int32 BankId { get; set; }
         public decimal TotAmt { get; set; }
         public decimal TotLocalAmt { get; set; }
         public decimal TotCtyAmt { get; set; }
@@ -47,7 +47,7 @@ namespace AHHA.Core.Entities.Accounts.AR
         public string Address3 { get; set; }
         public string Address4 { get; set; }
         public string PinCode { get; set; }
-        public short CountryId { get; set; }
+        public Int32 CountryId { get; set; }
         public string PhoneNo { get; set; }
         public string FaxNo { get; set; }
         public string ContactName { get; set; }
@@ -58,12 +58,12 @@ namespace AHHA.Core.Entities.Accounts.AR
         public string SuppInvoiceNo { get; set; }
         public long APInvoiceId { get; set; }
         public string APInvoiceNo { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
         public bool IsCancel { get; set; }
-        public short CancelById { get; set; }
+        public Int32 CancelById { get; set; }
         public DateTime CancelDate { get; set; }
         public string CancelRemarks { get; set; }
     }

@@ -10,16 +10,16 @@ namespace AHHA.Core.Entities.Masters
     public class M_PortRegion
     {
         [Key]
-        public short PortRegionId { get; set; }
-        public byte CompanyId { get; set; }
+        public Int32 PortRegionId { get; set; }
+        public Int16 CompanyId { get; set; }
         public string PortRegionCode { get; set; }
         public string PortRegionName { get; set; }
-        public short CountryId { get; set; }
+        public Int32 CountryId { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

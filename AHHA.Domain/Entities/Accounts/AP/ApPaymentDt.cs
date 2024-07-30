@@ -8,14 +8,14 @@ namespace AHHA.Core.Entities.Accounts.AP
 {
     public class ApPaymentDt
     {
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         public long PaymentId { get; set; }
         public string PaymentNo { get; set; }
-        public byte ItemNo { get; set; }
-        public byte TransactionId { get; set; }
+        public Int16 ItemNo { get; set; }
+        public Int16 TransactionId { get; set; }
         public long DocumentId { get; set; }
         public string DocumentNo { get; set; }
-        public byte DocCurrencyId { get; set; }
+        public Int16 DocCurrencyId { get; set; }
         public decimal DocExhRate { get; set; }
         public DateTime DocAccountDate { get; set; }
         public DateTime DocDueDate { get; set; }

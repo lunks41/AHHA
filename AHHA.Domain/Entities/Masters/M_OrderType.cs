@@ -9,12 +9,12 @@ namespace AHHA.Core.Entities.Masters
 {
     public class M_OrderType
     {
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         [Key]
-        public short OrderTypeId { get; set; }
+        public Int32 OrderTypeId { get; set; }
         public string OrderTypeCode { get; set; }
         public string OrderTypeName { get; set; }
-        public byte OrderTypeCategoryId { get; set; }
+        public Int16 OrderTypeCategoryId { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
         public string CreateById { get; set; }

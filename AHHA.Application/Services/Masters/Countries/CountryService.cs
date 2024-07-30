@@ -15,6 +15,7 @@ using System.Diagnostics.Metrics;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Text.Json.Nodes;
+using System.Transactions;
 
 namespace AHHA.Application.Services.Masters.Countries
 {
@@ -24,7 +25,7 @@ namespace AHHA.Application.Services.Masters.Countries
         private readonly IRepository<M_Country> _repository;
         private readonly IAuditLogServices _auditLogServices;
         private readonly IErrorLogServices _errorLogServices;
-        
+
         public CountryService(IQueryRepository<M_Country> queryRepository, IRepository<M_Country> repository, IAuditLogServices auditLogServices, IErrorLogServices errorLogServices)
         {
             _queryRepository = queryRepository;
@@ -33,18 +34,18 @@ namespace AHHA.Application.Services.Masters.Countries
             _errorLogServices = errorLogServices;
         }
 
-        public async Task<CountryViewModelCount> GetCountryListAsync(byte CompanyId, byte pageSize, byte pageNumber)
+        public async Task<CountryViewModelCount> GetCountryListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, Int32 UserId)
         {
             var parameters = new DynamicParameters();
             CountryViewModelCount countryViewModelCount = new CountryViewModelCount();
             try
             {
-                var totalcount = await _queryRepository.GetAllFromSqlQueryAsyncV1<SqlMissingResponce,dynamic>("SELECT COUNT(*) AS MissId FROM M_Country", parameters);
+                var totalcount = await _queryRepository.GetAllFromSqlQueryAsyncV1<SqlResponceIds, dynamic>($"SELECT COUNT(*) AS CountId FROM M_Country WHERE M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{((Int16)Master.Country)},{((Int16)Modules.Master)}))", parameters);
 
-                var result = await _queryRepository.GetAllFromSqlQueryAsync<CountryViewModel, dynamic>($"SELECT M_Cou.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Country M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{((byte)Master.Country)},{((byte)Modules.Master)})) ORDER BY M_Cou.CountryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY", parameters);
+                var result = await _queryRepository.GetAllFromSqlQueryAsync<CountryViewModel, dynamic>($"SELECT M_Cou.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Country M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{((Int16)Master.Country)},{((Int16)Modules.Master)})) ORDER BY M_Cou.CountryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY", parameters);
 
-                countryViewModelCount.Total_records = totalcount.MissId;
-                countryViewModelCount.countryViewModels = result.ToList();
+                countryViewModelCount.Total_records = totalcount == null ? 0 : totalcount.MissId;
+                countryViewModelCount.countryViewModels = result == null ? null : result.ToList();
 
                 return countryViewModelCount;
             }
@@ -53,8 +54,8 @@ namespace AHHA.Application.Services.Masters.Countries
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = ((byte)Master.Country),
-                    TransactionId = ((byte)Modules.Master),
+                    ModuleId = ((Int16)Master.Country),
+                    TransactionId = ((Int16)Modules.Master),
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Country",
@@ -70,36 +71,29 @@ namespace AHHA.Application.Services.Masters.Countries
             }
 
         }
-        public async Task<M_Country> GetCountryByIdAsync(int CountryId, byte CompanyId)
+        public async Task<M_Country> GetCountryByIdAsync(Int16 CompanyId, Int32 CountryId, Int32 UserId)
         {
             var parameters = new DynamicParameters();
             try
             {
-                var result = await _queryRepository.QueryDetailDtoAsyncV1<M_Country>($"SELECT CountryId,CountryCode,CountryName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Country WHERE CountryId={CountryId} AND CompanyId={CompanyId}", parameters);
+                var result = await _queryRepository.QueryDetailDtoAsyncV1<M_Country>($"SELECT CountryId,CountryCode,CountryName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Country WHERE CountryId={CountryId}", parameters);
 
                 return result;
-
-                //var parameters = new DynamicParameters();
-                //parameters.Add("Id", 1, DbType.Int32);
-
-                //IEnumerable<M_Country> countries = await _queryRepository.GetByIdAsync<M_Country, dynamic>("USP_Country", parameters);
-                //return countries.FirstOrDefault();
             }
             catch (Exception ex)
             {
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = ((byte)Master.Country),
-                    TransactionId = ((byte)Modules.Master),
+                    ModuleId = ((Int16)Master.Country),
+                    TransactionId = ((Int16)Modules.Master),
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Country",
                     ModeId = 0,
                     Remarks = ex.Message + ex.InnerException,
-                    CreateById = 0,
+                    CreateById = UserId,
                     //CreateDate = DateTime.Now
-
                 };
 
                 await _errorLogServices.AddErrorLogAsync(errorLog);
@@ -107,17 +101,17 @@ namespace AHHA.Application.Services.Masters.Countries
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> AddCountryAsyncV1(M_Country country,byte CompanyId)
+        public async Task<SqlResponce> AddCountryAsync(Int16 CompanyId, M_Country country, Int32 UserId)
         {
             var parameters = new DynamicParameters();
             bool isExist = false;
 
-            //using (var transaction = _context.Database.BeginTransaction())
-            //{
+            using (TransactionScope TScope = new TransactionScope())
+            {
                 try
                 {
                     ////Check Code & Name
-                    //var StrExist = await _queryRepository.ExecuteDataSetQuery($"SELECT 1 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{((byte)Master.Country)},{((byte)Modules.Master)})) AND CountryCode='{country.CountryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{((byte)Master.Country)},{((byte)Modules.Master)})) AND CountryName='{country.CountryName}'");
+                    //var StrExist = await _queryRepository.ExecuteDataSetQuery($"SELECT TOP 1 1 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{((Int16)Master.Country)},{((Int16)Modules.Master)})) AND CountryCode='{country.CountryCode}'; SELECT TOP 1 1 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{((Int16)Master.Country)},{((Int16)Modules.Master)})) AND CountryName='{country.CountryName}'");
 
                     //if (StrExist.Tables.Count > 0 && StrExist != null)
                     //{
@@ -137,24 +131,30 @@ namespace AHHA.Application.Services.Masters.Countries
                     //    }
                     //}
 
-                    var StrExist = await _queryRepository.GetAllFromSqlQueryAsync<SqlMissingResponce, dynamic>($"SELECT 1 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{((byte)Master.Country)},{((byte)Modules.Master)})) AND CountryCode='{country.CountryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{((byte)Master.Country)},{((byte)Modules.Master)})) AND CountryName='{country.CountryName}'", parameters);
+                    var StrExist = await _queryRepository.GetAllFromSqlQueryAsync<SqlResponceIds, dynamic>($"SELECT 1 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{((Int16)Master.Country)},{((Int16)Modules.Master)})) AND CountryCode='{country.CountryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{((Int16)Master.Country)},{((Int16)Modules.Master)})) AND CountryName='{country.CountryName}'", parameters);
 
-                    if (StrExist.ToList()[0].IsExist == 1)
+                    if (StrExist.Count() > 0)
                     {
-                        isExist = true;
-                        return new SqlResponce { Id = -1, Msg = "Country Code Exist" };
+                        if (StrExist.ToList()[0].IsExist == 1)
+                        {
+                            isExist = true;
+                            return new SqlResponce { Id = -1, Msg = "Country Code Exist" };
+                        }
+                        else if (StrExist.ToList()[1].IsExist == 2)
+                        {
+                            isExist = true;
+                            return new SqlResponce { Id = -2, Msg = "Country Name Exist" };
+                        }
                     }
-                    else if (StrExist.ToList()[1].IsExist == 2)
+                    else
                     {
-                        isExist = true;
-                        return new SqlResponce { Id = -2, Msg = "Country Name Exist" };
+                        isExist = false;
                     }
-
 
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _queryRepository.QueryDetailDtoAsyncV1<SqlMissingResponce>("SELECT ISNULL((SELECT TOP 1 (CountryId + 1) FROM dbo.M_Country WHERE (CountryId + 1) NOT IN (SELECT CountryId FROM dbo.M_Country)),1) AS MissId", parameters);
+                        var sqlMissingResponce = await _queryRepository.QueryDetailDtoAsyncV1<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (CountryId + 1) FROM dbo.M_Country WHERE (CountryId + 1) NOT IN (SELECT CountryId FROM dbo.M_Country)),1) ", parameters);
 
                         #region Saving Country
                         //Country Saving
@@ -171,24 +171,25 @@ namespace AHHA.Application.Services.Masters.Countries
                             //Saving Audit log
                             var auditLog = new AdmAuditLog
                             {
-                                CompanyId = country.CompanyId,
-                                ModuleId = ((byte)Master.Country),
-                                TransactionId = ((byte)Modules.Master),
+                                CompanyId = CompanyId,
+                                ModuleId = ((Int16)Master.Country),
+                                TransactionId = ((Int16)Modules.Master),
                                 DocumentId = Convert.ToByte(sqlMissingResponce.MissId),
                                 DocumentNo = country.CountryCode,
                                 TblName = "M_Country",
-                                ModeId = ((byte)Mode.Create),
+                                ModeId = ((Int16)Mode.Create),
                                 Remarks = "Invoice Save Successfully",
-                                CreateById = Convert.ToInt16(country.CreateById),
+                                CreateById = UserId,
                                 CreateDate = DateTime.Now
 
                             };
 
                             await _auditLogServices.AddAuditLogAsync(auditLog);
+
+                            TScope.Complete();
                         }
 
                         #endregion
-
                     }
 
                     return new SqlResponce { Id = 1, Msg = "Save Successfully" };
@@ -197,66 +198,45 @@ namespace AHHA.Application.Services.Masters.Countries
                 {
                     var errorLog = new AdmErrorLog
                     {
-                        CompanyId = country.CompanyId,
-                        ModuleId = ((byte)Master.Country),
-                        TransactionId = ((byte)Modules.Master),
+                        CompanyId = CompanyId,
+                        ModuleId = ((Int16)Master.Country),
+                        TransactionId = ((Int16)Modules.Master),
                         DocumentId = 0,
                         DocumentNo = country.CountryCode,
                         TblName = "M_Country",
-                        ModeId = ((byte)Mode.Create),
+                        ModeId = ((Int16)Mode.Create),
                         Remarks = ex.Message + ex.InnerException,
-                        CreateById = Convert.ToInt16(country.CreateById)
-                        //CreateDate = DateTime.Now
+                        CreateById = UserId
                     };
 
                     await _errorLogServices.AddErrorLogAsync(errorLog);
 
                     throw new Exception(ex.ToString());
                 }
-            //}
-        }
-        public async Task<SqlResponce> AddCountryAsync(M_Country country, byte CompanyId)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("CountryId", country.CountryId, DbType.Int32);
-                parameters.Add("CountryCode", country.CountryCode, DbType.String);
-                parameters.Add("CountryName", country.CountryName, DbType.String);
-
-                return await _queryRepository.UpsertAsync("USP_Country", parameters);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> UpdateCountryAsyncV1(M_Country country, byte CompanyId)
+        public async Task<SqlResponce> UpdateCountryAsync(Int16 CompanyId, M_Country country, Int32 UserId)
         {
             var parameters = new DynamicParameters();
+            int IsActive = country.IsActive == true ? 1 : 0;
             try
             {
-                var countryA = await _repository.UpdateAsync(country);
+                var result = await _queryRepository.GetAllFromSqlQueryAsync<M_Country, dynamic>($"UPDATE dbo.M_Country SET CountryName='{country.CountryName}',EditById={UserId},EditDate=GetDate(),Remarks='{country.Remarks}',IsActive={IsActive} WHERE CountryId={country.CountryId}", parameters);
 
-                if (countryA.CountryId > 0)
+                var auditLog = new AdmAuditLog
                 {
-                    var auditLog = new AdmAuditLog
-                    {
-                        CompanyId = country.CompanyId,
-                        ModuleId = ((byte)Master.Country),
-                        TransactionId = ((byte)Modules.Master),
-                        DocumentId = country.CountryId,
-                        DocumentNo = country.CountryCode,
-                        TblName = "M_Country",
-                        ModeId = ((byte)Mode.Update),
-                        Remarks = "Invoice Save Successfully",
-                        CreateById = Convert.ToInt16(country.EditById),
-                        //CreateDate = DateTime.Now
+                    CompanyId = CompanyId,
+                    ModuleId = ((Int16)Master.Country),
+                    TransactionId = ((Int16)Modules.Master),
+                    DocumentId = country.CountryId,
+                    DocumentNo = country.CountryCode,
+                    TblName = "M_Country",
+                    ModeId = ((Int16)Mode.Update),
+                    Remarks = "Invoice Save Successfully",
+                    CreateById = UserId
+                };
 
-                    };
-
-                    await _auditLogServices.AddAuditLogAsync(auditLog);
-                }
+                await _auditLogServices.AddAuditLogAsync(auditLog);
 
                 return new SqlResponce { Id = 1, Msg = "Save Successfully" };
 
@@ -265,17 +245,15 @@ namespace AHHA.Application.Services.Masters.Countries
             {
                 var errorLog = new AdmErrorLog
                 {
-                    CompanyId = country.CompanyId,
-                    ModuleId = ((byte)Master.Country),
-                    TransactionId = ((byte)Modules.Master),
+                    CompanyId = CompanyId,
+                    ModuleId = ((Int16)Master.Country),
+                    TransactionId = ((Int16)Modules.Master),
                     DocumentId = country.CountryId,
                     DocumentNo = country.CountryCode,
                     TblName = "M_Country",
-                    ModeId = ((byte)Mode.Update),
+                    ModeId = ((Int16)Mode.Update),
                     Remarks = ex.Message,
-                    CreateById = Convert.ToInt16(country.EditById)
-                    //CreateDate = DateTime.Now
-
+                    CreateById = UserId
                 };
 
                 await _errorLogServices.AddErrorLogAsync(errorLog);
@@ -284,67 +262,38 @@ namespace AHHA.Application.Services.Masters.Countries
 
             }
         }
-        public async Task<SqlResponce> UpdateCountryAsync(M_Country country, byte CompanyId)
+        public async Task DeleteCountryAsync(Int16 CompanyId, Int32 CountryId, Int32 UserId)
         {
-            try
+            using (TransactionScope TScope = new TransactionScope())
             {
-                var parameters = new DynamicParameters();
-                parameters.Add("CountryId", country.CountryId, DbType.Int32);
-                parameters.Add("CountryCode", country.CountryCode, DbType.String);
-                parameters.Add("CountryName", country.CountryName, DbType.String);
-
-                return await _queryRepository.UpsertAsync("USP_Country", parameters);
-            }
-            catch (Exception ex)
-            {
-                var errorLog = new AdmErrorLog
+                try
                 {
-                    CompanyId = country.CompanyId,
-                    ModuleId = ((byte)Master.Country),
-                    TransactionId = ((byte)Modules.Master),
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Country",
-                    ModeId = 0,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = 1,
-                    //CreateDate = DateTime.Now
+                    var parameters = new DynamicParameters();
+                    parameters.Add("Id", CountryId, DbType.Int32);
 
-                };
-
-                await _errorLogServices.AddErrorLogAsync(errorLog);
-                throw new Exception(ex.ToString());
-            }
-        }
-        public async Task DeleteCountryAsync(int CountryId, byte CompanyId)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Id", CountryId, DbType.Int32);
-
-                await _queryRepository.UpsertAsync("USP_Country", parameters);
-            }
-            catch (Exception ex)
-            {
-                var errorLog = new AdmErrorLog
+                    await _queryRepository.UpsertAsync("USP_Country", parameters);
+                }
+                catch (Exception ex)
                 {
-                    CompanyId = CompanyId,
-                    ModuleId = ((byte)Master.Country),
-                    TransactionId = ((byte)Modules.Master),
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Country",
-                    ModeId = 0,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = 1,
-                    //CreateDate = DateTime.Now
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = ((Int16)Master.Country),
+                        TransactionId = ((Int16)Modules.Master),
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Country",
+                        ModeId = 0,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = 1,
+                        //CreateDate = DateTime.Now
 
-                };
+                    };
 
-                await _errorLogServices.AddErrorLogAsync(errorLog);
+                    await _errorLogServices.AddErrorLogAsync(errorLog);
 
-                throw new Exception(ex.ToString());
+                    throw new Exception(ex.ToString());
+                }
             }
         }
         public async Task<DataSet> GetTrainingByIdsAsync(int Id)
@@ -364,6 +313,61 @@ namespace AHHA.Application.Services.Masters.Countries
             }
         }
 
+        //public async Task<SqlResponce> UpdateCountryAsync(M_Country country, Int16 CompanyId)
+        //{
+        //    using (TransactionScope TScope = new TransactionScope())
+        //    {
+        //        try
+        //        {
+        //            var parameters = new DynamicParameters();
+        //            parameters.Add("CountryId", country.CountryId, DbType.Int32);
+        //            parameters.Add("CountryCode", country.CountryCode, DbType.String);
+        //            parameters.Add("CountryName", country.CountryName, DbType.String);
+
+        //            return await _queryRepository.UpsertAsync("USP_Country", parameters);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            var errorLog = new AdmErrorLog
+        //            {
+        //                CompanyId = country.CompanyId,
+        //                ModuleId = ((Int16)Master.Country),
+        //                TransactionId = ((Int16)Modules.Master),
+        //                DocumentId = 0,
+        //                DocumentNo = "",
+        //                TblName = "M_Country",
+        //                ModeId = 0,
+        //                Remarks = ex.Message + ex.InnerException,
+        //                CreateById = 1,
+        //                //CreateDate = DateTime.Now
+
+        //            };
+
+        //            await _errorLogServices.AddErrorLogAsync(errorLog);
+        //            throw new Exception(ex.ToString());
+        //        }
+        //    }
+        //}
+
+        //public async Task<SqlResponce> AddCountryAsync(M_Country country, Int16 CompanyId)
+        //{
+        //    using (TransactionScope TScope = new TransactionScope())
+        //    {
+        //        try
+        //        {
+        //            var parameters = new DynamicParameters();
+        //            parameters.Add("CountryId", country.CountryId, DbType.Int32);
+        //            parameters.Add("CountryCode", country.CountryCode, DbType.String);
+        //            parameters.Add("CountryName", country.CountryName, DbType.String);
+
+        //            return await _queryRepository.UpsertAsync("USP_Country", parameters);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            throw new Exception(ex.ToString());
+        //        }
+        //    }
+        //}
 
 
         //private readonly IDapperRepository<LS_Agent> _dapperRepository;

@@ -27,7 +27,7 @@ namespace AHHA.Application.CommonServices
         Task<DataSet> ExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters parameters = null);
         Task<DataSet> ExecuteDataSetQuery(string storedProcedureName);
 
-        Task<IEnumerable<SqlMissingResponce>> GetAllFromSqlExecuteReaderAsyn<T, P>(string spName, P Parameters);
+        Task<IEnumerable<SqlResponceIds>> GetAllFromSqlExecuteReaderAsyn<T, P>(string spName, P Parameters);
         Task<IEnumerable<T>> GetAllFromSqlQueryAsync<T, P>(string spName, P Parameters);
         Task<T> GetAllFromSqlQueryAsyncV1<T, P>(string spName, P Parameters);
         Task<IEnumerable<T>> GetAllAsync<T, P>(string spName, P Parameters);

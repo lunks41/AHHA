@@ -10,16 +10,16 @@ namespace AHHA.Core.Entities.Masters
     public class M_CreditTerm
     {
         [Key]
-        public byte CreditTermId { get; set; }
-        public byte CompanyId { get; set; }
+        public Int16 CreditTermId { get; set; }
+        public Int16 CompanyId { get; set; }
         public string CreditTermCode { get; set; }
         public string CreditTermName { get; set; }
-        public short NoDays { get; set; }
+        public Int32 NoDays { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

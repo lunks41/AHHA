@@ -6,17 +6,14 @@ namespace AHHA.Application.Services.Masters.Countries
 {
     public interface ICountryService
     {
-        public Task<CountryViewModelCount> GetCountryListAsync(byte CompanyId, byte pageSize, byte pageNumber);
-        public Task<M_Country> GetCountryByIdAsync(int Id, byte CompanyId);
-        public Task<SqlResponce> AddCountryAsync(M_Country M_Country, byte CompanyId);
-        public Task<SqlResponce> UpdateCountryAsync(M_Country M_Country, byte CompanyId);
-        public Task DeleteCountryAsync(int Id, byte CompanyId);
+        public Task<CountryViewModelCount> GetCountryListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, Int32 UserId);
+        public Task<M_Country> GetCountryByIdAsync(Int16 CompanyId, Int32 CountryId, Int32 UserId);
+        public Task DeleteCountryAsync(Int16 CompanyId, Int32 CountryId, Int32 UserId);
+        public Task<SqlResponce> AddCountryAsync(Int16 CompanyId, M_Country M_Country, Int32 UserId);
+        public Task<SqlResponce> UpdateCountryAsync(Int16 CompanyId, M_Country M_Country, Int32 UserId);
 
-        //Multi Repository
-        public Task<SqlResponce> AddCountryAsyncV1(M_Country M_Country, byte CompanyId);
-        public Task<SqlResponce> UpdateCountryAsyncV1(M_Country M_Country, byte CompanyId);
-
-
+        //public Task<SqlResponce> AddCountryAsync(M_Country M_Country, Int16 CompanyId);
+        //public Task<SqlResponce> UpdateCountryAsync(M_Country M_Country, Int16 CompanyId);
         //public interface IAgentServices
         //{
         //    Task<LS_Agent> GetByIdAsync(int Id);

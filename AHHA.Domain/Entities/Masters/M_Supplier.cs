@@ -11,14 +11,14 @@ namespace AHHA.Core.Entities.Masters
     {
         [Key]
         public int SupplierId { get; set; }
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         public string SupplierCode { get; set; }
         public string SupplierName { get; set; }
         public string SupplierOtherName { get; set; }
         public string SupplierShortName { get; set; }
         public string SupplierRegNo { get; set; }
-        public byte CurrencyId { get; set; }
-        public byte CreditTermId { get; set; }
+        public Int16 CurrencyId { get; set; }
+        public Int16 CreditTermId { get; set; }
         public int ParentSupplierId { get; set; }
         public bool IsCustomer { get; set; }
         public bool IsVendor { get; set; }
@@ -26,9 +26,9 @@ namespace AHHA.Core.Entities.Masters
         public bool IsSupplier { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

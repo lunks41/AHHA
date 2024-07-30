@@ -10,7 +10,7 @@ namespace AHHA.Core.Entities.Admin
     public class UserLog
     {
         [Key]
-        public short UserId { get; set; }
+        public Int32 UserId { get; set; }
         public bool IsLogin { get; set; }
         public DateTime LoginDate { get; set; }
         public string Remarks { get; set; }

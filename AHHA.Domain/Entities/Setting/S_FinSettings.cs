@@ -8,20 +8,20 @@ namespace AHHA.Core.Entities.Setting
 {
     public class S_FinSettings
     {
-        public byte CompanyId { get; set; }
-        public byte Base_CurrencyId { get; set; }
-        public byte Local_CurrencyId { get; set; }
-        public short ExhGainLoss_GlId { get; set; }
-        public short BankCharge_GlId { get; set; }
-        public short ProfitLoss_GlId { get; set; }
-        public short RetEarning_GlId { get; set; }
-        public short SaleGst_GlId { get; set; }
-        public short PurGst_GlId { get; set; }
-        public short SaleDef_GlId { get; set; }
-        public short PurDef_GlId { get; set; }
-        public short CreateById { get; set; }
+        public Int16 CompanyId { get; set; }
+        public Int16 Base_CurrencyId { get; set; }
+        public Int16 Local_CurrencyId { get; set; }
+        public Int32 ExhGainLoss_GlId { get; set; }
+        public Int32 BankCharge_GlId { get; set; }
+        public Int32 ProfitLoss_GlId { get; set; }
+        public Int32 RetEarning_GlId { get; set; }
+        public Int32 SaleGst_GlId { get; set; }
+        public Int32 PurGst_GlId { get; set; }
+        public Int32 SaleDef_GlId { get; set; }
+        public Int32 PurDef_GlId { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

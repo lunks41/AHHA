@@ -10,14 +10,14 @@ namespace AHHA.Core.Entities.Masters
     public class M_Employee
     {
         [Key]
-        public short EmployeeId { get; set; }
-        public byte CompanyId { get; set; }
+        public Int32 EmployeeId { get; set; }
+        public Int16 CompanyId { get; set; }
         public string EmployeeCode { get; set; }
         public string EmployeeName { get; set; }
         public string EmployeeOtherName { get; set; }
         public string EmployeePhoto { get; set; }
         public string EmployeeSignature { get; set; }
-        public short DepartmentId { get; set; }
+        public Int32 DepartmentId { get; set; }
         public string EmployeeSex { get; set; }
         public string MartialStatus { get; set; }
         public DateTime EmployeeDOB { get; set; }
@@ -27,9 +27,9 @@ namespace AHHA.Core.Entities.Masters
         public string EmployeeOtherEmailAdd { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

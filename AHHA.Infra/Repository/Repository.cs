@@ -64,16 +64,21 @@ namespace AHHA.Infra.Repository
 
         public async Task<T> CreateAsync(T entity)
         {
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                await _dbSet.AddAsync(entity);
-                await _context.SaveChangesAsync();
-                return entity;
-            }
-            catch (Exception)
-            {
-                _context.ChangeTracker.Clear();
-                throw;
+                try
+                {
+                    await _dbSet.AddAsync(entity);
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+                    return entity;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+                    throw;
+                }
             }
         }
 

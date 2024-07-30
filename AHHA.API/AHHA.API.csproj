@@ -27,6 +27,7 @@
     <Folder Include="Controllers\Dashboard\" />
     <Folder Include="Controllers\Report\" />
     <Folder Include="Models\" />
+    <Folder Include="Validation\" />
   </ItemGroup>
 
 </Project>

@@ -14,6 +14,7 @@ using System.Configuration;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Transactions;
 using static Dapper.SqlMapper;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -101,37 +102,39 @@ namespace AHHA.Infra.Repository
             return rowsAffected > 0 ? true : false;
         }
 
-        public async Task<IEnumerable<SqlMissingResponce>> GetAllFromSqlExecuteReaderAsyn<T, P>(string spName, P Parameters)
+        public async Task<IEnumerable<SqlResponceIds>> GetAllFromSqlExecuteReaderAsyn<T, P>(string spName, P Parameters)
         {
-            List<SqlMissingResponce> items = new List<SqlMissingResponce>();
-            try
-            {
-                using (IDbConnection connection = new SqlConnection(_configuration.GetConnectionString("DbConnection")))
+           
+                List<SqlResponceIds> items = new List<SqlResponceIds>();
+                try
                 {
-                    connection.Open();
-                    using (var reader = connection.ExecuteReader(spName,Parameters))
+                    using (IDbConnection connection = new SqlConnection(_configuration.GetConnectionString("DbConnection")))
                     {
-                        if (reader.FieldCount > 0)
+                        connection.Open();
+                        using (var reader = connection.ExecuteReader(spName, Parameters))
                         {
-                            while (reader.Read())
+                            if (reader.FieldCount > 0)
                             {
-                                SqlMissingResponce obj = new SqlMissingResponce
+                                while (reader.Read())
                                 {
-                                    IsExist = reader.GetInt32(reader.GetOrdinal("IsExist")),
-                                };
+                                    SqlResponceIds obj = new SqlResponceIds
+                                    {
+                                        IsExist = reader.GetInt32(reader.GetOrdinal("IsExist")),
+                                    };
 
-                                items.Add(obj);
+                                    items.Add(obj);
+                                }
                             }
                         }
                     }
-                }
-                return items;
+                    return items;
 
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+           
         }
 
         public async Task<DataSet> ExecuteDataSetQuery(string storedProcedureName)

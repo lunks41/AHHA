@@ -10,20 +10,20 @@ namespace AHHA.Core.Entities.Masters
     public class M_Bank
     {
         [Key]
-        public short BankId { get; set; }
-        public byte CompanyId { get; set; }
+        public Int32 BankId { get; set; }
+        public Int16 CompanyId { get; set; }
         public string BankCode { get; set; }
         public string BankName { get; set; }
-        public byte CurrencyId { get; set; }
+        public Int16 CurrencyId { get; set; }
         public string AccountNo { get; set; }
         public string SwiftCode { get; set; }
         public string Remarks1 { get; set; }
         public string Remarks2 { get; set; }
-        public short GLId { get; set; }
+        public Int32 GLId { get; set; }
         public bool IsActive { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

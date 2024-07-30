@@ -11,7 +11,7 @@ namespace AHHA.Core.Entities.Masters
     public class M_Vessel_Back
     {
         public int VesselId { get; set; }
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         public string VesselCode { get; set; }
         public string VesselName { get; set; }
         public string CallSign { get; set; }

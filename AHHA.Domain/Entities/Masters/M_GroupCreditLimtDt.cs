@@ -12,16 +12,16 @@ namespace AHHA.Core.Entities.Masters
     public class M_GroupCreditLimtDt
     {
         [Key]
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         [Key]
-        public short GroupCreditLimitId { get; set; }
+        public Int32 GroupCreditLimitId { get; set; }
         public DateTime EffectFrom { get; set; }
         public DateTime EffectUntil { get; set; }
         public bool IsExpires { get; set; }
         public decimal CreditLimitAmt { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

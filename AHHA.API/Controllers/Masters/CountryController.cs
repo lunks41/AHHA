@@ -13,17 +13,22 @@ using AutoMapper;
 using AHHA.Application.CommonServices;
 using Microsoft.EntityFrameworkCore;
 using AHHA.Core.Models;
+using System.Globalization;
+using System.Configuration;
+using AHHA.Core.Entities.Admin;
 
 namespace AHHA.API.Controllers.Masters
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CountryController : ControllerBase
+    public class CountryController : BaseController
     {
         private readonly ICountryService _countryService;
         private readonly ILogger<CountryController> _logger;
         private readonly IMemoryCache _memoryCache;
         private readonly IMapper _mapper;
+        private Int16 pageSize = 10;// ("pageSize"); 
+        private Int16 pageNumber = 1;
 
         public CountryController(ILogger<CountryController> logger, ICountryService countryService, IMemoryCache memoryCache, IMapper mapper)
         {
@@ -36,42 +41,41 @@ namespace AHHA.API.Controllers.Masters
         [HttpGet, Route("GetCountry")]
         public async Task<ActionResult> GetAllCountrys()
         {
-            byte pageSize = 10;
-            byte pageNumber = 1;
-            byte CompanyId = 0;
+            Int16 CompanyId = 0;
+            Int32 UserId = 0;
             try
             {
-                //var getAll = Request.Headers.ToList();
-                //Get the data from header
-                if (Request.Headers.TryGetValue("CompanyId", out StringValues headerValue))
-                    CompanyId = Convert.ToByte(headerValue[0]);
-                else
-                    return NoContent();
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
 
-                pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToByte(pageSizeValue[0]) : Convert.ToByte(10);
-                pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToByte(pageNumberValue[0]) : Convert.ToByte(10);
+                if (ValidateHeaders(CompanyId, UserId))
+                {
+                    pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
+                    pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
 
-                //Get the data from cache memory
-                var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
+                    //Get the data from cache memory
+                    var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
 
-                if (cacheData != null)
-                    return Ok(cacheData);
+                    if (cacheData != null)
+                        return Ok(cacheData);
+                    else
+                    {
+                        var expirationTime = DateTimeOffset.Now.AddMinutes(5.0);
+                        cacheData = await _countryService.GetCountryListAsync(CompanyId, pageSize, pageNumber, UserId);
+
+                        if (cacheData == null)
+                            return NotFound();
+
+                        _memoryCache.Set<CountryViewModelCount>("country", cacheData, expirationTime);
+
+                        return Ok(cacheData);
+                    }
+                }
                 else
                 {
-                    var expirationTime = DateTimeOffset.Now.AddMinutes(5.0);
-                    cacheData = await _countryService.GetCountryListAsync(Convert.ToByte(CompanyId),pageSize,pageNumber);
-                    //cacheData = _mapper.Map<IEnumerable<CountryViewModel>>(await _countryService.GetCountryListAsync(Convert.ToByte(CompanyId)));
+                    return NoContent();
 
-                    if (cacheData == null)
-                        return NotFound();
-
-                    _memoryCache.Set<CountryViewModelCount>("country", cacheData, expirationTime);
-
-                    return Ok(cacheData);
                 }
-
-                //var Countrys = await _countryService.GetCountryListAsync(Convert.ToByte(CompanyId));
-                //return Ok(_countryViewModelMapper.MapList(Countrys));
             }
             catch (Exception ex)
             {
@@ -82,35 +86,38 @@ namespace AHHA.API.Controllers.Masters
         }
 
 
-        [HttpGet, Route("GetCountrybyid/{id:int}")]
-        public async Task<ActionResult<CountryViewModel>> GetCountryById(int id)
+        [HttpGet, Route("GetCountrybyid/{CountryId:Int32}")]
+        public async Task<ActionResult<CountryViewModel>> GetCountryById(Int32 CountryId)
         {
-            byte CompanyId = 0;
+            Int16 CompanyId = 0;
+            Int32 UserId = 0;
             var countryViewModel = new CountryViewModel();
             try
             {
-                if (Request.Headers.TryGetValue("CompanyId", out StringValues headerValue))
-                    CompanyId = Convert.ToByte(headerValue[0]);
-                else
-                    return NoContent();
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
 
-                // Attempt to retrieve the country from the cache
-                if (_memoryCache.TryGetValue($"country_{id}", out CountryViewModel? cachedProduct))
+                if (ValidateHeaders(CompanyId, UserId))
                 {
-                    countryViewModel = cachedProduct;
-                }
-                else
-                {
-                    countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(id,CompanyId));
 
-                    if (countryViewModel == null)
-                        return NotFound();
+                    if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
+                    {
+                        countryViewModel = cachedProduct;
+                    }
                     else
-                        // Cache the country with an expiration time of 10 minutes
-                        _memoryCache.Set($"Country_{id}", countryViewModel, TimeSpan.FromMinutes(10));
-                }
+                    {
+                        countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(CompanyId, CountryId, UserId));
 
-                return countryViewModel;
+                        if (countryViewModel == null)
+                            return NotFound();
+                        else
+                            // Cache the country with an expiration time of 10 minutes
+                            _memoryCache.Set($"Country_{CountryId}", countryViewModel, TimeSpan.FromMinutes(10));
+                    }
+
+                    return Ok(countryViewModel);
+                }
+                else { return NoContent(); }
             }
             catch (Exception ex)
             {
@@ -123,34 +130,37 @@ namespace AHHA.API.Controllers.Masters
         [HttpPost, Route("AddCountry")]
         public async Task<ActionResult<CountryViewModel>> CreateCountry(CountryViewModel country)
         {
-            byte CompanyId = 0;
+            Int16 CompanyId = 0;
+            Int32 UserId = 0;
             try
             {
-                if (Request.Headers.TryGetValue("CompanyId", out StringValues headerValue))
-                    CompanyId = Convert.ToByte(headerValue[0]);
-                else
-                    return NoContent();
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
 
-                if (country == null)
-                    return BadRequest();
-
-                var countryEntity = new M_Country
+                if (ValidateHeaders(CompanyId, UserId))
                 {
-                    CompanyId = country.CompanyId,
-                    CountryCode = country.CountryCode,
-                    CountryId = country.CountryId,
-                    CountryName = country.CountryName,
-                    CreateById = 1,
-                    //CreateDate = country.CreateDate,
-                    //EditById = country.EditById,
-                    //EditDate = country.EditDate,
-                    IsActive = country.IsActive,
-                    Remarks = country.Remarks
-                };
+                    if (country == null)
+                        return BadRequest();
 
-                var createdCountry = await _countryService.AddCountryAsyncV1(countryEntity, CompanyId);
+                    var countryEntity = new M_Country
+                    {
+                        CompanyId = country.CompanyId,
+                        CountryCode = country.CountryCode,
+                        CountryId = country.CountryId,
+                        CountryName = country.CountryName,
+                        CreateById = UserId,
+                        IsActive = country.IsActive,
+                        Remarks = country.Remarks
+                    };
 
-                return CreatedAtAction(nameof(GetCountryById), new { id = createdCountry.Id }, createdCountry);
+                    var createdCountry = await _countryService.AddCountryAsync(CompanyId, countryEntity, UserId);
+
+                    return CreatedAtAction(nameof(GetCountryById), new { id = createdCountry.Id }, createdCountry);
+                }
+                else
+                {
+                    return NoContent();
+                }
             }
             catch (Exception ex)
             {
@@ -160,50 +170,50 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpPut, Route("UpdateCountry/{id:int}")]
-        public async Task<ActionResult<CountryViewModel>> UpdateCountry(int id, [FromBody] CountryViewModel country)
+        [HttpPut, Route("UpdateCountry/{CountryId:Int32}")]
+        public async Task<ActionResult<CountryViewModel>> UpdateCountry(int CountryId, [FromBody] CountryViewModel country)
         {
-            byte CompanyId = 0;
+            Int16 CompanyId = 0; Int32 UserId = 0;
             var countryViewModel = new CountryViewModel();
             try
             {
-                if (Request.Headers.TryGetValue("CompanyId", out StringValues headerValue))
-                    CompanyId = Convert.ToByte(headerValue[0]);
-                else
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
+
+                if (ValidateHeaders(CompanyId, UserId))
+                {
+
+                    if (CountryId != country.CountryId)
+                        return BadRequest("M_Country ID mismatch");
+
+                    // Attempt to retrieve the country from the cache
+                    if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
+                    {
+                        countryViewModel = cachedProduct;
+                    }
+                    else
+                    {
+                        var CountryToUpdate = await _countryService.GetCountryByIdAsync(CompanyId, CountryId, UserId);
+
+                        if (CountryToUpdate == null)
+                            return NotFound($"M_Country with Id = {CountryId} not found");
+                    }
+
+                    var countryEntity = new M_Country
+                    {
+                        CountryCode = country.CountryCode,
+                        CountryId = country.CountryId,
+                        CountryName = country.CountryName,
+                        EditById = UserId,
+                        EditDate = DateTime.Now,
+                        IsActive = country.IsActive,
+                        Remarks = country.Remarks
+                    };
+
+                    await _countryService.UpdateCountryAsync(CompanyId, countryEntity, UserId);
                     return NoContent();
-
-                if (id != country.CountryId)
-                    return BadRequest("M_Country ID mismatch");
-
-                // Attempt to retrieve the country from the cache
-                if (_memoryCache.TryGetValue($"country_{id}", out CountryViewModel? cachedProduct))
-                {
-                    countryViewModel = cachedProduct;
                 }
-                else
-                {
-                    var CountryToUpdate = await _countryService.GetCountryByIdAsync(id, CompanyId);
-
-                    if (CountryToUpdate == null)
-                        return NotFound($"M_Country with Id = {id} not found");
-                }
-
-                var countryEntity = new M_Country
-                {
-                    //CompanyId = country.CompanyId,
-                    CountryCode = country.CountryCode,
-                    CountryId = country.CountryId,
-                    CountryName = country.CountryName,
-                    //CreateById = country.CreateById,
-                    //CreateDate = country.CreateDate,
-                    EditById = 1,
-                    EditDate = DateTime.Now,
-                    IsActive = country.IsActive,
-                    Remarks = country.Remarks
-                };
-
-                await _countryService.UpdateCountryAsyncV1(countryEntity, CompanyId);
-                return NoContent();
+                else { return NoContent(); }
             }
             catch (Exception ex)
             {
@@ -213,35 +223,38 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{id:int}")]
-        public async Task<ActionResult<M_Country>> DeleteCountry(int id)
+        [HttpDelete, Route("Delete/{CountryId:Int32}")]
+        public async Task<ActionResult<M_Country>> DeleteCountry(int CountryId)
         {
-            byte CompanyId = 0;
+            Int16 CompanyId = 0; Int32 UserId = 0;
             var countryViewModel = new CountryViewModel();
             try
             {
-                if (Request.Headers.TryGetValue("CompanyId", out StringValues headerValue))
-                    CompanyId = Convert.ToByte(headerValue[0]);
-                else
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
+
+                if (ValidateHeaders(CompanyId, UserId))
+                {
+
+                    // Attempt to retrieve the country from the cache
+                    if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
+                    {
+                        countryViewModel = cachedProduct;
+                    }
+                    else
+                    {
+                        var CountryToDelete = await _countryService.GetCountryByIdAsync(CompanyId, CountryId, UserId);
+
+                        if (CountryToDelete == null)
+                            return NotFound($"M_Country with Id = {CountryId} not found");
+                    }
+
+                    await _countryService.DeleteCountryAsync(CompanyId, CountryId, UserId);
+                    // Remove data from cache by key
+                    _memoryCache.Remove($"Country_{CountryId}");
                     return NoContent();
-
-                // Attempt to retrieve the country from the cache
-                if (_memoryCache.TryGetValue($"country_{id}", out CountryViewModel? cachedProduct))
-                {
-                    countryViewModel = cachedProduct;
                 }
-                else
-                {
-                    var CountryToDelete = await _countryService.GetCountryByIdAsync(id, CompanyId);
-
-                    if (CountryToDelete == null)
-                        return NotFound($"M_Country with Id = {id} not found");
-                }
-
-                await _countryService.DeleteCountryAsync(id,CompanyId);
-                // Remove data from cache by key
-                _memoryCache.Remove($"Country_{id}");
-                return NoContent();
+                else { return NoContent(); }
             }
             catch (Exception ex)
             {

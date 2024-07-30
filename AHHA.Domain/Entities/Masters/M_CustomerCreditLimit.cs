@@ -14,14 +14,14 @@ namespace AHHA.Core.Entities.Masters
         [Key]
         public int CustomerId { get; set; }
         [Key]
-        public byte CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         public DateTime EffectFrom { get; set; }
         public DateTime EffectUntil { get; set; }
         public bool IsExpires { get; set; }
         public decimal CreditLimitAmt { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
 
     }

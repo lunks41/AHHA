@@ -27,10 +27,10 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_AccountSetup", b =>
                 {
-                    b.Property<byte>("AccSetupId")
+                    b.Property<Int16>("AccSetupId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("AccSetupCategoryId")
+                    b.Property<Int16>("AccSetupCategoryId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("AccSetupCode")
@@ -39,16 +39,16 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("AccSetupName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -67,7 +67,7 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_AccountSetupCategory", b =>
                 {
-                    b.Property<byte>("AccSetupCategoryId")
+                    b.Property<Int16>("AccSetupCategoryId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("AccSetupCategoryCode")
@@ -76,13 +76,13 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("AccSetupCategoryName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -101,11 +101,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Bank", b =>
                 {
-                    b.Property<short>("BankId")
+                    b.Property<Int32>("BankId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("BankId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("BankId"));
 
                     b.Property<string>("AccountNo")
                         .HasColumnType("nvarchar(max)");
@@ -116,25 +116,25 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("BankName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("CurrencyId")
+                    b.Property<Int16>("CurrencyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("GLId")
+                    b.Property<Int32>("GLId")
                         .HasColumnType("smallint");
 
                     b.Property<bool>("IsActive")
@@ -156,11 +156,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Barge", b =>
                 {
-                    b.Property<short>("BargeId")
+                    b.Property<Int32>("BargeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("BargeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("BargeId"));
 
                     b.Property<string>("BargeICode")
                         .HasColumnType("nvarchar(max)");
@@ -174,16 +174,16 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("CallSign")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -214,7 +214,7 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_COACategory1", b =>
                 {
-                    b.Property<byte>("COACategoryId")
+                    b.Property<Int16>("COACategoryId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("COACategoryCode")
@@ -223,16 +223,16 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("COACategoryName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -244,7 +244,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("SeqNo")
+                    b.Property<Int32>("SeqNo")
                         .HasColumnType("smallint");
 
                     b.HasKey("COACategoryId");
@@ -254,7 +254,7 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_COACategory2", b =>
                 {
-                    b.Property<byte>("COACategoryId")
+                    b.Property<Int16>("COACategoryId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("COACategoryCode")
@@ -263,16 +263,16 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("COACategoryName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -284,7 +284,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("SeqNo")
+                    b.Property<Int32>("SeqNo")
                         .HasColumnType("smallint");
 
                     b.HasKey("COACategoryId");
@@ -294,7 +294,7 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_COACategory3", b =>
                 {
-                    b.Property<byte>("COACategoryId")
+                    b.Property<Int16>("COACategoryId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("COACategoryCode")
@@ -303,16 +303,16 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("COACategoryName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -324,7 +324,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("SeqNo")
+                    b.Property<Int32>("SeqNo")
                         .HasColumnType("smallint");
 
                     b.HasKey("COACategoryId");
@@ -346,16 +346,16 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("CategoryName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -374,37 +374,37 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_ChartOfAccount", b =>
                 {
-                    b.Property<short>("GLId")
+                    b.Property<Int32>("GLId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("GLId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("GLId"));
 
-                    b.Property<byte>("AccGroupId")
+                    b.Property<Int16>("AccGroupId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("AccTypeId")
+                    b.Property<Int16>("AccTypeId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("COACategoryId1")
+                    b.Property<Int16>("COACategoryId1")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("COACategoryId2")
+                    b.Property<Int16>("COACategoryId2")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("COACategoryId3")
+                    b.Property<Int16>("COACategoryId3")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -425,7 +425,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("SeqNo")
+                    b.Property<Int32>("SeqNo")
                         .HasColumnType("smallint");
 
                     b.HasKey("GLId");
@@ -435,13 +435,13 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Country", b =>
                 {
-                    b.Property<short>("CountryId")
+                    b.Property<Int32>("CountryId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("CountryId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("CountryId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("CountryCode")
@@ -450,13 +450,13 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("CountryName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short?>("EditById")
+                    b.Property<Int32?>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime?>("EditDate")
@@ -475,13 +475,13 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_CreditTerm", b =>
                 {
-                    b.Property<byte>("CreditTermId")
+                    b.Property<Int16>("CreditTermId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -493,7 +493,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("CreditTermName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -502,7 +502,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<short>("NoDays")
+                    b.Property<Int32>("NoDays")
                         .HasColumnType("smallint");
 
                     b.Property<string>("Remarks")
@@ -515,37 +515,37 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_CreditTermDt", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("CreditTermId")
+                    b.Property<Int16>("CreditTermId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("DueDay")
+                    b.Property<Int16>("DueDay")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("FromDay")
+                    b.Property<Int16>("FromDay")
                         .HasColumnType("tinyint");
 
                     b.Property<bool>("IsEndOfMonth")
                         .HasColumnType("bit");
 
-                    b.Property<byte>("NoMonth")
+                    b.Property<Int16>("NoMonth")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("ToDay")
+                    b.Property<Int16>("ToDay")
                         .HasColumnType("tinyint");
 
                     b.ToTable("M_CreditTermDt");
@@ -553,13 +553,13 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Currency", b =>
                 {
-                    b.Property<byte>("CurrencyId")
+                    b.Property<Int16>("CurrencyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -571,7 +571,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("CurrencyName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -593,19 +593,19 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_CurrencyDt", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("CurrencyId")
+                    b.Property<Int16>("CurrencyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -622,19 +622,19 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_CurrencyLocalDt", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("CurrencyId")
+                    b.Property<Int16>("CurrencyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -651,22 +651,22 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_CustomeGroupCreditLimt", b =>
                 {
-                    b.Property<short>("GroupCreditLimitId")
+                    b.Property<Int32>("GroupCreditLimitId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("GroupCreditLimitId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("GroupCreditLimitId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -697,19 +697,19 @@ namespace AHHA.Infra.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CustomerId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("CreditTermId")
+                    b.Property<Int16>("CreditTermId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CurrencyId")
+                    b.Property<Int16>("CurrencyId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("CustomerCode")
@@ -727,7 +727,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("CustomerShortName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -773,13 +773,13 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Address4")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("AddressId")
+                    b.Property<Int32>("AddressId")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("CountryId")
+                    b.Property<Int32>("CountryId")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -788,7 +788,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -829,7 +829,7 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_CustomerContact", b =>
                 {
-                    b.Property<short>("ContactId")
+                    b.Property<Int32>("ContactId")
                         .HasColumnType("smallint");
 
                     b.Property<string>("ContactMessType")
@@ -838,7 +838,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("ContactName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -847,7 +847,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -888,10 +888,10 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_CustomerCreditLimit", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -903,7 +903,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -923,16 +923,16 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Department", b =>
                 {
-                    b.Property<short>("DepartmentId")
+                    b.Property<Int32>("DepartmentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("DepartmentId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("DepartmentId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -944,7 +944,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("DepartmentName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -963,13 +963,13 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Designation", b =>
                 {
-                    b.Property<byte>("DesignationId")
+                    b.Property<Int16>("DesignationId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -981,7 +981,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("DesignationName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1000,25 +1000,25 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Employee", b =>
                 {
-                    b.Property<short>("EmployeeId")
+                    b.Property<Int32>("EmployeeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("EmployeeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("EmployeeId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("DepartmentId")
+                    b.Property<Int32>("DepartmentId")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1073,22 +1073,22 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_GroupCreditLimt", b =>
                 {
-                    b.Property<short>("GroupCreditLimitId")
+                    b.Property<Int32>("GroupCreditLimitId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("GroupCreditLimitId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("GroupCreditLimitId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1113,10 +1113,10 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_GroupCreditLimtDt", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -1125,7 +1125,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<decimal>("CreditLimitAmt")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1137,7 +1137,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<DateTime>("EffectUntil")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("GroupCreditLimitId")
+                    b.Property<Int32>("GroupCreditLimitId")
                         .HasColumnType("smallint");
 
                     b.Property<bool>("IsExpires")
@@ -1148,10 +1148,10 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_GroupCreditLimt_Customer", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
@@ -1160,13 +1160,13 @@ namespace AHHA.Infra.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("GroupCreditLimitId")
+                    b.Property<Int32>("GroupCreditLimitId")
                         .HasColumnType("smallint");
 
                     b.ToTable("M_GroupCreditLimt_Customer");
@@ -1174,25 +1174,25 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Gst", b =>
                 {
-                    b.Property<byte>("GstId")
+                    b.Property<Int16>("GstId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("GstCategoryId")
+                    b.Property<Int16>("GstCategoryId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("GstCode")
@@ -1214,19 +1214,19 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_GstCategory", b =>
                 {
-                    b.Property<byte>("GstCategoryId")
+                    b.Property<Int16>("GstCategoryId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1251,22 +1251,22 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_GstDt", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("GstId")
+                    b.Property<Int16>("GstId")
                         .HasColumnType("tinyint");
 
                     b.Property<decimal>("GstPercentahge")
@@ -1280,13 +1280,13 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_OrderType", b =>
                 {
-                    b.Property<short>("OrderTypeId")
+                    b.Property<Int32>("OrderTypeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("OrderTypeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("OrderTypeId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("CreateById")
@@ -1304,7 +1304,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<byte>("OrderTypeCategoryId")
+                    b.Property<Int16>("OrderTypeCategoryId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("OrderTypeCode")
@@ -1323,19 +1323,19 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_OrderTypeCategory", b =>
                 {
-                    b.Property<byte>("OrderTypeCategoryId")
+                    b.Property<Int16>("OrderTypeCategoryId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1360,22 +1360,22 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_PaymentType", b =>
                 {
-                    b.Property<short>("PaymentTypeId")
+                    b.Property<Int32>("PaymentTypeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("PaymentTypeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("PaymentTypeId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1400,22 +1400,22 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Port", b =>
                 {
-                    b.Property<short>("PortId")
+                    b.Property<Int32>("PortId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("PortId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("PortId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1430,7 +1430,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("PortName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("PortRegionId")
+                    b.Property<Int32>("PortRegionId")
                         .HasColumnType("smallint");
 
                     b.Property<string>("Remarks")
@@ -1443,25 +1443,25 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_PortRegion", b =>
                 {
-                    b.Property<short>("PortRegionId")
+                    b.Property<Int32>("PortRegionId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("PortRegionId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<Int32>("PortRegionId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CountryId")
+                    b.Property<Int32>("CountryId")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1492,16 +1492,16 @@ namespace AHHA.Infra.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short?>("EditBy")
+                    b.Property<Int32?>("EditBy")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime?>("EditDateId")
@@ -1532,16 +1532,16 @@ namespace AHHA.Infra.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubCategoryId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1572,22 +1572,22 @@ namespace AHHA.Infra.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupplierId"));
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("CreditTermId")
+                    b.Property<Int16>("CreditTermId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CurrencyId")
+                    b.Property<Int16>("CurrencyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1648,19 +1648,19 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Address4")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("AddressId")
+                    b.Property<Int32>("AddressId")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("CountryId")
+                    b.Property<Int32>("CountryId")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1704,7 +1704,7 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_SupplierContact", b =>
                 {
-                    b.Property<short>("ContactId")
+                    b.Property<Int32>("ContactId")
                         .HasColumnType("smallint");
 
                     b.Property<string>("ContactMessType")
@@ -1713,13 +1713,13 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("ContactName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1763,19 +1763,19 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Tax", b =>
                 {
-                    b.Property<byte>("TaxId")
+                    b.Property<Int16>("TaxId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1787,7 +1787,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("TaxCategoryId")
+                    b.Property<Int16>("TaxCategoryId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("TaxCode")
@@ -1803,19 +1803,19 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_TaxCategory", b =>
                 {
-                    b.Property<byte>("TaxCategoryId")
+                    b.Property<Int16>("TaxCategoryId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1840,22 +1840,22 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_TaxDt", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("TaxId")
+                    b.Property<Int16>("TaxId")
                         .HasColumnType("tinyint");
 
                     b.Property<decimal>("TaxPercentage")
@@ -1869,19 +1869,19 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Uom", b =>
                 {
-                    b.Property<byte>("UomId")
+                    b.Property<Int16>("UomId")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1906,28 +1906,28 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_UomDt", b =>
                 {
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte>("PackUomId")
+                    b.Property<Int16>("PackUomId")
                         .HasColumnType("tinyint");
 
                     b.Property<decimal>("UomFactor")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<byte>("UomId")
+                    b.Property<Int16>("UomId")
                         .HasColumnType("tinyint");
 
                     b.ToTable("M_UomDt");
@@ -1944,16 +1944,16 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("CallSign")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
-                    b.Property<short>("CreateById")
+                    b.Property<Int32>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<short>("EditById")
+                    b.Property<Int32>("EditById")
                         .HasColumnType("smallint");
 
                     b.Property<DateTime>("EditDate")
@@ -1996,7 +1996,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("CallSign")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("CreateBy")
@@ -2052,10 +2052,10 @@ namespace AHHA.Infra.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VoyageId"));
 
-                    b.Property<short>("BargeId")
+                    b.Property<Int32>("BargeId")
                         .HasColumnType("smallint");
 
-                    b.Property<byte>("CompanyId")
+                    b.Property<Int16>("CompanyId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("CreateById")

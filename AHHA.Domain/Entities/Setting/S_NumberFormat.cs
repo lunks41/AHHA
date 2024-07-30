@@ -8,27 +8,27 @@ namespace AHHA.Core.Entities.Setting
 {
     public class S_NumberFormat
     {
-        public short NumberId { get; set; }
-        public byte CompanyId { get; set; }
-        public byte ModuleId { get; set; }
-        public short TransactionId { get; set; }
+        public Int32 NumberId { get; set; }
+        public Int16 CompanyId { get; set; }
+        public Int16 ModuleId { get; set; }
+        public Int32 TransactionId { get; set; }
         public string Prefix { get; set; }
-        public byte PrefixSeq { get; set; }
+        public Int16 PrefixSeq { get; set; }
         public string PrefixDelimiter { get; set; }
         public bool IncludeYear { get; set; }
-        public byte YearSeq { get; set; }
+        public Int16 YearSeq { get; set; }
         public string YearFormat { get; set; }
         public string YearDelimiter { get; set; }
         public bool IncludeMonth { get; set; }
-        public byte MonthSeq { get; set; }
+        public Int16 MonthSeq { get; set; }
         public string MonthFormat { get; set; }
         public string MonthDelimiter { get; set; }
-        public byte NoDIgits { get; set; }
-        public byte DIgitSeq { get; set; }
+        public Int16 NoDIgits { get; set; }
+        public Int16 DIgitSeq { get; set; }
         public bool ResetYearly { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

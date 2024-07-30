@@ -11,16 +11,16 @@ namespace AHHA.Core.Entities.Masters
     [Keyless]
     public class M_CreditTermDt
     {
-        public byte CreditTermId { get; set; }
-        public byte CompanyId { get; set; }
-        public byte FromDay { get; set; }
-        public byte ToDay { get; set; }
+        public Int16 CreditTermId { get; set; }
+        public Int16 CompanyId { get; set; }
+        public Int16 FromDay { get; set; }
+        public Int16 ToDay { get; set; }
         public bool IsEndOfMonth { get; set; }
-        public byte DueDay { get; set; }
-        public byte NoMonth { get; set; }
-        public short CreateById { get; set; }
+        public Int16 DueDay { get; set; }
+        public Int16 NoMonth { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

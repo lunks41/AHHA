@@ -12,7 +12,7 @@ namespace AHHA.Core.Entities.Masters
     public class M_SupplierContact
     {
         [Key]
-        public short ContactId { get; set; }
+        public Int32 ContactId { get; set; }
         [Key]
         public int SupplierId { get; set; }
         public string ContactName { get; set; }
@@ -27,9 +27,9 @@ namespace AHHA.Core.Entities.Masters
         public bool IsFinance { get; set; }
         public bool IsSales { get; set; }
         public bool IsActive { get; set; }
-        public short CreateById { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public short EditById { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }
