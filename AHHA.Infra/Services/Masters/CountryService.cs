@@ -112,102 +112,94 @@ namespace AHHA.Infra.Services.Masters
             var parameters = new DynamicParameters();
             bool isExist = false;
 
-            using (var TScope = new TransactionScope())
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                using (var transaction = _context.Database.BeginTransaction())
+                try
                 {
-                    try
+                    var StrExist = await _queryRepository.GetAllFromSqlQueryAsync<SqlResponceIds, dynamic>($"SELECT 1 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Master.Country},{(short)Modules.Master})) AND CountryCode='{country.CountryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Master.Country},{(short)Modules.Master})) AND CountryName='{country.CountryName}'", parameters);
+
+                    if (StrExist.Count() > 0)
                     {
-                        var StrExist = await _queryRepository.GetAllFromSqlQueryAsync<SqlResponceIds, dynamic>($"SELECT 1 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Master.Country},{(short)Modules.Master})) AND CountryCode='{country.CountryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Country WHERE CountryId IN (SELECT DISTINCT CountryId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Master.Country},{(short)Modules.Master})) AND CountryName='{country.CountryName}'", parameters);
-
-                        if (StrExist.Count() > 0)
+                        if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            if (StrExist.ToList()[0].IsExist == 1)
-                            {
-                                isExist = true;
-                                return new SqlResponce { Id = -1, Msg = "Country Code Exist" };
-                            }
-                            else if (StrExist.ToList()[1].IsExist == 2)
-                            {
-                                isExist = true;
-                                return new SqlResponce { Id = -2, Msg = "Country Name Exist" };
-                            }
+                            isExist = true;
+                            return new SqlResponce { Id = -1, Msg = "Country Code Exist" };
                         }
-                        else
+                        else if (StrExist.ToList()[1].IsExist == 2)
                         {
-                            isExist = false;
+                            isExist = true;
+                            return new SqlResponce { Id = -2, Msg = "Country Name Exist" };
                         }
-
-                        if (!isExist)
-                        {
-                            //Take the Missing Id From SQL
-                            var sqlMissingResponce = await _queryRepository.QueryDetailDtoAsyncV1<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (CountryId + 1) FROM dbo.M_Country WHERE (CountryId + 1) NOT IN (SELECT CountryId FROM dbo.M_Country)),1) ", parameters);
-
-
-                            #region Saving Country
-                            //Country Saving
-                            country.CountryId = Convert.ToInt16(sqlMissingResponce.MissId);
-                            country.CreateDate = DateTime.Now;
-
-                            await _context.AddAsync(country);
-
-                            var countrySave = await _context.SaveChangesAsync();
-
-                            //var countryA = await _repository.CreateAsync(country);
-                            #endregion
-
-                            #region Save AuditLog
-                            if (countrySave > 0)
-                            {
-                                //Saving Audit log
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Country,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = Convert.ToByte(sqlMissingResponce.MissId),
-                                    DocumentNo = country.CountryCode,
-                                    TblName = "M_Country",
-                                    ModeId = (short)Mode.Create,
-                                    Remarks = "Invoice Save Successfully",
-                                    CreateById = UserId,
-                                    CreateDate = DateTime.Now
-                                };
-
-                                _context.Add(auditLog);
-                                var auditLogSave = _context.SaveChanges();
-
-                                //await _auditLogServices.AddAuditLogAsync(auditLog);
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-
-                                TScope.Complete();
-                            }
-                            #endregion
-                        }
-                        return new SqlResponce { Id = 1, Msg = "Save Successfully" };
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        transaction.Rollback();
-                        _context.ChangeTracker.Clear();
-
-                        var errorLog = new AdmErrorLog
-                        {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Country,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = 0,
-                            DocumentNo = country.CountryCode,
-                            TblName = "M_Country",
-                            ModeId = (short)Mode.Create,
-                            Remarks = ex.Message + ex.InnerException,
-                            CreateById = UserId
-                        };
-                        await _errorLogServices.AddErrorLogAsync(errorLog);
-
-                        throw new Exception(ex.ToString());
+                        isExist = false;
                     }
+
+                    if (!isExist)
+                    {
+                        //Take the Missing Id From SQL
+                        var sqlMissingResponce = await _queryRepository.QueryDetailDtoAsyncV1<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (CountryId + 1) FROM dbo.M_Country WHERE (CountryId + 1) NOT IN (SELECT CountryId FROM dbo.M_Country)),1) AS MissId", parameters);
+
+
+                        #region Saving Country
+                        
+                        country.CountryId = Convert.ToInt32(sqlMissingResponce.MissId);
+
+                        _context.Add(country);
+                        var countrySave = _context.SaveChanges();
+
+                        #endregion
+
+                        #region Save AuditLog
+                        if (countrySave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Country,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = country.CountryId,
+                                DocumentNo = country.CountryCode,
+                                TblName = "M_Country",
+                                ModeId = (short)Mode.Create,
+                                Remarks = "Invoice Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            //await _auditLogServices.AddAuditLogAsync(auditLog);
+                            if (auditLogSave > 0)
+                                transaction.Commit();
+                        }
+                        #endregion
+                    }
+                    return new SqlResponce { Id = 1, Msg = "Save Successfully" };
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.Country,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = 0,
+                        DocumentNo = country.CountryCode,
+                        TblName = "M_Country",
+                        ModeId = (short)Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    await _errorLogServices.AddErrorLogAsync(errorLog);
+
+                    throw new Exception(ex.ToString());
                 }
             }
         }
@@ -222,7 +214,7 @@ namespace AHHA.Infra.Services.Masters
                 try
                 {
                     #region Update Country
-                    //Country Saving
+                    
                     country.CreateDate = DateTime.Now;
 
                     var entity = _context.Update(country);
@@ -230,10 +222,10 @@ namespace AHHA.Infra.Services.Masters
                     entity.Property(b => b.CreateDate).IsModified = false;
                     entity.Property(b => b.CreateById).IsModified = false;
                     entity.Property(b => b.CountryCode).IsModified = false;
+                    entity.Property(b => b.CompanyId).IsModified = false;
 
                     var countryUpdate = _context.SaveChanges();
 
-                    //var countryA = await _repository.CreateAsync(country);
                     #endregion
 
                     if (countryUpdate > 0)

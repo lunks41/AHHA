@@ -14,8 +14,10 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICountryService _countryService;
         private readonly ILogger<CountryController> _logger;
-        private Int16 pageSize = 10;// ("pageSize"); 
+        private Int16 pageSize = 10; 
         private Int16 pageNumber = 1;
+        private Int16 CompanyId = 0;
+        private Int32 UserId = 0;
 
         public CountryController(IMemoryCache memoryCache, IMapper mapper, ILogger<CountryController> logger, ICountryService countryService)
     : base(memoryCache, mapper)
@@ -27,8 +29,6 @@ namespace AHHA.API.Controllers.Masters
         [HttpGet, Route("GetCountry")]
         public async Task<ActionResult> GetAllCountrys()
         {
-            Int16 CompanyId = 0;
-            Int32 UserId = 0;
             try
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
@@ -78,8 +78,6 @@ namespace AHHA.API.Controllers.Masters
         [HttpGet, Route("GetCountrybyid/{CountryId}")]
         public async Task<ActionResult<CountryViewModel>> GetCountryById(Int32 CountryId)
         {
-            Int16 CompanyId = 0;
-            Int32 UserId = 0;
             var countryViewModel = new CountryViewModel();
             try
             {
@@ -119,8 +117,6 @@ namespace AHHA.API.Controllers.Masters
         [HttpPost, Route("AddCountry")]
         public async Task<ActionResult<CountryViewModel>> CreateCountry(CountryViewModel country)
         {
-            Int16 CompanyId = 0;
-            Int32 UserId = 0;
             try
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
@@ -143,8 +139,7 @@ namespace AHHA.API.Controllers.Masters
                     };
 
                     var createdCountry = await _countryService.AddCountryAsync(CompanyId, countryEntity, UserId);
-
-                    return CreatedAtAction(nameof(GetCountryById), new { id = createdCountry.Id }, createdCountry);
+                    return Ok(createdCountry);
                 }
                 else
                 {
@@ -162,7 +157,6 @@ namespace AHHA.API.Controllers.Masters
         [HttpPut, Route("UpdateCountry/{CountryId}")]
         public async Task<ActionResult<CountryViewModel>> UpdateCountry(int CountryId, [FromBody] CountryViewModel country)
         {
-            Int16 CompanyId = 0; Int32 UserId = 0;
             var countryViewModel = new CountryViewModel();
             try
             {
@@ -218,7 +212,6 @@ namespace AHHA.API.Controllers.Masters
         [HttpDelete, Route("Delete/{CountryId}")]
         public async Task<ActionResult<M_Country>> DeleteCountry(int CountryId)
         {
-            Int16 CompanyId = 0; Int32 UserId = 0;
             var countryViewModel = new CountryViewModel();
             try
             {

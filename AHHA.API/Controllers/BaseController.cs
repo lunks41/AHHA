@@ -14,6 +14,7 @@ namespace AHHA.API.Controllers
     {
         public readonly IMemoryCache _memoryCache;
         public readonly IMapper _mapper;
+        
         public BaseController(IMemoryCache memoryCache, IMapper mapper)
         {
             _memoryCache = memoryCache;
