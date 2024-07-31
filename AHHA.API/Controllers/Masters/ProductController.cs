@@ -1,6 +1,5 @@
-﻿using AHHA.Application.Services.Masters.Products;
+﻿using AHHA.Application.IServices.Masters;
 using AHHA.Core.Entities.Masters;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 

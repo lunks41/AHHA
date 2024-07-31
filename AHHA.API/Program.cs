@@ -1,9 +1,6 @@
 using AHHA.API.Extensions;
-using AHHA.Application.Services.Masters.Products;
-using AHHA.Infra.Data;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);

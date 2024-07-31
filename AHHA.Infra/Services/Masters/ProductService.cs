@@ -1,11 +1,14 @@
 ﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
 using AHHA.Core.Entities.Masters;
+using AHHA.Infra.Data;
 
-namespace AHHA.Application.Services.Masters.Products
+namespace AHHA.Infra.Services.Masters
 {
     public class ProductService : IProductService
     {
         private readonly IRepository<M_Product> _repository;
+        private readonly ApplicationDbContext _context;
 
         public ProductService(IRepository<M_Product> repository)
         {

@@ -1,21 +1,10 @@
-﻿using Azure;
-using AHHA.Application.Services.Masters.Countries;
+﻿using AHHA.Application.IServices.Masters;
 using AHHA.Core.Entities.Masters;
-using AHHA.Core.Common;
-using Microsoft.AspNetCore.Http;
+using AHHA.Core.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using System.Net;
-using Microsoft.OpenApi.Models;
-using System.Net.Http.Headers;
 using Microsoft.Extensions.Primitives;
-using AutoMapper;
-using AHHA.Application.CommonServices;
-using Microsoft.EntityFrameworkCore;
-using AHHA.Core.Models;
-using System.Globalization;
-using System.Configuration;
-using AHHA.Core.Entities.Admin;
 
 namespace AHHA.API.Controllers.Masters
 {

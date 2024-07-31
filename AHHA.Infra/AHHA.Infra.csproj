@@ -27,6 +27,14 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Services\Accounts\AP\" />
+    <Folder Include="Services\Accounts\AR\" />
+    <Folder Include="Services\Accounts\CB\" />
+    <Folder Include="Services\Accounts\GL\" />
+    <Folder Include="Services\Admin\" />
+    <Folder Include="Services\Dashboard\" />
+    <Folder Include="Services\Report\" />
+    <Folder Include="Services\Setting\" />
   </ItemGroup>
 
 </Project>
