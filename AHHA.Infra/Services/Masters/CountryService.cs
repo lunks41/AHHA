@@ -291,12 +291,13 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    #region Update Country
-
+                    #region Delete Country
+                    //Get the country deteils
                     var countryToRemove = _context.M_Country.SingleOrDefault(x => x.CountryId == CountryId); //returns a single item.
 
                     if (countryToRemove != null)
                     {
+                        //
                         _context.M_Country.Remove(countryToRemove);
                         var countryRemove = _context.SaveChanges();
 

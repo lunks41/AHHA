@@ -75,7 +75,6 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-
         [HttpGet, Route("GetCountrybyid/{CountryId}")]
         public async Task<ActionResult<CountryViewModel>> GetCountryById(Int32 CountryId)
         {
