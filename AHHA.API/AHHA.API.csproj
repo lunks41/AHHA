@@ -7,6 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\**" />
+    <Compile Remove="Validation\**" />
+    <Content Remove="Models\**" />
+    <Content Remove="Validation\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="Validation\**" />
+    <None Remove="Models\**" />
+    <None Remove="Validation\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.1" />
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7">
@@ -26,8 +37,6 @@
   <ItemGroup>
     <Folder Include="Controllers\Dashboard\" />
     <Folder Include="Controllers\Report\" />
-    <Folder Include="Models\" />
-    <Folder Include="Validation\" />
   </ItemGroup>
 
 </Project>

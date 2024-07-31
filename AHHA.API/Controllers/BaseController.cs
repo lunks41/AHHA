@@ -1,15 +1,25 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AHHA.Core.Common;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Identity.Client;
 
 namespace AHHA.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BaseController : ControllerBase
+    public abstract class BaseController : ControllerBase
     {
-        public BaseController() { }
-
+        public readonly IMemoryCache _memoryCache;
+        public readonly IMapper _mapper;
+        public BaseController(IMemoryCache memoryCache, IMapper mapper)
+        {
+            _memoryCache = memoryCache;
+            _mapper = mapper;
+        }
+        [HttpGet]
         public bool ValidateHeaders(Int16 CompanyId, Int32 UserId)
         {
             bool IsValidate = false;

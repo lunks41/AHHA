@@ -25,17 +25,14 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICountryService _countryService;
         private readonly ILogger<CountryController> _logger;
-        private readonly IMemoryCache _memoryCache;
-        private readonly IMapper _mapper;
         private Int16 pageSize = 10;// ("pageSize"); 
         private Int16 pageNumber = 1;
 
-        public CountryController(ILogger<CountryController> logger, ICountryService countryService, IMemoryCache memoryCache, IMapper mapper)
+        public CountryController(IMemoryCache memoryCache, IMapper mapper, ILogger<CountryController> logger, ICountryService countryService)
+    : base(memoryCache, mapper)
         {
             _logger = logger;
             _countryService = countryService;
-            _memoryCache = memoryCache;
-            _mapper = mapper;
         }
 
         [HttpGet, Route("GetCountry")]
@@ -73,8 +70,10 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                    return NoContent();
-
+                    if (UserId == 0)
+                        return NotFound("UserId Not Found");
+                    else if(CompanyId==0)
+                        return NotFound("CompanyId Not Found");
                 }
             }
             catch (Exception ex)
@@ -86,7 +85,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
 
-        [HttpGet, Route("GetCountrybyid/{CountryId:Int32}")]
+        [HttpGet, Route("GetCountrybyid/{CountryId}")]
         public async Task<ActionResult<CountryViewModel>> GetCountryById(Int32 CountryId)
         {
             Int16 CompanyId = 0;
@@ -170,7 +169,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpPut, Route("UpdateCountry/{CountryId:Int32}")]
+        [HttpPut, Route("UpdateCountry/{CountryId}")]
         public async Task<ActionResult<CountryViewModel>> UpdateCountry(int CountryId, [FromBody] CountryViewModel country)
         {
             Int16 CompanyId = 0; Int32 UserId = 0;
@@ -223,7 +222,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{CountryId:Int32}")]
+        [HttpDelete, Route("Delete/{CountryId}")]
         public async Task<ActionResult<M_Country>> DeleteCountry(int CountryId)
         {
             Int16 CompanyId = 0; Int32 UserId = 0;
