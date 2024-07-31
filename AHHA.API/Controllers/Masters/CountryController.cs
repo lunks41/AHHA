@@ -200,10 +200,13 @@ namespace AHHA.API.Controllers.Masters
                         Remarks = country.Remarks
                     };
 
-                    await _countryService.UpdateCountryAsync(CompanyId, countryEntity, UserId);
+                    var sqlResponce = await _countryService.UpdateCountryAsync(CompanyId, countryEntity, UserId);
+                    return Ok(sqlResponce);
+                }
+                else
+                {
                     return NoContent();
                 }
-                else { return NoContent(); }
             }
             catch (Exception ex)
             {
@@ -239,12 +242,15 @@ namespace AHHA.API.Controllers.Masters
                             return NotFound($"M_Country with Id = {CountryId} not found");
                     }
 
-                    await _countryService.DeleteCountryAsync(CompanyId, CountryId, UserId);
+                    var sqlResponce = await _countryService.DeleteCountryAsync(CompanyId, CountryId, UserId);
                     // Remove data from cache by key
                     _memoryCache.Remove($"Country_{CountryId}");
+                    return Ok(sqlResponce);
+                }
+                else
+                {
                     return NoContent();
                 }
-                else { return NoContent(); }
             }
             catch (Exception ex)
             {
