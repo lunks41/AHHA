@@ -72,8 +72,10 @@ namespace AHHA.API.Controllers.Masters
                 {
                     if (UserId == 0)
                         return NotFound("UserId Not Found");
-                    else if(CompanyId==0)
+                    else if (CompanyId == 0)
                         return NotFound("CompanyId Not Found");
+                    else
+                        return NotFound();
                 }
             }
             catch (Exception ex)
