@@ -143,7 +143,7 @@ namespace AHHA.Infra.Services.Masters
 
 
                         #region Saving Country
-                        
+
                         country.CountryId = Convert.ToInt32(sqlMissingResponce.MissId);
 
                         _context.Add(country);
@@ -213,43 +213,53 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    #region Update Country
-                    
-                    country.CreateDate = DateTime.Now;
-
-                    var entity = _context.Update(country);
-
-                    entity.Property(b => b.CreateDate).IsModified = false;
-                    entity.Property(b => b.CreateById).IsModified = false;
-                    entity.Property(b => b.CountryCode).IsModified = false;
-                    entity.Property(b => b.CompanyId).IsModified = false;
-
-                    var countryUpdate = _context.SaveChanges();
-
-                    #endregion
-
-                    if (countryUpdate > 0)
+                    if (country.CountryId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+
+
+
+                        #region Update Country
+
+                        country.CreateDate = DateTime.Now;
+
+                        var entity = _context.Update(country);
+
+                        entity.Property(b => b.CreateDate).IsModified = false;
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.CountryCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var countryUpdate = _context.SaveChanges();
+
+                        #endregion
+
+                        if (countryUpdate > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Country,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = country.CountryId,
-                            DocumentNo = country.CountryCode,
-                            TblName = "M_Country",
-                            ModeId = (short)Mode.Update,
-                            Remarks = "Country Update Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Country,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = country.CountryId,
+                                DocumentNo = country.CountryCode,
+                                TblName = "M_Country",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Country Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
 
-                        if (auditLogSave > 0)
-                            transaction.Commit();
+                            if (auditLogSave > 0)
+                                transaction.Commit();
+                        }
+
+                        return new SqlResponce { Id = 1, Msg = "Update Successfully" };
                     }
-
-                    return new SqlResponce { Id = 1, Msg = "Update Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Id = -1, Msg = "CountryId Should not be zero" };
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -279,68 +289,58 @@ namespace AHHA.Infra.Services.Masters
         }
         public async Task<SqlResponce> DeleteCountryAsync(Int16 CompanyId, Int32 CountryId, Int32 UserId)
         {
-            using (var transaction = _context.Database.BeginTransaction())
+            try
             {
-                try
+                if (CountryId > 0)
                 {
                     #region Delete Country
-                    //Get the country deteils
-                    var countryToRemove = _context.M_Country.SingleOrDefault(x => x.CountryId == CountryId); //returns a single item.
+                    var countryToRemove = _context.M_Country.Where(x => x.CountryId == CountryId).ExecuteDelete();
 
-                    if (countryToRemove != null)
+                    if (countryToRemove > 0)
                     {
-                        //
-                        _context.M_Country.Remove(countryToRemove);
-                        var countryRemove = _context.SaveChanges();
-
-                        #endregion
-
-                        if (countryRemove > 0)
+                        var auditLog = new AdmAuditLog
                         {
-                            var auditLog = new AdmAuditLog
-                            {
-                                CompanyId = CompanyId,
-                                ModuleId = (short)Master.Country,
-                                TransactionId = (short)Modules.Master,
-                                DocumentId = CountryId,
-                                DocumentNo = countryToRemove.CountryCode,
-                                TblName = "M_Country",
-                                ModeId = (short)Mode.Delete,
-                                Remarks = "Country Delete Successfully",
-                                CreateById = UserId
-                            };
-                            _context.Add(auditLog);
-                            var auditLogSave = await _context.SaveChangesAsync();
-
-                            if (auditLogSave > 0)
-                                transaction.Commit();
-                        }
+                            CompanyId = CompanyId,
+                            ModuleId = (short)Master.Country,
+                            TransactionId = (short)Modules.Master,
+                            DocumentId = CountryId,
+                            DocumentNo = "countryToRemove.CountryCode",
+                            TblName = "M_Country",
+                            ModeId = (short)Mode.Delete,
+                            Remarks = "Country Delete Successfully",
+                            CreateById = UserId
+                        };
+                        _context.Add(auditLog);
+                        var auditLogSave = await _context.SaveChangesAsync();
                     }
 
                     return new SqlResponce { Id = 1, Msg = "Delete Successfully" };
                 }
-                catch (Exception ex)
+                else
                 {
-                    transaction.Rollback();
-                    _context.ChangeTracker.Clear();
-
-                    var errorLog = new AdmErrorLog
-                    {
-                        CompanyId = CompanyId,
-                        ModuleId = (short)Master.Country,
-                        TransactionId = (short)Modules.Master,
-                        DocumentId = 0,
-                        DocumentNo = "",
-                        TblName = "M_Country",
-                        ModeId = (short)Mode.Delete,
-                        Remarks = ex.Message + ex.InnerException,
-                        CreateById = UserId,
-                    };
-
-                    await _errorLogServices.AddErrorLogAsync(errorLog);
-
-                    throw new Exception(ex.ToString());
+                    return new SqlResponce { Id = -1, Msg = "CountryId Should be zero" };
                 }
+                }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Master.Country,
+                    TransactionId = (short)Modules.Master,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Country",
+                    ModeId = (short)Mode.Delete,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                await _errorLogServices.AddErrorLogAsync(errorLog);
+
+                throw new Exception(ex.ToString());
             }
         }
 
