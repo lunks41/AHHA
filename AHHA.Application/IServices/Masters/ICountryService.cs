@@ -10,7 +10,7 @@ namespace AHHA.Application.IServices.Masters
         public Task<M_Country> GetCountryByIdAsync(Int16 CompanyId, Int32 CountryId, Int32 UserId);
         public Task<SqlResponce> AddCountryAsync(Int16 CompanyId, M_Country M_Country, Int32 UserId);
         public Task<SqlResponce> UpdateCountryAsync(Int16 CompanyId, M_Country M_Country, Int32 UserId);
-        public Task<SqlResponce> DeleteCountryAsync(Int16 CompanyId, Int32 CountryId, Int32 UserId);
+        public Task<SqlResponce> DeleteCountryAsync(Int16 CompanyId, M_Country M_Country, Int32 UserId);
 
         //public Task<SqlResponce> AddCountryAsync(M_Country M_Country, Int16 CompanyId);
         //public Task<SqlResponce> UpdateCountryAsync(M_Country M_Country, Int16 CompanyId);

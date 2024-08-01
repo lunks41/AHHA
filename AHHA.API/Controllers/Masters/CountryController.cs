@@ -14,7 +14,7 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICountryService _countryService;
         private readonly ILogger<CountryController> _logger;
-        private Int16 pageSize = 10; 
+        private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
@@ -212,7 +212,6 @@ namespace AHHA.API.Controllers.Masters
         [HttpDelete, Route("Delete/{CountryId}")]
         public async Task<ActionResult<M_Country>> DeleteCountry(int CountryId)
         {
-            var countryViewModel = new CountryViewModel();
             try
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
@@ -221,20 +220,12 @@ namespace AHHA.API.Controllers.Masters
                 if (ValidateHeaders(CompanyId, UserId))
                 {
 
-                    // Attempt to retrieve the country from the cache
-                    if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
-                    {
-                        countryViewModel = cachedProduct;
-                    }
-                    else
-                    {
-                        var CountryToDelete = await _countryService.GetCountryByIdAsync(CompanyId, CountryId, UserId);
+                    var CountryToDelete = await _countryService.GetCountryByIdAsync(CompanyId, CountryId, UserId);
 
-                        if (CountryToDelete == null)
-                            return NotFound($"M_Country with Id = {CountryId} not found");
-                    }
+                    if (CountryToDelete == null)
+                        return NotFound($"M_Country with Id = {CountryId} not found");
 
-                    var sqlResponce = await _countryService.DeleteCountryAsync(CompanyId, CountryId, UserId);
+                    var sqlResponce = await _countryService.DeleteCountryAsync(CompanyId, CountryToDelete, UserId);
                     // Remove data from cache by key
                     _memoryCache.Remove($"Country_{CountryId}");
                     return Ok(sqlResponce);

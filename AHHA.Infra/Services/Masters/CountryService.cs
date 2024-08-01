@@ -287,14 +287,13 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> DeleteCountryAsync(Int16 CompanyId, Int32 CountryId, Int32 UserId)
+        public async Task<SqlResponce> DeleteCountryAsync(Int16 CompanyId, M_Country country, Int32 UserId)
         {
             try
             {
-                if (CountryId > 0)
+                if (country.CountryId > 0)
                 {
-                    #region Delete Country
-                    var countryToRemove = _context.M_Country.Where(x => x.CountryId == CountryId).ExecuteDelete();
+                    var countryToRemove = _context.M_Country.Where(x => x.CountryId == country.CountryId).ExecuteDelete();
 
                     if (countryToRemove > 0)
                     {
@@ -303,8 +302,8 @@ namespace AHHA.Infra.Services.Masters
                             CompanyId = CompanyId,
                             ModuleId = (short)Master.Country,
                             TransactionId = (short)Modules.Master,
-                            DocumentId = CountryId,
-                            DocumentNo = "countryToRemove.CountryCode",
+                            DocumentId = country.CountryId,
+                            DocumentNo = country.CountryCode,
                             TblName = "M_Country",
                             ModeId = (short)Mode.Delete,
                             Remarks = "Country Delete Successfully",
