@@ -46,7 +46,7 @@ namespace AHHA.API.Controllers.Masters
                         return Ok(cacheData);
                     else
                     {
-                        var expirationTime = DateTimeOffset.Now.AddMinutes(5.0);
+                        var expirationTime = DateTimeOffset.Now.AddMinutes(5);
                         cacheData = await _countryService.GetCountryListAsync(CompanyId, pageSize, pageNumber, UserId);
 
                         if (cacheData == null)

@@ -22,7 +22,6 @@ namespace AHHA.Core.Entities.Masters
         [NotMapped]
         public DateTime CreateDate { get; set; }
         public Int32? EditById { get; set; }
-        [NotMapped]
         public DateTime? EditDate { get; set; }
     }
 }

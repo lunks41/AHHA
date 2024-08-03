@@ -15,6 +15,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Transactions;
+using System.Xml.Linq;
 using static Dapper.SqlMapper;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -28,6 +29,49 @@ namespace AHHA.Infra.Repository
         public QueryRepository(IConfiguration configuration)
         {
             _configuration = configuration;
+        }
+
+        public async Task<T> QuerySingleORDefaultAsync<T>(string SpName, object Parameters, string ConStr = "DbConnection")
+        {
+            using (IDbConnection connection = CreateConnection(ConStr))
+            {
+                var entities = await connection.QuerySingleOrDefaultAsync<T>(SpName, Parameters);
+                return entities;
+            }
+        }
+
+        public async Task<IEnumerable<T>> QueryIEnumerableAsync<T, P>(string spName, P Parameters)
+        {
+            try
+            {
+                using (IDbConnection connection = new SqlConnection(_configuration.GetConnectionString("DbConnection")))
+                {
+                    connection.Open();
+                    var entities = await connection.QueryAsync<T>(spName, Parameters);
+                    return entities;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<T> QueryFirstAsync<T, P>(string spName, P Parameters)
+        {
+            try
+            {
+                using (IDbConnection connection = new SqlConnection(_configuration.GetConnectionString("DbConnection")))
+                {
+                    connection.Open();
+                    var entities = await connection.QueryFirstAsync<T>(spName);
+                    return entities;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         #region Methods
@@ -73,13 +117,7 @@ namespace AHHA.Infra.Repository
             }
         }
 
-        public async Task<T> QueryDetailDtoAsyncV1<T>(string SpName, object Parameters, string ConStr = "DbConnection")
-        {
-            using (IDbConnection connection = CreateConnection(ConStr))
-            {
-                return await connection.QuerySingleOrDefaultAsync<T>(SpName, Parameters);
-            }
-        }
+       
 
         public async Task<T> QuerySingleOrDefaultAsync(string SpName, Object Parameters, string ConStr = "DbConnection")
         {
@@ -168,39 +206,7 @@ namespace AHHA.Infra.Repository
             return await Task.FromResult(dataSet);
         }
 
-        public async Task<IEnumerable<T>> GetAllFromSqlQueryAsync<T, P>(string spName, P Parameters)
-        {
-            try
-            {
-                using (IDbConnection connection = new SqlConnection(_configuration.GetConnectionString("DbConnection")))
-                {
-                    connection.Open();
-                    var entities = await connection.QueryAsync<T>(spName, Parameters);
-                    return entities;
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        public async Task<T> GetAllFromSqlQueryAsyncV1<T, P>(string spName, P Parameters)
-        {
-            try
-            {
-                using (IDbConnection connection = new SqlConnection(_configuration.GetConnectionString("DbConnection")))
-                {
-                    connection.Open();
-                    var entities = await connection.QueryFirstAsync<T>(spName);
-                    return entities;
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
+      
 
         public async Task<IEnumerable<T>> GetAllAsync<T, P>(string spName, P Parameters)
         {
