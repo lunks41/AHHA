@@ -31,7 +31,10 @@ app.UseCors("CORSPolicy");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AHHA API V1");
+    });
 }
 
 app.UseHttpsRedirection();

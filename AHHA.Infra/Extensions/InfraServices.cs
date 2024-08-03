@@ -21,9 +21,7 @@ public static class InfraServices
 
         serviceCollection.AddScoped<IProductService, ProductService>();
         serviceCollection.AddScoped<ICountryService, CountryService>();
-        serviceCollection.AddScoped<IErrorLogServices, ErrorLogServices>();
-        serviceCollection.AddScoped<IAuditLogServices, AuditLogServices>();
-
+        
         #endregion
 
         serviceCollection.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
@@ -31,8 +29,6 @@ public static class InfraServices
                 b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));//Why use this line (b=>b.MigrationsAssembly)?
 
         serviceCollection.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        serviceCollection.AddScoped(typeof(IQueryRepository<>), typeof(QueryRepository<>));
-       
 
         return serviceCollection;
     }
