@@ -21,7 +21,6 @@
     <Folder Include="IServices\Accounts\AR\" />
     <Folder Include="IServices\Accounts\CB\" />
     <Folder Include="IServices\Accounts\GL\" />
-    <Folder Include="IServices\Admin\" />
     <Folder Include="IServices\Dashboard\" />
     <Folder Include="IServices\Report\" />
     <Folder Include="IServices\Setting\" />

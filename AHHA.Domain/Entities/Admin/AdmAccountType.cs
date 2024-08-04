@@ -7,18 +7,20 @@ using System.Threading.Tasks;
 
 namespace AHHA.Core.Entities.Admin
 {
-    public class TransactionCategory
+    public class AdmAccountType
     {
         [Key]
-        public Int32 TransCategoryId { get; set; }
-        public string TransCategoryCode { get; set; }
-        public string TransCategoryName { get; set; }
-        public Int32 SeqNo { get; set; }
+        public Int16 AccTypeId { get; set; }
+        public Int16 CompanyId { get; set; }
+        public string AccTypeCode { get; set; }
+        public string AccTypeName { get; set; }
+        public Int16 SeqNo { get; set; }
+        public string AccGroupName { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
-        public string CreateBy { get; set; }
+        public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
-        public string EditBy { get; set; }
+        public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }
 }

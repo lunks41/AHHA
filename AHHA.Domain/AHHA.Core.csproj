@@ -9,6 +9,7 @@
   <ItemGroup>
     <Folder Include="Entities\Dashboard\" />
     <Folder Include="Entities\Report\" />
+    <Folder Include="Models\Masters\" />
   </ItemGroup>
 
   <ItemGroup>

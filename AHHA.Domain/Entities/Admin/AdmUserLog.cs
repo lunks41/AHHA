@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AHHA.Core.Entities.Admin
 {
-    public class UserLog
+    public class AdmUserLog
     {
         [Key]
         public Int32 UserId { get; set; }

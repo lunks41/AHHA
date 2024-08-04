@@ -108,12 +108,12 @@ namespace AHHA.Infra.Services.Masters
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
                             isExist = true;
-                            return new SqlResponce { Id = -1, Msg = "Country Code Exist" };
+                            return new SqlResponce { Id = -1, Message = "Country Code Exist" };
                         }
                         else if (StrExist.ToList()[1].IsExist == 2)
                         {
                             isExist = true;
-                            return new SqlResponce { Id = -2, Msg = "Country Name Exist" };
+                            return new SqlResponce { Id = -2, Message = "Country Name Exist" };
                         }
                     }
                     else
@@ -160,7 +160,7 @@ namespace AHHA.Infra.Services.Masters
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Id = 1, Msg = "Save Successfully" };
+                                sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
                         #endregion
@@ -168,7 +168,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Id = -1, Msg = "CountryId Should not be zero" };
+                        sqlResponce = new SqlResponce { Id = -1, Message = "CountryId Should not be zero" };
                     }
                     return sqlResponce;
                 }
@@ -218,7 +218,7 @@ namespace AHHA.Infra.Services.Masters
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
                                 isExist = true;
-                                return new SqlResponce { Id = -2, Msg = "Country Name Exist" };
+                                return new SqlResponce { Id = -2, Message = "Country Name Exist" };
                             }
                         }
                         else
@@ -260,12 +260,12 @@ namespace AHHA.Infra.Services.Masters
                                 if (auditLogSave > 0)
                                     transaction.Commit();
                             }
-                            sqlResponce = new SqlResponce { Id = 1, Msg = "Update Successfully" };
+                            sqlResponce = new SqlResponce { Id = 1, Message = "Update Successfully" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Id = -1, Msg = "CountryId Should not be zero" };
+                        sqlResponce = new SqlResponce { Id = -1, Message = "CountryId Should not be zero" };
                     }
                     return sqlResponce;
                 }
@@ -322,11 +322,11 @@ namespace AHHA.Infra.Services.Masters
                         var auditLogSave = await _context.SaveChangesAsync();
                     }
 
-                    sqlResponce = new SqlResponce { Id = 1, Msg = "Delete Successfully" };
+                    sqlResponce = new SqlResponce { Id = 1, Message = "Delete Successfully" };
                 }
                 else
                 {
-                    sqlResponce = new SqlResponce { Id = -1, Msg = "CountryId Should be zero" };
+                    sqlResponce = new SqlResponce { Id = -1, Message = "CountryId Should be zero" };
                 }
                 return sqlResponce;
             }

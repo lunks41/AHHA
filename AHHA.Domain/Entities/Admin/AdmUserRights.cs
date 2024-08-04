@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace AHHA.Core.Entities.Admin
 {
     [Keyless]
-    public class UserRights
+    public class AdmUserRights
     {
         [Key]
         public Int16 CompanyId { get; set; }

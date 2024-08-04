@@ -14,9 +14,22 @@ namespace AHHA.Infra.Data
         {
         }
 
-        #region DbSet Section - Logs
+        #region Admin
+        public DbSet<AdmAccountGroup> AdmAccountGroup { get; set; }
+        public DbSet<AdmAccountType> AdmAccountType { get; set; }
         public DbSet<AdmAuditLog> AdmAuditLog { get; set; }
         public DbSet<AdmErrorLog> AdmErrorLog { get; set; }
+        public DbSet<AdmCompany> AdmCompany { get; set; }
+        public DbSet<AdmModule> AdmModule { get; set; }
+        public DbSet<AdmShareData> AdmShareData { get; set; }
+        public DbSet<AdmTransaction> AdmTransaction { get; set; }
+        public DbSet<AdmTransactionCategory> AdmTransactionCategory { get; set; }
+        public DbSet<AdmUser> AdmUser { get; set; }
+        public DbSet<AdmUserGroup> AdmUserGroup { get; set; }
+        public DbSet<AdmUserGroupRights> AdmUserGroupRights { get; set; }
+        public DbSet<AdmUserLog> AdmUserLog { get; set; }
+        public DbSet<AdmUserRights> AdmUserRights { get; set; }
+
         #endregion
 
         #region DbSet Section - Masters

@@ -2,6 +2,7 @@
 using AHHA.API.Mapping;
 using AHHA.Infra.Data;
 using AHHA.Infra.Extensions;
+using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Diagnostics;
 
 namespace AHHA.API.Extensions
@@ -10,7 +11,6 @@ namespace AHHA.API.Extensions
     {
         public static IServiceCollection RegisterService(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSingleton<IExceptionHandler, GlobalExcaptionHandler>();
             services.AddInfraServices(configuration); //From Infra Layar
             services.AddHealthChecks().Services.AddDbContext<ApplicationDbContext>();
             services.AddAutoMapper(typeof(MappingProfile));

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace AHHA.Core.Entities.Admin
 {
     [Keyless]
-    public class UserGroupRights
+    public class AdmUserGroupRights
     {
         [Key]
         public Int32 UserGroupId { get; set; }

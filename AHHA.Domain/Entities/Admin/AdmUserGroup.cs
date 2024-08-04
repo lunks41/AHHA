@@ -7,14 +7,12 @@ using System.Threading.Tasks;
 
 namespace AHHA.Core.Entities.Admin
 {
-    public class AccountGroup
+    public class AdmUserGroup
     {
         [Key]
-        public Int16 AccGroupId { get; set; }
-        public Int16 CompanyId { get; set; }
-        public string AccGroupCode { get; set; }
-        public string AccGroupName { get; set; }
-        public Int16 SeqNo { get; set; }
+        public Int32 UserGroupId { get; set; }
+        public string UserGroupCode { get; set; }
+        public string UserGroupName { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
         public Int32 CreateById { get; set; }

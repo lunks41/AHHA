@@ -329,7 +329,7 @@ namespace AHHA.Infra.Repository
             var resultSQLReponce = new SqlResponce
             {
                 Id = result?.Id ?? 0,
-                Msg = result?.Msg ?? "Unknown"
+                Message = result?.Message ?? "Unknown"
             };
 
             return resultSQLReponce;

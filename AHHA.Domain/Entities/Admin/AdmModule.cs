@@ -1,15 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace AHHA.Core.Entities.Admin
 {
-    [Keyless]
-    public class ShareData
+    public class AdmModule
     {
+        [Key]
         public Int16 ModuleId { get; set; }
-        public Int32 TransactionId { get; set; }
-        public bool ShareToAll { get; set; }
-        public Int16 CompanyId { get; set; }
-        public Int16 SetId { get; set; }
+        public string ModuleCode { get; set; }
+        public string ModuleName { get; set; }
+        public Int16 SeqNo { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
         public string CreateBy { get; set; }
