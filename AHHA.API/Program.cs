@@ -46,6 +46,8 @@ builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>()
 builder.Services.AddLogging();
 builder.Services.RegisterService(builder.Configuration);//From API Exenstions Folder
 
+#region JWT Token
+
 // Configuring JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -58,9 +60,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidAudience = configuration["JWT:ValidAudience"],
             ValidIssuer = configuration["JWT:ValidIssuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
         };
     });
+
+//builder.Services.AddAuthentication("ApiKey")
+//        .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>("ApiKey", null);
+
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.AddPolicy("ApiKeyOrBearer", policy =>
+//    {
+//        policy.AddAuthenticationSchemes("Bearer", "ApiKey");
+//        policy.RequireAuthenticatedUser();
+//    });
+//});
+
+#endregion
+
 
 builder.Services.AddCors(options => {
     options.AddPolicy("CORSPolicy", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());

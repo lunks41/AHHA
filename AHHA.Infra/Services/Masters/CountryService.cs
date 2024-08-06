@@ -1,9 +1,10 @@
 ﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
-using AHHA.Core.Models;
+using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
 using Dapper;
 using Microsoft.EntityFrameworkCore;

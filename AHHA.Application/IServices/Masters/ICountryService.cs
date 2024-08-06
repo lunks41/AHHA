@@ -1,6 +1,6 @@
 ﻿using AHHA.Core.Common;
 using AHHA.Core.Entities.Masters;
-using AHHA.Core.Models;
+using AHHA.Core.Models.Masters;
 
 namespace AHHA.Application.IServices.Masters
 {
