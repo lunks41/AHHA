@@ -23,11 +23,22 @@ public static class InfraServices
 
         #region Services
 
+        serviceCollection.AddScoped<IBaseService, BaseService>();
+        serviceCollection.AddScoped<IAuthService, AuthService>();
+
+        #region Master Services
         serviceCollection.AddScoped<IProductService, ProductService>();
         serviceCollection.AddScoped<ICountryService, CountryService>();
-        serviceCollection.AddScoped<IUserService, UserService>();
-        serviceCollection.AddScoped<IAuthService, AuthService>();
         
+        #endregion
+
+        #region Admin Services
+        serviceCollection.AddScoped<IUserService, UserService>();
+        serviceCollection.AddScoped<IModuleService, ModuleService>();
+        serviceCollection.AddScoped<ICompanyService, CompanyService>();
+        serviceCollection.AddScoped<ITransactionService, TransactionService>();
+        #endregion
+
         #endregion
 
         serviceCollection.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(

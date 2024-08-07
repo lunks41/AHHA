@@ -11,6 +11,7 @@ namespace AHHA.Core.Common
         Create = 1,
         Update = 2,
         Delete = 3,
+        View = 4,
     }
 
     public enum Modules
@@ -118,12 +119,15 @@ namespace AHHA.Core.Common
         Reports = 99,
     }
 
-    public enum Admin
+    public enum Admins
     {
         User = 1,
         UserRights = 2,
         UserGroup = 3,
         UserGroupRights = 4,
         DocumentNo = 5,
+        Modules=6,
+        Transaction=7
     }
+
 }

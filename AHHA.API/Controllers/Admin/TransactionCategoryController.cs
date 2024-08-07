@@ -1,6 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AHHA.Application.IServices.Masters;
+using AHHA.Application.IServices;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using System.Runtime.ConstrainedExecution;
+using AHHA.Core.Common;
+using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Admin
 {
@@ -8,12 +14,7 @@ namespace AHHA.API.Controllers.Admin
     [ApiController]
     public class TransactionCategoryController : ControllerBase
     {
-        //        Submenu is divided as per the TransactionCategory :
-        //Get Call
-        //http://118.189.194.191:8080/ahharestapiproject/ahha/gettransmenuitems/{moduleid}
-        //http://118.189.194.191:8080/ahharestapiproject/ahha/gettransmenuitems/1
-
-
+        
 
     }
 }
