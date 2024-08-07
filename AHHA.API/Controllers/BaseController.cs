@@ -21,7 +21,7 @@ namespace AHHA.API.Controllers
             _baseServices = baseServices;
         }
 
-        [HttpGet]
+        [NonAction]
         public bool ValidateHeaders(Int16 CompanyId, Int32 UserId)
         {
             //RegID Check from json file
@@ -35,7 +35,7 @@ namespace AHHA.API.Controllers
             return IsValidate;
         }
 
-        [HttpPost]
+        [NonAction]
         public UserGroupRightsViewModel ValidateScreen(Int16 CompanyId, Int16 ModuleId, Int32 TransactionId, Int32 UserId)
         {
             return _baseServices.ValidateScreen(CompanyId, ModuleId, TransactionId, UserId);

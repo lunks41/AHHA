@@ -2,6 +2,8 @@
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Admin;
+using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -11,27 +13,29 @@ namespace AHHA.Infra.Services.Admin
 {
     public sealed class TransactionService : ITransactionService
     {
-        private readonly IRepository<AdmTransaction> _repository;
+        private readonly IRepository<TransactionViewModel> _repository;
         private ApplicationDbContext _context;
 
-        public TransactionService(IRepository<AdmTransaction> repository, ApplicationDbContext context)
+        public TransactionService(IRepository<TransactionViewModel> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        public async Task<IEnumerable<AdmTransaction>> GetUsersTransactionsAsync(Int16 CompanyId, Int16 ModuleId, Int32 UserId)
+        public async Task<IEnumerable<TransactionViewModel>> GetUsersTransactionsAsync(Int16 CompanyId, Int16 ModuleId, Int32 UserId)
         {
             var parameters = new DynamicParameters();
             try
             {
-                var parameter = new List<SqlParameter>();
-                parameter.Add(new SqlParameter("@CompanyId", CompanyId));
-                parameter.Add(new SqlParameter("@ModuleId", ModuleId));
-                parameter.Add(new SqlParameter("@UserId", UserId));
+                //var parameter = new List<SqlParameter>();
+                //parameter.Add(new SqlParameter("@CompanyId", CompanyId));
+                //parameter.Add(new SqlParameter("@ModuleId", ModuleId));
+                //parameter.Add(new SqlParameter("@UserId", UserId));
 
-                var productDetails = await Task.Run(() => _context.AdmTransaction
-                                .FromSqlRaw(@"exec Adm_GetUserTransactions @CompanyId,@ModuleId,@UserId", parameter.ToArray()).ToListAsync());
+                var productDetails = await _repository.GetQueryAsync<TransactionViewModel>($"exec Adm_GetUserTransactions {CompanyId},{ModuleId},{UserId}");
+
+                //var productDetails = await Task.Run(() => _context.AdmTransaction
+                //                .FromSqlRaw(@"exec Adm_GetUserTransactions @CompanyId,@ModuleId,@UserId", parameter.ToArray()).ToListAsync());
 
                 return productDetails;
             }
@@ -57,18 +61,12 @@ namespace AHHA.Infra.Services.Admin
             }
         }
 
-        public async Task<IEnumerable<AdmTransaction>> GetUsersTransactionsAllAsync(Int16 CompanyId, Int16 ModuleId, Int32 UserId)
+        public async Task<IEnumerable<TransactionViewModel>> GetUsersTransactionsAllAsync(Int16 CompanyId, Int32 UserId)
         {
             var parameters = new DynamicParameters();
             try
             {
-                var parameter = new List<SqlParameter>();
-                parameter.Add(new SqlParameter("@CompanyId", CompanyId));
-                parameter.Add(new SqlParameter("@ModuleId", ModuleId));
-                parameter.Add(new SqlParameter("@UserId", UserId));
-
-                var productDetails = await Task.Run(() => _context.AdmTransaction
-                                .FromSqlRaw(@"exec Adm_GetUserTransactions_All @CompanyId,@ModuleId,@UserId", parameter.ToArray()).ToListAsync());
+                var productDetails = await _repository.GetQueryAsync<TransactionViewModel>($"exec Adm_GetUserTransactions_All {CompanyId},{UserId}");
 
                 return productDetails;
             }

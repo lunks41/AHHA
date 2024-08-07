@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace AHHA.Core.Models.Admin
 {
-    public class ModuleViewModel
+    public class UsersModuleViewModel
     {
-        public Int16 CompanyId { get; set; }
-        public string CompanyName { get; set; }
+        public Int16 ModuleId { get; set; }
+        public string ModuleCode { get; set; }
+        public string ModuleName { get; set; }
+        public Int16 SeqNo { get; set; }
     }
 }

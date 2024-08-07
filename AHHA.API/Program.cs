@@ -111,16 +111,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-    endpoints.MapHealthChecks("/health", new HealthCheckOptions
-    {
-        Predicate = _ => true,
-        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-    });
-});
-
+//Use for Global Excaption Handlers
+//app.UseMiddleware<GlobalExcaptionHandler>();
 app.MapControllers();
 
 app.Run();

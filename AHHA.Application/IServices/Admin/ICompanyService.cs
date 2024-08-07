@@ -5,6 +5,6 @@ namespace AHHA.Application.IServices.Masters
 {
     public interface ICompanyService
     {
-        public Task<IEnumerable<CompanyViewModel>> GetCompanyListAsync(Int32 UserId);
+        public Task<IEnumerable<CompanyViewModel>> GetUserCompanyListAsync(Int32 UserId);
     }
 }

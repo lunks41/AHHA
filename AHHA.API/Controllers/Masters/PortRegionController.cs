@@ -4,6 +4,7 @@ using AHHA.Core.Common;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
@@ -30,6 +31,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetPortRegion")]
+        [Authorize]
         public async Task<ActionResult> GetAllPortRegions()
         {
             try
@@ -89,6 +91,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetPortRegionbyid/{PortRegionId}")]
+        [Authorize]
         public async Task<ActionResult<PortRegionViewModel>> GetPortRegionById(Int32 PortRegionId)
         {
             var PortRegionViewModel = new PortRegionViewModel();
@@ -140,6 +143,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpPost, Route("AddPortRegion")]
+        [Authorize]
         public async Task<ActionResult<PortRegionViewModel>> CreatePortRegion(PortRegionViewModel PortRegion)
         {
             try
@@ -161,9 +165,10 @@ namespace AHHA.API.Controllers.Masters
                             var PortRegionEntity = new M_PortRegion
                             {
                                 CompanyId = PortRegion.CompanyId,
-                                PortRegionCode = PortRegion.PortRegionCode,
                                 PortRegionId = PortRegion.PortRegionId,
+                                PortRegionCode = PortRegion.PortRegionCode,
                                 PortRegionName = PortRegion.PortRegionName,
+                                CountryId = PortRegion.CountryId,
                                 CreateById = UserId,
                                 IsActive = PortRegion.IsActive,
                                 Remarks = PortRegion.Remarks
@@ -197,6 +202,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpPut, Route("UpdatePortRegion/{PortRegionId}")]
+        [Authorize]
         public async Task<ActionResult<PortRegionViewModel>> UpdatePortRegion(int PortRegionId, [FromBody] PortRegionViewModel PortRegion)
         {
             var PortRegionViewModel = new PortRegionViewModel();
@@ -237,7 +243,9 @@ namespace AHHA.API.Controllers.Masters
                                 EditById = UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = PortRegion.IsActive,
-                                Remarks = PortRegion.Remarks
+                                Remarks = PortRegion.Remarks,
+                                CountryId = PortRegion.CountryId
+                               
                             };
 
                             var sqlResponce = await _portRegionService.UpdatePortRegionAsync(CompanyId, PortRegionEntity, UserId);
@@ -267,6 +275,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpDelete, Route("Delete/{PortRegionId}")]
+        [Authorize]
         public async Task<ActionResult<M_PortRegion>> DeletePortRegion(int PortRegionId)
         {
             try

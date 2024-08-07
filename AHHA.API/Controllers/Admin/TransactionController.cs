@@ -7,6 +7,8 @@ using Microsoft.Extensions.Caching.Memory;
 using AHHA.Core.Common;
 using AHHA.Infra.Services.Admin;
 using Microsoft.Extensions.Primitives;
+using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace AHHA.API.Controllers.Admin
 {
@@ -34,12 +36,13 @@ namespace AHHA.API.Controllers.Admin
 
         // [dbo].[Adm_GetUserTransactions_All]
 
-        [HttpGet, Route("GetUsersTransactions")]
-        public async Task<ActionResult> GetUsersTransactions()
+        [HttpGet, Route("GetUsersTransactions/{ModuleId}")]
+        public async Task<ActionResult> GetUsersTransactions(Int16 ModuleId)
         {
-            Int16 ModuleId = 0;
             try
             {
+                //Convert Json file to object class
+                //var people = JsonFileHelper.ReadFromJsonFile<Person>();
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
                 RegId = Convert.ToInt32(Request.Headers.TryGetValue("RegId", out StringValues regIdValue));
@@ -71,7 +74,6 @@ namespace AHHA.API.Controllers.Admin
         [HttpGet, Route("GetUsersTransactionsAll")]
         public async Task<ActionResult> GetUsersTransactionsAll()
         {
-            Int16 ModuleId = 0;
             try
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
@@ -80,7 +82,7 @@ namespace AHHA.API.Controllers.Admin
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {
-                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAllAsync(CompanyId, ModuleId,UserId);
+                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAllAsync(CompanyId, UserId);
 
                     return Ok(UsersTransactionsdata);
                 }

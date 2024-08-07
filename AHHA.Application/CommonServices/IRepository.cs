@@ -14,47 +14,59 @@ namespace AHHA.Application.CommonServices
     //Unit of Work Pattern
     public interface IRepository<T> where T : class
     {
-        #region Enitity Framework
-        Task<IEnumerable<T>> GetAllAsync();
-        Task<T> GetByIdAsync(int id);
-        Task<T> GetById<Tid>(Tid id);
-        IQueryable<T> GetAllQuery();
-        Task<T> CreateAsync(T entity);
-        Task<T> UpdateAsync(T entity);
-        Task DeleteAsync(int id);
-        Task<bool> IsExists<Tvalue>(string key, Tvalue value);
-        Task<bool> IsExistsForUpdate<Tid>(Tid id, string key, string value);
+        /// <summary>
+        /// Get List of Data By passing T as view model class by using query
+        /// </summary>
+        /// <typeparam name="T"> return type as a object which was you provide</typeparam>
+        /// <param name="spName"></param>
+        /// <param name="Parameters"></param>
+        /// <param name="ConStr"></param>
+        /// <returns name="T"> return type as int,string or object etc which you provide on method</returns>
+        Task<IEnumerable<T>> GetQueryAsync<T>(string spName, object? Parameters = null, string ConStr = "DbConnection");
 
-        #endregion
+        /// <summary>
+        /// Get first row of Data By passing T as view model class by using query
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="SpName"></param>
+        /// <param name="Parameters"></param>
+        /// <param name="ConStr"></param>
+        /// <returns></returns>
+        Task<T> GetQuerySingleOrDefaultAsync<T>(string SpName, object? Parameters = null, string ConStr = "DbConnection");
 
-        #region SQL
+        /// <summary>
+        /// Get first row of Data By passing T as view model class by using query
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="P"></typeparam>
+        /// <param name="spName"></param>
+        /// <param name="Parameters"></param>
+        /// <param name="ConStr"></param>
+        /// <returns></returns>
+        Task<T> GetQueryFirstAsync<T>(string spName, object? Parameters=null, string ConStr = "DbConnection");
 
-        Task<T> QuerySingleORDefaultAsync<T>(string SpName, object Parameters, string ConStr = "DbConnection");
-        Task<IEnumerable<T>> QueryIEnumerableAsync<T, P>(string spName, P Parameters);
-        Task<T> QueryFirstAsync<T, P>(string spName, P Parameters);
+        /// <summary>
+        /// Get table type of data
+        /// </summary>
+        /// <param name="SpName"></param>
+        /// <param name="Parameters"></param>
+        /// <param name="ConStr"></param>
+        /// <returns></returns>
+        Task<bool> GetExecuteScalarAsync(string SpName, object? Parameters, string ConStr = "DbConnection");
 
-        Task<(IEnumerable<T> entities, int totalCount)> QueryMultiplePagingEntityAsync(string SpName, Object Parameters, string ConStr = "DbConnection");
-        Task<(IEnumerable<T> entities, int totalCount)> QueryMultipleDtoPagingAsync<T>(string SpName, Object Parameters, string ConStr = "DbConnection");
-        Task<IEnumerable<T>> QueryAsync(string SpName, Object Parameters, string ConStr = "DbConnection");
-        Task<IEnumerable<T>> QueryDtoAsync<T>(string SpName, object Parameters, string ConStr = "DbConnection");
-        Task<T> QueryDetailDtoAsync<T>(string SpName, object Parameters, string ConStr = "DbConnection");
+        /// <summary>
+        /// Get table type of data
+        /// </summary>
+        /// <param name="storedProcedureName"></param>
+        /// <returns></returns>
+        Task<DataSet> GetExecuteDataSetQuery(string storedProcedureName);
 
-        Task<T> QuerySingleOrDefaultAsync(string SpName, Object Parameters, string ConStr = "DbConnection");
-        Task<SqlResponce> QuerySqlResponseModelAsync(string SpName, Object Parameters, string ConStr = "DbConnection");
-        Task<bool> ExecuteScalarAsync(string SpName, Object Parameters, string ConStr = "DbConnection");
-
-        Task<DataSet> ExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters parameters = null);
-        Task<DataSet> ExecuteDataSetQuery(string storedProcedureName);
-
-        Task<IEnumerable<SqlResponceIds>> GetAllFromSqlExecuteReaderAsyn<T, P>(string spName, P Parameters);
-
-
-        Task<IEnumerable<T>> GetAllAsync<T, P>(string spName, P Parameters);
-        Task<IEnumerable<T>> GetByIdAsync<T, P>(string spName, P Parameters);
-        Task<SqlResponce> UpsertAsync<T>(string spName, T Parameters);
-
-        #endregion
-
-
+        /// <summary>
+        /// Get table type of data
+        /// </summary>
+        /// <param name="storedProcedureName"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        Task<DataSet> GetExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters parameters = null);
     }
 }

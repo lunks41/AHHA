@@ -29,6 +29,7 @@ public static class InfraServices
         #region Master Services
         serviceCollection.AddScoped<IProductService, ProductService>();
         serviceCollection.AddScoped<ICountryService, CountryService>();
+        serviceCollection.AddScoped<IPortRegionService, PortRegionService>();
         
         #endregion
 

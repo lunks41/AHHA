@@ -1,11 +1,9 @@
-﻿using AHHA.Application.IServices.Masters;
-using AHHA.Application.IServices;
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using AHHA.Core.Common;
-using AHHA.Infra.Services.Admin;
 using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Admin
@@ -33,6 +31,7 @@ namespace AHHA.API.Controllers.Admin
         //http://118.189.194.191:8080/ahharestapiproject/ahha/getUsersModules/1/1
 
         [HttpGet, Route("GetUsersModules")]
+        [Authorize]
         public async Task<ActionResult> GetUsersModules()
         {
             try

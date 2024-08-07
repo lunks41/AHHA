@@ -12,25 +12,20 @@ namespace AHHA.Infra.Services.Admin
 {
     public sealed class ModuleService : IModuleService
     {
-        private readonly IRepository<AdmModule> _repository;
+        private readonly IRepository<UsersModuleViewModel> _repository;
         private ApplicationDbContext _context;
 
-        public ModuleService(IRepository<AdmModule> repository, ApplicationDbContext context)
+        public ModuleService(IRepository<UsersModuleViewModel> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        public async Task<IEnumerable<AdmModule>> GetUsersModulesAsync(Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<UsersModuleViewModel>> GetUsersModulesAsync(Int16 CompanyId, Int32 UserId)
         {
             try
             {
-                var parameter = new List<SqlParameter>();
-                parameter.Add(new SqlParameter("@CompanyId", CompanyId));
-                parameter.Add(new SqlParameter("@UserId", UserId));
-
-                var productDetails = await Task.Run(() => _context.AdmModule
-                                .FromSqlRaw(@"exec Adm_GetUserModules @CompanyId,@UserId", parameter.ToArray()).ToListAsync());
+                var productDetails = await _repository.GetQueryAsync<UsersModuleViewModel>($"exec Adm_GetUserModules {CompanyId},{UserId}");
 
                 return productDetails;
             }

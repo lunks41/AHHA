@@ -11,7 +11,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
-    [Authorize]
+    
     [Route("api/[controller]")]
     [ApiController]
     public class CountryController : BaseController
@@ -46,6 +46,8 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
+                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
+
                         pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
                         pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
 
@@ -53,7 +55,8 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
 
                         if (cacheData != null)
-                            return Ok(cacheData);
+                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                        //return Ok(cacheData);
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddMinutes(5);
@@ -64,7 +67,8 @@ namespace AHHA.API.Controllers.Masters
 
                             _memoryCache.Set<CountryViewModelCount>("country", cacheData, expirationTime);
 
-                            return Ok(cacheData);
+                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                            //return Ok(cacheData);
                         }
                     }
                     else
@@ -91,6 +95,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetCountrybyid/{CountryId}")]
+        [Authorize]
         public async Task<ActionResult<CountryViewModel>> GetCountryById(Int32 CountryId)
         {
             var countryViewModel = new CountryViewModel();
@@ -119,8 +124,8 @@ namespace AHHA.API.Controllers.Masters
                                 // Cache the country with an expiration time of 10 minutes
                                 _memoryCache.Set($"Country_{CountryId}", countryViewModel, TimeSpan.FromMinutes(10));
                         }
-
-                        return Ok(countryViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, countryViewModel);
+                        //return Ok(countryViewModel);
                     }
                     else
                     {
@@ -142,6 +147,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpPost, Route("AddCountry")]
+        [Authorize]
         public async Task<ActionResult<CountryViewModel>> CreateCountry(CountryViewModel country)
         {
             try
@@ -158,7 +164,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (country == null)
-                                return BadRequest();
+                                return StatusCode(StatusCodes.Status400BadRequest, "M_Country ID mismatch");
 
                             var countryEntity = new M_Country
                             {
@@ -172,7 +178,7 @@ namespace AHHA.API.Controllers.Masters
                             };
 
                             var createdCountry = await _countryService.AddCountryAsync(CompanyId, countryEntity, UserId);
-                            return Ok(createdCountry);
+                            return StatusCode(StatusCodes.Status202Accepted, createdCountry);
 
                         }
                         else
@@ -199,6 +205,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpPut, Route("UpdateCountry/{CountryId}")]
+        [Authorize]
         public async Task<ActionResult<CountryViewModel>> UpdateCountry(int CountryId, [FromBody] CountryViewModel country)
         {
             var countryViewModel = new CountryViewModel();
@@ -216,7 +223,8 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (CountryId != country.CountryId)
-                                return BadRequest("M_Country ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "M_Country ID mismatch");
+                            //return BadRequest("M_Country ID mismatch");
 
                             // Attempt to retrieve the country from the cache
                             if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
@@ -243,7 +251,7 @@ namespace AHHA.API.Controllers.Masters
                             };
 
                             var sqlResponce = await _countryService.UpdateCountryAsync(CompanyId, countryEntity, UserId);
-                            return Ok(sqlResponce);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
@@ -269,6 +277,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpDelete, Route("Delete/{CountryId}")]
+        [Authorize]
         public async Task<ActionResult<M_Country>> DeleteCountry(int CountryId)
         {
             try
@@ -292,7 +301,7 @@ namespace AHHA.API.Controllers.Masters
                             var sqlResponce = await _countryService.DeleteCountryAsync(CompanyId, CountryToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Country_{CountryId}");
-                            return Ok(sqlResponce);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {

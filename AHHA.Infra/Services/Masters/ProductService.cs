@@ -19,7 +19,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                return await _repository.GetAllAsync();
+                return null;
             }
             catch (Exception ex)
             {
@@ -32,7 +32,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                return await _repository.GetById(ProductId);
+                return null;
             }
             catch (Exception ex)
             {
@@ -44,7 +44,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                return await _repository.CreateAsync(product);
+                return null;
             }
             catch (Exception ex)
             {
@@ -56,7 +56,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                return await _repository.UpdateAsync(product);
+                return null;
             }
             catch (Exception ex)
             {
@@ -67,7 +67,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                await _repository.DeleteAsync(ProductId);
+                
             }
             catch (Exception ex)
             {

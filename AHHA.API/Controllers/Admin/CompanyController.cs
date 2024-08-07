@@ -1,15 +1,6 @@
-﻿using AHHA.API.Controllers.Masters;
-using AHHA.Application.IServices.Masters;
-using AHHA.Application.IServices;
-using AutoMapper;
+﻿using AHHA.Application.IServices.Masters;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
-using AHHA.Core.Common;
-using AHHA.Core.Models.Masters;
-using AHHA.Infra.Services.Masters;
 using Microsoft.Extensions.Primitives;
-using System.ComponentModel.Design;
-using System.Text.RegularExpressions;
 
 namespace AHHA.API.Controllers.Admin
 {
@@ -19,7 +10,6 @@ namespace AHHA.API.Controllers.Admin
     {
         private readonly ICompanyService _companyService;
         private readonly ILogger<CompanyController> _logger;
-        private Int16 CompanyId = 0;
         private Int32 UserId = 0;
 
         public CompanyController(ILogger<CompanyController> logger, ICompanyService companyService)
@@ -32,8 +22,8 @@ namespace AHHA.API.Controllers.Admin
         //Parameter : UserId
         //http://118.189.194.191:8080/ahharestapiproject/ahha/userCompany/{UserId}
 
-        [HttpGet, Route("GetCompany")]
-        public async Task<ActionResult> GetCompany()
+        [HttpGet, Route("GetUserCompany")]
+        public async Task<ActionResult> GetUserCompany()
         {
             try
             {
@@ -42,7 +32,7 @@ namespace AHHA.API.Controllers.Admin
 
                 if (UserId > 0 && RegId.Length > 0)
                 {
-                    var Companydata = await _companyService.GetCompanyListAsync(UserId);
+                    var Companydata = await _companyService.GetUserCompanyListAsync(UserId);
 
                     return Ok(Companydata);
                 }

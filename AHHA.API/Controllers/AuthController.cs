@@ -1,17 +1,8 @@
 ﻿using AHHA.Application.IServices;
 using AHHA.Core.Models;
 using AHHA.Core.Models.Admin;
-using AHHA.Infra.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
-using Microsoft.IdentityModel.Tokens;
-using System.ComponentModel.Design;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace AHHA.API.Controllers
 {
@@ -23,8 +14,6 @@ namespace AHHA.API.Controllers
         private readonly IAuthService _authServices;
         private static Dictionary<string, string> _refreshTokens = new Dictionary<string, string>();
 
-        private Int32 RegId = 0;
-
         public AuthController(IConfiguration configuration, IAuthService authServices)
         {
             _configuration = configuration;
@@ -33,6 +22,7 @@ namespace AHHA.API.Controllers
 
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginViewModel user)
         {
             if (!ModelState.IsValid)
