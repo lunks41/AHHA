@@ -12,7 +12,7 @@ using Microsoft.Extensions.Primitives;
 namespace AHHA.API.Controllers.Masters
 {
     
-    [Route("api/[controller]")]
+    [Route("api/Masters")]
     [ApiController]
     public class CountryController : BaseController
     {

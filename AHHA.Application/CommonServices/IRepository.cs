@@ -1,13 +1,5 @@
-﻿
-using AHHA.Core.Common;
-using Dapper;
-using System;
-using System.Collections.Generic;
+﻿using Dapper;
 using System.Data;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AHHA.Application.CommonServices
 {
@@ -22,7 +14,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns name="T"> return type as int,string or object etc which you provide on method</returns>
-        Task<IEnumerable<T>> GetQueryAsync<T>(string spName, object? Parameters = null, string ConStr = "DbConnection");
+        Task<IEnumerable<T>> GetQueryAsync<T>(string spName, object? Parameters = null);
 
         /// <summary>
         /// Get first row of Data By passing T as view model class by using query
@@ -32,7 +24,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns></returns>
-        Task<T> GetQuerySingleOrDefaultAsync<T>(string SpName, object? Parameters = null, string ConStr = "DbConnection");
+        Task<T> GetQuerySingleOrDefaultAsync<T>(string SpName, object? Parameters = null);
 
         /// <summary>
         /// Get first row of Data By passing T as view model class by using query
@@ -43,7 +35,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns></returns>
-        Task<T> GetQueryFirstAsync<T>(string spName, object? Parameters=null, string ConStr = "DbConnection");
+        Task<T> GetQueryFirstAsync<T>(string spName, object? Parameters=null);
 
         /// <summary>
         /// Get table type of data
@@ -52,7 +44,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns></returns>
-        Task<bool> GetExecuteScalarAsync(string SpName, object? Parameters, string ConStr = "DbConnection");
+        Task<bool> GetExecuteScalarAsync(string SpName, object? Parameters);
 
         /// <summary>
         /// Get table type of data
@@ -67,6 +59,6 @@ namespace AHHA.Application.CommonServices
         /// <param name="storedProcedureName"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        Task<DataSet> GetExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters parameters = null);
+        Task<DataSet> GetExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters parameters);
     }
 }

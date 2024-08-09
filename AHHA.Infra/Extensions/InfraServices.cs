@@ -2,6 +2,7 @@ using AHHA.Application.CommonServices;
 using AHHA.Application.IServices;
 using AHHA.Application.IServices.Admin;
 using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
 using AHHA.Infra.Data;
 using AHHA.Infra.Repository;
 using AHHA.Infra.Services;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System.Reflection;
 
 namespace AHHA.Infra.Extensions;
@@ -44,21 +46,29 @@ public static class InfraServices
 
         #endregion
 
-        //serviceCollection.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
-        //{
-        //    var connectionStringPlaceHolder = builder.Configuration.GetConnectionString("DbConnection");
-        //    var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-        //    var dbName = httpContextAccessor.HttpContext.Request.Headers["companyName"].First();
-        //    var connectionString = connectionStringPlaceHolder.Replace("{dbName}", dbName);
-        //    options.UseSqlServer(connectionString);
-        //});
+       
 
         serviceCollection.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
         {
-            var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-            var getconnectionstrigName = httpContextAccessor.HttpContext.Request.Headers["RegId"].First();
+            Int16 regId = 0;
+            var connectionString=string.Empty;
 
-            var connectionString = configuration.GetConnectionString("DbConnection");
+            var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+            //regId = Convert.ToInt16(httpContextAccessor.HttpContext.Request.Headers["regId"].First());
+
+            ////read the company registration data from json
+            //string regCompanyData = File.ReadAllText("regCompany.json");
+            ////Convert json to object list
+            //var regCompany = JsonConvert.DeserializeObject<IEnumerable<CompanyRegistration>>(regCompanyData);
+            //// find out the regId & get the connectionstring from there
+            //var getConnectionStringName = regCompany.Where(b => b.RegId == regId).FirstOrDefault().ConnectionStringName;
+
+            //if (getConnectionStringName == null)
+            //    connectionString = configuration.GetConnectionString(getConnectionStringName);
+            //else 
+            //    connectionString = configuration.GetConnectionString(getConnectionStringName);
+
+            connectionString = configuration.GetConnectionString("DbConnection");
             options.UseSqlServer(connectionString,
                         b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
         });

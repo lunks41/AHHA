@@ -13,6 +13,5 @@ namespace AHHA.Application.IServices
         Task<RefreshResponse> RefreshToken(RefreshTokenModel model);
         void Revoke(RevokeRequestModel model);
         //Task<RevokeResponse> Revoke(RevokeRequestModel model);
-
     }
 }

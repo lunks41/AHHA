@@ -22,36 +22,5 @@ namespace AHHA.Infra.Services.Admin
             _context = context;
         }
 
-        public async Task<AdmUser> AuthenticateAsync(Int16 CompanyId, string UserName, string UserPassword)
-        {
-            var parameters = new DynamicParameters();
-            try
-            {
-               
-                return null;
-            }
-            catch (Exception ex)
-            {
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.Country,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "AdmUser",
-                    ModeId = 0,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = CompanyId,
-                    //CreateDate = DateTime.Now
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
-            }
-        }
-
     }
 }

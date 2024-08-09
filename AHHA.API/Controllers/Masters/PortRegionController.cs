@@ -11,7 +11,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
-    [Route("api/[controller]")]
+    [Route("api/Masters")]
     [ApiController]
     public class PortRegionController : BaseController
     {
@@ -31,7 +31,6 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetPortRegion")]
-        [Authorize]
         public async Task<ActionResult> GetAllPortRegions()
         {
             try
@@ -91,7 +90,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetPortRegionbyid/{PortRegionId}")]
-        [Authorize]
+        
         public async Task<ActionResult<PortRegionViewModel>> GetPortRegionById(Int32 PortRegionId)
         {
             var PortRegionViewModel = new PortRegionViewModel();
@@ -143,7 +142,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpPost, Route("AddPortRegion")]
-        [Authorize]
+        
         public async Task<ActionResult<PortRegionViewModel>> CreatePortRegion(PortRegionViewModel PortRegion)
         {
             try
@@ -202,7 +201,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpPut, Route("UpdatePortRegion/{PortRegionId}")]
-        [Authorize]
+        
         public async Task<ActionResult<PortRegionViewModel>> UpdatePortRegion(int PortRegionId, [FromBody] PortRegionViewModel PortRegion)
         {
             var PortRegionViewModel = new PortRegionViewModel();
@@ -275,7 +274,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpDelete, Route("Delete/{PortRegionId}")]
-        [Authorize]
+        
         public async Task<ActionResult<M_PortRegion>> DeletePortRegion(int PortRegionId)
         {
             try

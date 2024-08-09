@@ -9,10 +9,11 @@ using AHHA.Infra.Services.Admin;
 using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Authorization;
 using System;
+using AHHA.Core.Models.Admin;
 
 namespace AHHA.API.Controllers.Admin
 {
-    [Route("api/[controller]")]
+    [Route("api/Admin")]
     [ApiController]
     public class TransactionController : BaseController
     {
@@ -36,8 +37,8 @@ namespace AHHA.API.Controllers.Admin
 
         // [dbo].[Adm_GetUserTransactions_All]
 
-        [HttpGet, Route("GetUsersTransactions/{ModuleId}")]
-        public async Task<ActionResult> GetUsersTransactions(Int16 ModuleId)
+        [HttpGet, Route("GetUsersTransactions")]
+        public async Task<ActionResult> GetUsersTransactions([FromBody] ModuleViewModel Module)
         {
             try
             {
@@ -49,7 +50,7 @@ namespace AHHA.API.Controllers.Admin
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {
-                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAsync(CompanyId, ModuleId, UserId);
+                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAsync(CompanyId, Module.ModuleId, UserId);
 
                     return Ok(UsersTransactionsdata);
                 }

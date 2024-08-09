@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace AHHA.API.Controllers.Admin
+namespace AHHA.API.Filters
 {
     public static class JsonFileHelper
     {

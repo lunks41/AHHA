@@ -7,6 +7,5 @@ namespace AHHA.Application.IServices.Admin
 {
     public interface IUserService
     {
-        public Task<AdmUser> AuthenticateAsync(Int16 CompanyId, string UserName, string UserPassword);
     }
 }

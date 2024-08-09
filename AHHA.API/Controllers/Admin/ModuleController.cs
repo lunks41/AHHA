@@ -8,7 +8,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Admin
 {
-    [Route("api/[controller]")]
+    [Route("api/Admin")]
     [ApiController]
     public class ModuleController : BaseController
     {
@@ -29,6 +29,7 @@ namespace AHHA.API.Controllers.Admin
         //Get call
         //http://118.189.194.191:8080/ahharestapiproject/ahha/getUsersModules/{companyid}/{userid}
         //http://118.189.194.191:8080/ahharestapiproject/ahha/getUsersModules/1/1
+        ////http://118.189.194.191:8080/api/
 
         [HttpGet, Route("GetUsersModules")]
         [Authorize]

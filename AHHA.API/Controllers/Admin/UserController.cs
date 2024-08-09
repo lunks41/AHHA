@@ -34,26 +34,26 @@ namespace AHHA.API.Controllers.Admin
         }
 
 
-        [HttpPost]
-        [Route("register")]
-        public async Task<IActionResult> Create([FromBody] LoginViewModel model)
-        {
-            var userExists = await _userManager.FindByNameAsync(model.UserName);
-            if (userExists != null)
-                return StatusCode(StatusCodes.Status500InternalServerError, new SqlResponce { Id = -1, Message = "User already exists!" });
+        //[HttpPost]
+        //[Route("register")]
+        //public async Task<IActionResult> Create([FromBody] LoginViewModel model)
+        //{
+        //    var userExists = await _userManager.FindByNameAsync(model.UserName);
+        //    if (userExists != null)
+        //        return StatusCode(StatusCodes.Status500InternalServerError, new SqlResponce { Id = -1, Message = "User already exists!" });
 
-            LoginViewModel user = new LoginViewModel()
-            {
-                UserName = model.UserName
-            };
+        //    LoginViewModel user = new LoginViewModel()
+        //    {
+        //        UserName = model.UserName
+        //    };
 
-            var result = await _userManager.CreateAsync(user, model.UserPassword);
+        //    var result = await _userManager.CreateAsync(user, model.UserPassword);
 
-            if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, new SqlResponce { Id = -1, Message = "User creation failed! Please check user details and try again." });
+        //    if (!result.Succeeded)
+        //        return StatusCode(StatusCodes.Status500InternalServerError, new SqlResponce { Id = -1, Message = "User creation failed! Please check user details and try again." });
 
-            return Ok(new SqlResponce { Id = 1, Message = "User created successfully!" });
-        }
+        //    return Ok(new SqlResponce { Id = 1, Message = "User created successfully!" });
+        //}
 
     }
 }

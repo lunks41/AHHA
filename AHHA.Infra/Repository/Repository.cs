@@ -13,6 +13,7 @@ namespace AHHA.Infra.Repository
     //Unit of Work Pattern
     public class Repository<T> : IRepository<T> where T : class
     {
+        string ConnectionStringName = "DbConnection";
         private readonly ApplicationDbContext _context;
         private readonly DbSet<T> _dbSet;
         private readonly IConfiguration _configuration;
@@ -24,37 +25,37 @@ namespace AHHA.Infra.Repository
             _configuration = configuration;
         }
 
-        public async Task<IEnumerable<T>> GetQueryAsync<T>(string spName, object? Parameters, string ConStr = "DbConnection")
+        public async Task<IEnumerable<T>> GetQueryAsync<T>(string spName, object? Parameters)
         {
-            using (IDbConnection connection = CreateConnection(ConStr))
+            using (IDbConnection connection = CreateConnection(ConnectionStringName))
             {
                 var entities = await connection.QueryAsync<T>(spName, Parameters);
                 return entities;
             }
         }
 
-        public async Task<T> GetQuerySingleOrDefaultAsync<T>(string SpName, object? Parameters, string ConStr = "DbConnection")
+        public async Task<T> GetQuerySingleOrDefaultAsync<T>(string SpName, object? Parameters)
         {
-            using (IDbConnection connection = CreateConnection(ConStr))
+            using (IDbConnection connection = CreateConnection(ConnectionStringName))
             {
                 var entities = await connection.QuerySingleOrDefaultAsync<T>(SpName, Parameters);
                 return entities;
             }
         }
 
-        public async Task<T> GetQueryFirstAsync<T>(string spName, object? Parameters, string ConStr = "DbConnection")
+        public async Task<T> GetQueryFirstAsync<T>(string spName, object? Parameters)
         {
-            using (IDbConnection connection = CreateConnection(ConStr))
+            using (IDbConnection connection = CreateConnection(ConnectionStringName))
             {
                 var entities = await connection.QueryFirstAsync<T>(spName, Parameters);
                 return entities;
             }
         }
 
-        public async Task<bool> GetExecuteScalarAsync(string SpName, object? Parameters, string ConStr = "DbConnection")
+        public async Task<bool> GetExecuteScalarAsync(string SpName, object? Parameters)
         {
             var rowsAffected = 0;
-            using (IDbConnection connection = CreateConnection(ConStr))
+            using (IDbConnection connection = CreateConnection(ConnectionStringName))
             {
                 rowsAffected = await connection.ExecuteScalarAsync<int>(SpName, Parameters, commandType: CommandType.StoredProcedure);
             }
@@ -63,7 +64,7 @@ namespace AHHA.Infra.Repository
 
         public async Task<DataSet> GetExecuteDataSetQuery(string storedProcedureName)
         {
-            using IDbConnection connection = CreateConnection("DbConnection");
+            using IDbConnection connection = CreateConnection(ConnectionStringName);
             var dataSet = new DataSet();
             using (var sqlDataAdapter = new SqlDataAdapter(storedProcedureName, connection as SqlConnection))
             {
@@ -74,7 +75,7 @@ namespace AHHA.Infra.Repository
 
         public async Task<DataSet> GetExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters? parameters = null)
         {
-            using IDbConnection connection = CreateConnection("DbConnection");
+            using IDbConnection connection = CreateConnection(ConnectionStringName);
             var dataSet = new DataSet();
             using (var sqlDataAdapter = new SqlDataAdapter(storedProcedureName, connection as SqlConnection))
             {
@@ -94,9 +95,9 @@ namespace AHHA.Infra.Repository
 
 
         #region Private Methods        
-        private IDbConnection CreateConnection(string ConStr)
+        private IDbConnection CreateConnection(string ConnectionStringName)
         {
-            IDbConnection db = new SqlConnection(_configuration.GetConnectionString(ConStr));
+            IDbConnection db = new SqlConnection(_configuration.GetConnectionString(ConnectionStringName));
             if (db.State == ConnectionState.Closed)
                 db.Open();
             return db;

@@ -7,73 +7,7 @@ namespace AHHA.Infra.Services.Masters
 {
     public class ProductService : IProductService
     {
-        private readonly IRepository<M_Product> _repository;
-        private readonly ApplicationDbContext _context;
-
-        public ProductService(IRepository<M_Product> repository)
-        {
-            _repository = repository;
-        }
-
-        public async Task<IEnumerable<M_Product>> GetProductListAsync()
-        {
-            try
-            {
-                return null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.ToString());
-            }
-
-        }
-
-        public async Task<M_Product> GetProductByIdAsync(int ProductId)
-        {
-            try
-            {
-                return null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.ToString());
-            }
-        }
-
-        public async Task<M_Product> AddProductAsync(M_Product product)
-        {
-            try
-            {
-                return null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.ToString());
-            }
-        }
-
-        public async Task<M_Product> UpdateProductAsync(M_Product product)
-        {
-            try
-            {
-                return null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.ToString());
-            }
-        }
-        public async Task DeleteProductAsync(int ProductId)
-        {
-            try
-            {
-                
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.ToString());
-            }
-        }
+        
     }
 
 
