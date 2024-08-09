@@ -32,13 +32,14 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetCountry")]
+        [Authorize]
         public async Task<ActionResult> GetAllCountrys()
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("RegId", out StringValues regIdValue));
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {
@@ -101,8 +102,8 @@ namespace AHHA.API.Controllers.Masters
             var countryViewModel = new CountryViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {
@@ -152,8 +153,8 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {
@@ -211,8 +212,8 @@ namespace AHHA.API.Controllers.Masters
             var countryViewModel = new CountryViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {
@@ -282,8 +283,8 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {

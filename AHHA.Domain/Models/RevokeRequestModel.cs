@@ -8,7 +8,6 @@ namespace AHHA.Core.Models
 {
     public class RevokeRequestModel
     {
-        public string RefreshToken { get; set; }
-        public string JwtToken { get; set; }
+        public string refreshToken { get; set; }
     }
 }

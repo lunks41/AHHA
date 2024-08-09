@@ -27,8 +27,8 @@ namespace AHHA.API.Controllers.Admin
         {
             try
             {
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
-                string RegId = Request.Headers.TryGetValue("RegId", out StringValues regIdValue).ToString().Trim();
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                string RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
                 if (UserId > 0 && RegId.Length > 0)
                 {

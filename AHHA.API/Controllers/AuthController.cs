@@ -41,23 +41,19 @@ namespace AHHA.API.Controllers
         [HttpPost("refreshToken")]
         public async Task<IActionResult> RefreshToken(RefreshTokenModel model)
         {
-            var loginResult = await _authServices.RefreshToken(model);
-            if (loginResult != null)
+            var refreshResult = await _authServices.RefreshToken(model);
+            if (refreshResult != null)
             {
-                return Ok(loginResult);
+                return Ok(refreshResult);
             }
             return Unauthorized();
         }
 
         [HttpPost("revoke")]
-        public async Task<IActionResult> Revoke(RevokeRequestModel model)
+        public IActionResult Revoke(RevokeRequestModel model)
         {
-            var loginResult = await _authServices.Revoke(model);
-            if (loginResult != null)
-            {
-                return Ok("Token revoked successfully");
-            }
-            return BadRequest("Invalid refresh token");
+            _authServices.Revoke(model);
+            return Ok();
         }
 
         // login
@@ -66,7 +62,7 @@ namespace AHHA.API.Controllers
         //public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         //{
         //    // Check user credentials (in a real application, you'd authenticate against a database)
-        //    RegId = Convert.ToInt32(Request.Headers.TryGetValue("RegId", out StringValues regIdValue));
+        //    RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
 
         //    var user = _authServices.GetByUserName(model.UserName);
 

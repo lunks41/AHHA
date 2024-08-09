@@ -1,13 +1,10 @@
 using AHHA.API.ExceptionHandling;
 using AHHA.API.Extensions;
 using AspNetCoreRateLimit;
-using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using System.Configuration;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +14,6 @@ builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration
 #region Caching & IP Rate Limiting
 
 var configuration = builder.Configuration;
-
 
 // needed to load configuration from appsettings.json
 builder.Services.AddOptions();

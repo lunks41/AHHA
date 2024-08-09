@@ -43,9 +43,9 @@ namespace AHHA.API.Controllers.Admin
             {
                 //Convert Json file to object class
                 //var people = JsonFileHelper.ReadFromJsonFile<Person>();
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("RegId", out StringValues regIdValue));
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {
@@ -76,9 +76,9 @@ namespace AHHA.API.Controllers.Admin
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("CompanyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("UserId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("RegId", out StringValues regIdValue));
+                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
+                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
 
                 if (ValidateHeaders(CompanyId, UserId))
                 {

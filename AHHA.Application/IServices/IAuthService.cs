@@ -10,8 +10,9 @@ namespace AHHA.Application.IServices
         bool IsAuthenticated(string userName, string password);
 
         Task<LoginResponse> Login(LoginViewModel user);
-        Task<LoginResponse> RefreshToken(RefreshTokenModel model);
-        Task<LoginResponse> Revoke(RevokeRequestModel model);
+        Task<RefreshResponse> RefreshToken(RefreshTokenModel model);
+        void Revoke(RevokeRequestModel model);
+        //Task<RevokeResponse> Revoke(RevokeRequestModel model);
 
     }
 }

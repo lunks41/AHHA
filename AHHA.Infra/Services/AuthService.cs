@@ -1,4 +1,5 @@
 ﻿using AHHA.Application.IServices;
+using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Models;
 using AHHA.Core.Models.Admin;
@@ -47,27 +48,37 @@ namespace AHHA.Infra.Services
             return _context.AdmUser.Where(c => c.UserName == userName).FirstOrDefault();
         }
 
+        public AdmUser GetByRefreshToken(string RefreshToken)
+        {
+            return _context.AdmUser.Where(c => c.RefreshToken == RefreshToken).FirstOrDefault();
+        }
+
         public async Task<LoginResponse> Login(LoginViewModel user)
         {
             var response = new LoginResponse();
             var identityUser = GetByUserName(user.UserName);
 
-            if (identityUser is null || (IsAuthenticated(user.UserName, user.UserPassword)) == false)
+            if (identityUser.RefreshToken != null)
             {
-                return response;
+                //return new LoginResponse { token = null, refreshToken = null, message = "you alreday login in another system" }; //Disscusion Pending with Ravi sir
+                return new LoginResponse { token = null, refreshToken = null };
             }
 
-            var token = GenerateTokenString(identityUser.UserName);
+            if (identityUser is null || (IsAuthenticated(user.UserName, user.UserPassword)) == false)
+            {
+                return new LoginResponse { token = null, refreshToken = null };
+            }
+
+            var token = GenerateTokenString(identityUser.UserName, identityUser.UserId);
             //response.IsLogedIn = true;
-            response.JwtToken = new JwtSecurityTokenHandler().WriteToken(token);
-            response.RefreshToken = this.GenerateRefreshTokenString();
+            response.token = new JwtSecurityTokenHandler().WriteToken(token);
+            response.refreshToken = this.GenerateRefreshTokenString();
             //response.Expiration = token.ValidTo;
 
-            identityUser.RefreshToken = response.RefreshToken;
+            identityUser.RefreshToken = response.refreshToken;
             identityUser.RefreshTokenExpiry = DateTime.Now.AddHours(12);
 
             //update the user table
-
             var entity = _context.Update(identityUser);
 
             entity.Property(b => b.UserCode).IsModified = false;
@@ -83,32 +94,36 @@ namespace AHHA.Infra.Services
             return response;
         }
 
-        public async Task<LoginResponse> RefreshToken(RefreshTokenModel model)
+        public async Task<RefreshResponse> RefreshToken(RefreshTokenModel model)
         {
-            var principal = GetTokenPrincipal(model.JwtToken);
+            //Check by UserId
+            //var principal = GetTokenPrincipal(model.token);
 
-            var response = new LoginResponse();
+            var response = new RefreshResponse();
 
-            if (principal?.Identity?.Name is null)
-                return response;
+            //if (principal?.Identity?.Name is null)
+            //    return response;
 
-            var identityUser = GetByUserName(principal.Identity.Name);
+            //var identityUser = GetByUserName(principal.Identity.Name);
+            var identityUser = GetByRefreshToken(model.refreshToken);
 
-            if (identityUser is null || identityUser.RefreshToken != model.RefreshToken || identityUser.RefreshTokenExpiry < DateTime.Now)
-                return response;
+            //if (identityUser is null || identityUser.RefreshToken != model.RefreshToken || identityUser.RefreshTokenExpiry < DateTime.Now)
+            //    return response;
 
-            var token = GenerateTokenString(identityUser.UserName);
-            //response.IsLogedIn = true;
-            response.JwtToken = new JwtSecurityTokenHandler().WriteToken(token);
-            response.RefreshToken = this.GenerateRefreshTokenString();
-            //response.Expiration = token.ValidTo;
+            if (identityUser is null || identityUser.RefreshToken == null || identityUser.RefreshTokenExpiry < DateTime.Now)
+            {
+                return new RefreshResponse { token = null };
+            }
 
-            identityUser.RefreshToken = response.RefreshToken;
-            identityUser.RefreshTokenExpiry = DateTime.Now.AddHours(12);
+            var token = GenerateTokenString(identityUser.UserName, identityUser.UserId);
+            response.token = new JwtSecurityTokenHandler().WriteToken(token);
+            identityUser.RefreshTokenExpiry = DateTime.Now.AddHours(1);
+
             //update the user table
 
             var entity = _context.Update(identityUser);
 
+            entity.Property(b => b.RefreshToken).IsModified = false;
             entity.Property(b => b.UserCode).IsModified = false;
             entity.Property(b => b.UserName).IsModified = false;
             entity.Property(b => b.UserPassword).IsModified = false;
@@ -150,11 +165,12 @@ namespace AHHA.Infra.Services
             return Convert.ToBase64String(randomNumber);
         }
 
-        private JwtSecurityToken GenerateTokenString(string userName)
+        private JwtSecurityToken GenerateTokenString(string userName, Int32 userId)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name,userName),
+                //new Claim(UserId,userId),
             };
 
             var staticKey = _configuration.GetSection("Jwt:SecretKey").Value;
@@ -173,24 +189,26 @@ namespace AHHA.Infra.Services
             return securityToken;
         }
 
-        public async Task<LoginResponse> Revoke(RevokeRequestModel model)
+        public void Revoke(RevokeRequestModel model)   //Diccusss with Ravi Sir
         {
-            var principal = GetTokenPrincipal(model.JwtToken);
+            //var principal = GetTokenPrincipal(model.token);
 
-            var response = new LoginResponse();
+            //var response = new LoginResponse();
 
-            if (principal?.Identity?.Name is null)
-                return response;
+            //if (principal?.Identity?.Name is null)
+            //    return response;
 
-            var identityUser = GetByUserName(principal.Identity.Name);
+            //var identityUser = GetByUserName(principal.Identity.Name);
 
-            if (identityUser is null || identityUser.RefreshToken != model.RefreshToken || identityUser.RefreshTokenExpiry < DateTime.Now)
-                return response;
+            var identityUser = GetByRefreshToken(model.refreshToken);
 
-            //response.IsLogedIn = false;
-            response.JwtToken = null;
-            response.RefreshToken = null;
-            //response.Expiration = null;
+            //if (identityUser is null || identityUser.RefreshToken != model.RefreshToken || identityUser.RefreshTokenExpiry < DateTime.Now)
+            //    return response;
+
+            //if (identityUser is null || identityUser.RefreshToken != null || identityUser.RefreshTokenExpiry < DateTime.Now)
+            //{
+            //    return new RevokeResponse { IsLogout = false };
+            //}
 
             identityUser.RefreshToken = null;
             identityUser.RefreshTokenExpiry = null;
@@ -205,10 +223,10 @@ namespace AHHA.Infra.Services
             entity.Property(b => b.Remarks).IsModified = false;
             entity.Property(b => b.IsActive).IsModified = false;
             entity.Property(b => b.UserGroupId).IsModified = false;
+            _context.SaveChanges();
+            // var counToUpdate = _context.SaveChanges();
 
-            var counToUpdate = _context.SaveChanges();
-
-            return response;
+            //return response;
         }
     }
 }

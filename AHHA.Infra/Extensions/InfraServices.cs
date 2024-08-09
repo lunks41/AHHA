@@ -7,6 +7,7 @@ using AHHA.Infra.Repository;
 using AHHA.Infra.Services;
 using AHHA.Infra.Services.Admin;
 using AHHA.Infra.Services.Masters;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ public static class InfraServices
     public static IServiceCollection AddInfraServices(this IServiceCollection serviceCollection,
         IConfiguration configuration)
     {
+        serviceCollection.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         serviceCollection.AddAutoMapper(Assembly.GetExecutingAssembly());
 
         #region Services
@@ -42,9 +44,29 @@ public static class InfraServices
 
         #endregion
 
-        serviceCollection.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
-            configuration.GetConnectionString("DbConnection"),
-                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));//Why use this line (b=>b.MigrationsAssembly)?
+        //serviceCollection.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+        //{
+        //    var connectionStringPlaceHolder = builder.Configuration.GetConnectionString("DbConnection");
+        //    var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+        //    var dbName = httpContextAccessor.HttpContext.Request.Headers["companyName"].First();
+        //    var connectionString = connectionStringPlaceHolder.Replace("{dbName}", dbName);
+        //    options.UseSqlServer(connectionString);
+        //});
+
+        serviceCollection.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+        {
+            var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+            var getconnectionstrigName = httpContextAccessor.HttpContext.Request.Headers["RegId"].First();
+
+            var connectionString = configuration.GetConnectionString("DbConnection");
+            options.UseSqlServer(connectionString,
+                        b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+        });
+
+        //serviceCollection.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
+            
+        //    configuration.GetConnectionString("DbConnection"),
+        //        b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));//Why use this line (b=>b.MigrationsAssembly)?
 
         serviceCollection.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 

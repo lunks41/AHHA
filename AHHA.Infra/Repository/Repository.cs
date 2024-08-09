@@ -1,14 +1,12 @@
 ﻿
 
 using AHHA.Application.CommonServices;
-using AHHA.Core.Common;
 using AHHA.Infra.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Data;
-using System.Linq.Expressions;
 
 namespace AHHA.Infra.Repository
 {
