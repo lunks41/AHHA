@@ -32,7 +32,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetPortRegion")]
-        public async Task<ActionResult> GetAllPortRegions(PagingViewModel pagingViewModel)
+        public async Task<ActionResult> GetAllPortRegion(PagingViewModel pagingViewModel)
         {
             try
             {
