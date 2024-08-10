@@ -20,7 +20,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ICountryService _countryService;
         private readonly ILogger<CountryController> _logger;
         private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
+        private Int32 UserId = 0;//User Id
         private Int32 RegId = 0;
 
         public CountryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CountryController> logger, ICountryService countryService)
