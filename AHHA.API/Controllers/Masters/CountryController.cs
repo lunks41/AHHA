@@ -22,7 +22,7 @@ namespace AHHA.API.Controllers.Masters
         private Int16 pageNumber = 1;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private Int32 RegId = 0; //Company Registration Id
 
         public CountryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CountryController> logger, ICountryService countryService)
     : base(memoryCache, mapper, baseServices)
