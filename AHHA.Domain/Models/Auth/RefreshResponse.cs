@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AHHA.Core.Models
+namespace AHHA.Core.Models.Auth
 {
     public class RefreshResponse
     {

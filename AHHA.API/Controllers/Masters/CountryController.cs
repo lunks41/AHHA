@@ -3,6 +3,7 @@ using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
+using AHHA.Core.Models.Utilites;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,14 +13,12 @@ using Microsoft.Extensions.Primitives;
 namespace AHHA.API.Controllers.Masters
 {
     
-    [Route("api/Masters")]
+    [Route("api/Master")]
     [ApiController]
     public class CountryController : BaseController
     {
         private readonly ICountryService _countryService;
         private readonly ILogger<CountryController> _logger;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
         private Int32 RegId = 0;
@@ -33,7 +32,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCountry")]
         [Authorize]
-        public async Task<ActionResult> GetAllCountrys()
+        public async Task<ActionResult> GetAllCountry(PagingViewModel pagingViewModel)
         {
             try
             {
@@ -49,9 +48,6 @@ namespace AHHA.API.Controllers.Masters
                     {
                         //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
 
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-
                         //Get the data from cache memory
                         var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
 
@@ -60,8 +56,8 @@ namespace AHHA.API.Controllers.Masters
                         //return Ok(cacheData);
                         else
                         {
-                            var expirationTime = DateTimeOffset.Now.AddMinutes(5);
-                            cacheData = await _countryService.GetCountryListAsync(CompanyId, pageSize, pageNumber, UserId);
+                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
+                            cacheData = await _countryService.GetCountryListAsync(CompanyId, pagingViewModel.pageSize, pagingViewModel.pageNumber,pagingViewModel.searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();

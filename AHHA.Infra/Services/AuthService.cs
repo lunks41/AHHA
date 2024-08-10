@@ -1,8 +1,8 @@
 ﻿using AHHA.Application.IServices;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
-using AHHA.Core.Models;
 using AHHA.Core.Models.Admin;
+using AHHA.Core.Models.Auth;
 using AHHA.Infra.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;

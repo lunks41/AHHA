@@ -1,14 +1,16 @@
 ﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AHHA.Core.Models
+namespace AHHA.Core.Models.Auth
 {
-    public class LoginResponse
+    public class RefreshTokenModel
     {
-        public string token { get; set; }
         public string refreshToken { get; set; }
     }
+
+
 }

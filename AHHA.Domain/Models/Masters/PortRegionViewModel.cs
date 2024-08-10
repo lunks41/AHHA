@@ -8,6 +8,8 @@
         public string PortRegionName { get; set; }
         public Int32 CountryId { get; set; }
         public string Remarks { get; set; }
+        public string CountryCode { get; set; }
+        public string CountryName { get; set; }
         public bool IsActive { get; set; }
         public Int32? CreateById { get; set; }
         public DateTime CreateDate { get; set; }

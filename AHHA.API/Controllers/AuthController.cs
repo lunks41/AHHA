@@ -1,12 +1,12 @@
 ﻿using AHHA.Application.IServices;
-using AHHA.Core.Models;
 using AHHA.Core.Models.Admin;
+using AHHA.Core.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AHHA.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {

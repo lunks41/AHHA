@@ -3,6 +3,7 @@ using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
+using AHHA.Core.Models.Utilites;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
-    [Route("api/Masters")]
+    [Route("api/Master")]
     [ApiController]
     public class PortRegionController : BaseController
     {
@@ -31,7 +32,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("GetPortRegion")]
-        public async Task<ActionResult> GetAllPortRegions()
+        public async Task<ActionResult> GetAllPortRegions(PagingViewModel pagingViewModel)
         {
             try
             {
@@ -45,9 +46,6 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-
                         //Get the data from cache memory
                         var cacheData = _memoryCache.Get<PortRegionViewModelCount>("PortRegion");
 
@@ -55,12 +53,10 @@ namespace AHHA.API.Controllers.Masters
                             return Ok(cacheData);
                         else
                         {
-                            var expirationTime = DateTimeOffset.Now.AddMinutes(5);
-                            cacheData = await _portRegionService.GetPortRegionListAsync(CompanyId, pageSize, pageNumber, UserId);
-
+                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
+                            cacheData = await _portRegionService.GetPortRegionListAsync(CompanyId, pagingViewModel.pageSize, pagingViewModel.pageNumber, pagingViewModel.searchString.Trim(), UserId);
                             if (cacheData == null)
                                 return NotFound();
-
                             _memoryCache.Set<PortRegionViewModelCount>("PortRegion", cacheData, expirationTime);
 
                             return Ok(cacheData);

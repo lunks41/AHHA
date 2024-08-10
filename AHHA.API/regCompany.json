@@ -1,11 +1,11 @@
 [
   {
-    "RegId": 1,
+    "RegId": "347623461",
     "CompanyName": "AHHA",
     "ConnectionStringName": "DbConnection1"
   },
   {
-    "RegId": 2,
+    "RegId": "439578349",
     "CompanyName": "AHHA",
     "ConnectionStringName": "DbConnection"
   }

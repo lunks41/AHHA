@@ -1,6 +1,6 @@
 ﻿using AHHA.Core.Entities.Admin;
-using AHHA.Core.Models;
 using AHHA.Core.Models.Admin;
+using AHHA.Core.Models.Auth;
 
 namespace AHHA.Application.IServices
 {

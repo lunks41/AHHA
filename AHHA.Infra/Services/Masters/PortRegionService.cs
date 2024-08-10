@@ -23,7 +23,7 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<PortRegionViewModelCount> GetPortRegionListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, Int32 UserId)
+        public async Task<PortRegionViewModelCount> GetPortRegionListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber,string searchString, Int32 UserId)
         {
             var parameters = new DynamicParameters();
             PortRegionViewModelCount PortRegionViewModelCount = new PortRegionViewModelCount();
@@ -31,7 +31,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>($"SELECT COUNT(*) AS CountId FROM M_PortRegion WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.PortRegion},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<PortRegionViewModel>($"SELECT M_PortRg.PortRegionId,M_PortRg.PortRegionCode,M_PortRg.PortRegionName,M_PortRg.CompanyId,M_PortRg.Remarks,M_PortRg.IsActive,M_PortRg.CreateById,M_PortRg.CreateDate,M_PortRg.EditById,M_PortRg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_PortRegion M_PortRg LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_PortRg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_PortRg.EditById WHERE M_PortRg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.PortRegion},{(short)Modules.Master})) ORDER BY M_PortRg.PortRegionName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<PortRegionViewModel>($"SELECT M_PortRg.PortRegionId,M_PortRg.PortRegionCode,M_PortRg.PortRegionName,M_PortRg.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_PortRg.CompanyId,M_PortRg.Remarks,M_PortRg.IsActive,M_PortRg.CreateById,M_PortRg.CreateDate,M_PortRg.EditById,M_PortRg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_PortRegion M_PortRg INNER JOIN M_Country M_Cou ON M_Cou.CountryId = M_PortRg.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_PortRg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_PortRg.EditById WHERE (M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%' OR M_PortRg.PortRegionName LIKE '%{searchString}%' OR M_PortRg.PortRegionCode LIKE '%{searchString}%' OR M_PortRg.Remarks LIKE '%{searchString}%') AND M_PortRg.PortRegionId<>0 AND M_PortRg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.PortRegion},{(short)Modules.Master})) ORDER BY M_PortRg.PortRegionName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 PortRegionViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
                 PortRegionViewModelCount.portRegionViewModels = result == null ? null : result.ToList();
