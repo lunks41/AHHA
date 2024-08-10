@@ -28,19 +28,19 @@ namespace AHHA.Infra.Services
 
         public bool IsAuthenticated(string userName, string password)
         {
-            var user = this.GetByUserName(userName);
-            return this.DoesUserExists(userName) && BC.Verify(userName + password, user.UserPassword);
+            var user = this.GetByUserName(userName.ToLower().Trim());
+            return this.DoesUserExists(userName.ToLower().Trim()) && BC.Verify(userName.ToLower().Trim() + password.Trim(), user.UserPassword);
         }
 
         public bool DoesUserExists(string userName)
         {
-            var user = _context.AdmUser.FirstOrDefault(x => x.UserName == userName);
+            var user = _context.AdmUser.FirstOrDefault(x => x.UserCode == userName);
             return user != null;
         }
 
         public AdmUser GetByUserName(string userName)
         {
-            return _context.AdmUser.Where(c => c.UserName == userName).FirstOrDefault();
+            return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault();
         }
 
         public AdmUser GetByRefreshToken(string RefreshToken)
@@ -51,7 +51,7 @@ namespace AHHA.Infra.Services
         public async Task<LoginResponse> Login(LoginViewModel user)
         {
             var response = new LoginResponse();
-            var identityUser = GetByUserName(user.userName);
+            var identityUser = GetByUserName(user.userName.ToLower().Trim());
 
             if (identityUser is null || (IsAuthenticated(user.userName, user.userPassword)) == false)
             {
