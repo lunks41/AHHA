@@ -33,8 +33,8 @@ namespace AHHA.Infra.Services
 
         public AdmUser GetByUserName(string userName)
         {
-            return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault();
-            //return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault(c => c.IsActive == true);
+            //return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault();
+            return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault(c => c.IsActive == true);
         }
 
         public AdmUser GetByRefreshToken(string RefreshToken)
@@ -49,8 +49,8 @@ namespace AHHA.Infra.Services
 
             if (identityUser is null || (IsAuthenticated(user.userName, user.userPassword,identityUser.UserPassword)) == false)
             {
-                //return new Response { "User Not Exist" };
-                return new LoginResponse { token = "", refreshToken = "" };
+                //return new dynamic { "User Not Exist" };
+                return new LoginResponse { token = "User Not Exist", refreshToken = "" };
             }
 
             var token = GenerateTokenString(identityUser.UserName, identityUser.UserId.ToString());
