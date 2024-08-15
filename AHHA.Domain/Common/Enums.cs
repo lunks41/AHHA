@@ -72,6 +72,9 @@ namespace AHHA.Core.Common
         AccountGroup = 43,
         CustomerCreditLimit = 44,
         GroupCreditLimt_Customer = 45,
+
+        //Harshad Added Tempory basis
+        PaymentType=0,
     }
 
     public enum AR

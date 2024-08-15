@@ -3,7 +3,7 @@
     public class ProductViewModel
     {
         public int ProductId { get; set; }
-        public short CompanyId { get; set; }
+        public Int16 CompanyId { get; set; }
         public string ProductCode { get; set; }
         public string ProductName { get; set; }
         public string Remarks { get; set; }

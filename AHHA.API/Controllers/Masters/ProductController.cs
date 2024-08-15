@@ -1,5 +1,4 @@
 ﻿using AHHA.Application.IServices.Masters;
-using AHHA.Core.Entities.Masters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -12,6 +11,9 @@ namespace AHHA.API.Controllers.Masters
         private readonly IProductService _productService;
         private readonly ILogger<ProductController> _logger;
         private readonly IMemoryCache _memoryCache;
+        private Int16 pageSize = 10;
+        private Int16 pageNumber = 1;
+        private string searchString = string.Empty;
 
         public ProductController(ILogger<ProductController> logger, IProductService productService, IMemoryCache memoryCache)
         {

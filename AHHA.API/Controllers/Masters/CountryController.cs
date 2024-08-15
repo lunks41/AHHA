@@ -3,7 +3,6 @@ using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
-using AHHA.Core.Models.Utilites;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +11,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
-    
+
     [Route("api/Master")]
     [ApiController]
     public class CountryController : BaseController
@@ -22,6 +21,9 @@ namespace AHHA.API.Controllers.Masters
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
         private Int32 RegId = 0;
+        private Int16 pageSize = 10;
+        private Int16 pageNumber = 1;
+        private string searchString = string.Empty;
 
         public CountryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CountryController> logger, ICountryService countryService)
     : base(memoryCache, mapper, baseServices)
@@ -32,7 +34,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCountry")]
         [Authorize]
-        public async Task<ActionResult> GetAllCountry(PagingViewModel pagingViewModel)
+        public async Task<ActionResult> GetAllCountry()
         {
             try
             {
@@ -47,6 +49,9 @@ namespace AHHA.API.Controllers.Masters
                     if (userGroupRight != null)
                     {
                         //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
+                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
+                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
+                        searchString= (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
 
                         //Get the data from cache memory
                         var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
@@ -57,7 +62,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _countryService.GetCountryListAsync(CompanyId, pagingViewModel.pageSize, pagingViewModel.pageNumber,pagingViewModel.searchString.Trim(), UserId);
+                            cacheData = await _countryService.GetCountryListAsync(CompanyId, pageSize, pageNumber,searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();

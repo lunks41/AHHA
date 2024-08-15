@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AHHA.Core.Entities.Masters
 {
@@ -15,6 +11,7 @@ namespace AHHA.Core.Entities.Masters
         public string AccSetupCategoryName { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
+        [NotMapped]
         public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
         public Int32 EditById { get; set; }

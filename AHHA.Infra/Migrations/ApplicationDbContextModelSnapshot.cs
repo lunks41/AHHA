@@ -159,10 +159,10 @@ namespace AHHA.Infra.Migrations
 
                 SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("BargeId"));
 
-                b.Property<string>("BargeICode")
+                b.Property<string>("BargeCode")
                     .HasColumnType("nvarchar(max)");
 
-                b.Property<string>("BargeIName")
+                b.Property<string>("BargeName")
                     .HasColumnType("nvarchar(max)");
 
                 b.Property<string>("BargeIType")

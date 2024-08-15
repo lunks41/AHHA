@@ -34,6 +34,39 @@ public static class InfraServices
         serviceCollection.AddScoped<IProductService, ProductService>();
         serviceCollection.AddScoped<ICountryService, CountryService>();
         serviceCollection.AddScoped<IPortRegionService, PortRegionService>();
+        serviceCollection.AddScoped<ICOACategory1Service, COACategory1Service>();
+        serviceCollection.AddScoped<ICOACategory2Service, COACategory2Service>();
+        serviceCollection.AddScoped<ICOACategory3Service, COACategory3Service>();
+        serviceCollection.AddScoped<IAccountSetupCategoryService, AccountSetupCategoryService>();
+        serviceCollection.AddScoped<IAccountSetupService, AccountSetupService>();
+        serviceCollection.AddScoped<IBankService, BankService>();
+        serviceCollection.AddScoped<IBargeService, BargeService>();
+        serviceCollection.AddScoped<ICategoryService, CategoryService>();
+        serviceCollection.AddScoped<IChartOfAccountService, ChartOfAccountService>();
+        serviceCollection.AddScoped<ICustomeGroupCreditLimtService, CustomeGroupCreditLimtService>();
+        serviceCollection.AddScoped<ICustomerAddressService, CustomerAddressService>();
+        serviceCollection.AddScoped<ICustomerContactService, CustomerContactService>();
+        serviceCollection.AddScoped<ICustomerService, CustomerService>();
+        serviceCollection.AddScoped<ICustomerCreditLimitService, CustomerCreditLimitService>();
+        serviceCollection.AddScoped<IDepartmentService, DepartmentService>();
+        serviceCollection.AddScoped<IDesignationService, DesignationService>();
+        serviceCollection.AddScoped<IEmployeeService, EmployeeService>();
+        serviceCollection.AddScoped<IGroupCreditLimit_CustomerService, GroupCreditLimit_CustomerService>();
+        //serviceCollection.AddScoped<IGroupCreditLimitService, CustomeGroupCreditLimtService>();
+        serviceCollection.AddScoped<IGstCategoryService, GstCategoryService>();
+        //serviceCollection.AddScoped<IGstService, gst>();
+        serviceCollection.AddScoped<IOrderTypeCategoryService, OrderTypeCategoryService>();
+        serviceCollection.AddScoped<IOrderTypeService, OrderTypeService>();
+        serviceCollection.AddScoped<IPaymentTypeService, PaymentTypeService>();
+        serviceCollection.AddScoped<IPortService, PortService>();
+        serviceCollection.AddScoped<ISubCategoryService, SubCategoryService>();
+        serviceCollection.AddScoped<ISupplierAddressService, SupplierAddressService>();
+        serviceCollection.AddScoped<ISupplierContactService, SupplierContactService>();
+        serviceCollection.AddScoped<ISupplierService, SupplierService>();
+        //serviceCollection.AddScoped<IUomService, uom>();
+        serviceCollection.AddScoped<IVesselService, VesselService>();
+        serviceCollection.AddScoped<IVessel_BackService, Vessel_BackService>();
+        serviceCollection.AddScoped<IVoyageService, VoyageService>();
         
         #endregion
 

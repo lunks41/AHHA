@@ -84,8 +84,8 @@ namespace AHHA.Infra.Migrations
                     BargeId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<byte>(type: "tinyint", nullable: false),
-                    BargeICode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BargeIName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BargeCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BargeName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CallSign = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IMOCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     GRT = table.Column<string>(type: "nvarchar(max)", nullable: true),

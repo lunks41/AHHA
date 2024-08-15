@@ -20,6 +20,10 @@ namespace AHHA.API.Controllers
             _authServices = authServices;
         }
 
+        //Implimenting in future
+        //check the different location
+        //save the user computer data.  (like which OS? OS address? Ip address? )
+        //write the server log. when users try to password three times then user will be locked.
 
         [HttpPost("login")]
         [AllowAnonymous]

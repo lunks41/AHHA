@@ -1,0 +1,30 @@
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AHHA.Core.Models.Masters
+{
+    public class SupplierViewModel
+    {
+        public int SupplierId { get; set; }
+        public Int16 CompanyId { get; set; }
+        public string SupplierCode { get; set; }
+        public string SupplierName { get; set; }
+        public string SupplierOtherName { get; set; }
+        public string SupplierShortName { get; set; }
+        public string SupplierRegNo { get; set; }
+        public Int16 CurrencyId { get; set; }
+        public Int16 CreditTermId { get; set; }
+        public int ParentSupplierId { get; set; }
+        public bool IsCustomer { get; set; }
+        public bool IsVendor { get; set; }
+        public bool IsTrader { get; set; }
+        public bool IsSupplier { get; set; }
+        public string Remarks { get; set; }
+        public bool IsActive { get; set; }
+        public Int32 CreateById { get; set; }
+        public DateTime CreateDate { get; set; }
+        public int? EditById { get; set; }
+        public DateTime? EditDate { get; set; }
+        public string CreateBy { get; set; }
+        public string EditBy { get; set; }
+    }
+}

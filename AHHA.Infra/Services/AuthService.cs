@@ -26,21 +26,15 @@ namespace AHHA.Infra.Services
             _configuration = configuration;
         }
 
-        public bool IsAuthenticated(string userName, string password)
+        public bool IsAuthenticated(string userName, string password,string UserPassword)
         {
-            var user = this.GetByUserName(userName.ToLower().Trim());
-            return this.DoesUserExists(userName.ToLower().Trim()) && BC.Verify(userName.ToLower().Trim() + password.Trim(), user.UserPassword);
-        }
-
-        public bool DoesUserExists(string userName)
-        {
-            var user = _context.AdmUser.FirstOrDefault(x => x.UserCode == userName);
-            return user != null;
+            return BC.Verify(userName.ToLower().Trim() + password.Trim(), UserPassword);
         }
 
         public AdmUser GetByUserName(string userName)
         {
             return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault();
+            //return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault(c => c.IsActive == true);
         }
 
         public AdmUser GetByRefreshToken(string RefreshToken)
@@ -48,14 +42,15 @@ namespace AHHA.Infra.Services
             return _context.AdmUser.Where(c => c.RefreshToken == RefreshToken).FirstOrDefault();
         }
 
-        public async Task<LoginResponse> Login(LoginViewModel user)
+        public async Task<dynamic> Login(LoginViewModel user)
         {
             var response = new LoginResponse();
             var identityUser = GetByUserName(user.userName.ToLower().Trim());
 
-            if (identityUser is null || (IsAuthenticated(user.userName, user.userPassword)) == false)
+            if (identityUser is null || (IsAuthenticated(user.userName, user.userPassword,identityUser.UserPassword)) == false)
             {
-                return new LoginResponse { token = null, refreshToken = null };
+                //return new Response { "User Not Exist" };
+                return new LoginResponse { token = "", refreshToken = "" };
             }
 
             var token = GenerateTokenString(identityUser.UserName, identityUser.UserId.ToString());
@@ -63,7 +58,7 @@ namespace AHHA.Infra.Services
             response.refreshToken = this.GenerateRefreshTokenString();
 
             identityUser.RefreshToken = response.refreshToken;
-            identityUser.RefreshTokenExpiry = DateTime.Now.AddHours(12);
+            identityUser.RefreshTokenExpiry = DateTime.Now.AddHours(1);
 
             var entity = _context.Update(identityUser);
             entity.Property(b => b.UserCode).IsModified = false;
@@ -86,11 +81,12 @@ namespace AHHA.Infra.Services
 
             if (identityUser is null || identityUser.RefreshToken == null || identityUser.RefreshTokenExpiry < DateTime.Now)
             {
-                return new RefreshResponse { token = null };
+                return new RefreshResponse { token = "token not vaild" };
             }
 
             var token = GenerateTokenString(identityUser.UserName, identityUser.UserId.ToString());
             response.token = new JwtSecurityTokenHandler().WriteToken(token);
+
             identityUser.RefreshTokenExpiry = DateTime.Now.AddHours(1);
 
             var entity = _context.Update(identityUser);

@@ -3,9 +3,7 @@ using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
-using AHHA.Core.Models.Utilites;
 using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
@@ -20,6 +18,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<PortRegionController> _logger;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
+        private string searchString = string.Empty;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
         private Int32 RegId = 0;
@@ -31,8 +30,8 @@ namespace AHHA.API.Controllers.Masters
             _portRegionService = portRegionService;
         }
 
-        [HttpGet, Route("GetPortRegion")]
-        public async Task<ActionResult> GetAllPortRegion(PagingViewModel pagingViewModel)
+        [HttpGet, Route("getPortRegion")]
+        public async Task<ActionResult> GetAllPortRegion()
         {
             try
             {
@@ -46,6 +45,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
+                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
+                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
+                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
                         //Get the data from cache memory
                         var cacheData = _memoryCache.Get<PortRegionViewModelCount>("PortRegion");
 
@@ -54,7 +56,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _portRegionService.GetPortRegionListAsync(CompanyId, pagingViewModel.pageSize, pagingViewModel.pageNumber, pagingViewModel.searchString.Trim(), UserId);
+                            cacheData = await _portRegionService.GetPortRegionListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
                             if (cacheData == null)
                                 return NotFound();
                             _memoryCache.Set<PortRegionViewModelCount>("PortRegion", cacheData, expirationTime);
@@ -85,8 +87,8 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpGet, Route("GetPortRegionbyid/{PortRegionId}")]
-        
+
+        [HttpGet, Route("getPortRegionbyid/{PortRegionId}")]
         public async Task<ActionResult<PortRegionViewModel>> GetPortRegionById(Int32 PortRegionId)
         {
             var PortRegionViewModel = new PortRegionViewModel();
@@ -137,8 +139,8 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpPost, Route("AddPortRegion")]
-        
+
+        [HttpPost, Route("addPortRegion")]
         public async Task<ActionResult<PortRegionViewModel>> CreatePortRegion(PortRegionViewModel PortRegion)
         {
             try
@@ -196,8 +198,8 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpPut, Route("UpdatePortRegion/{PortRegionId}")]
-        
+
+        [HttpPut, Route("updatePortRegion/{PortRegionId}")]
         public async Task<ActionResult<PortRegionViewModel>> UpdatePortRegion(int PortRegionId, [FromBody] PortRegionViewModel PortRegion)
         {
             var PortRegionViewModel = new PortRegionViewModel();
@@ -269,8 +271,8 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{PortRegionId}")]
-        
+
+        [HttpDelete, Route("deletePortRegion/{PortRegionId}")]
         public async Task<ActionResult<M_PortRegion>> DeletePortRegion(int PortRegionId)
         {
             try
