@@ -10,7 +10,7 @@ namespace AHHA.API.Mapping
     {
         public MappingProfile()
         {
-            CreateMap<CountryViewModel, M_Country>().ReverseMap();
+            CreateMap<CountryLookupViewModel, M_Country>().ReverseMap();
             CreateMap<ProductViewModel, M_Product>().ReverseMap();
         }
     }

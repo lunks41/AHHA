@@ -77,9 +77,13 @@ public static class InfraServices
         serviceCollection.AddScoped<ITransactionService, TransactionService>();
         #endregion
 
+        #region
+        serviceCollection.AddScoped<ILookupService, LookupService>();
         #endregion
 
-       
+        #endregion
+
+
 
         serviceCollection.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
         {

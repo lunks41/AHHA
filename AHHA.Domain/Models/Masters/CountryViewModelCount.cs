@@ -9,6 +9,6 @@ namespace AHHA.Core.Models.Masters
     public class CountryViewModelCount
     {
         public long Total_records { get; set; }
-        public List<CountryViewModel> countryViewModels { get; set; }
+        public List<CountryLookupViewModel> countryViewModels { get; set; }
     }
 }

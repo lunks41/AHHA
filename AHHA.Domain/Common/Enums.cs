@@ -12,6 +12,7 @@ namespace AHHA.Core.Common
         Update = 2,
         Delete = 3,
         View = 4,
+        Lookup = 4,
     }
 
     public enum Modules
