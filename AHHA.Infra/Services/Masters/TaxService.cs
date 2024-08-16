@@ -23,14 +23,14 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<TaxViewModelCount> GetTaxListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<TaxViewModelCount> GetTaxListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
             TaxViewModelCount TaxViewModelCount = new TaxViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>($"SELECT COUNT(*) AS CountId FROM M_Tax WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Tax},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_Tax WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Tax},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<TaxViewModel>($"SELECT M_Cou.TaxId,M_Cou.TaxCode,M_Cou.TaxName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Tax M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.TaxName LIKE '%{searchString}%' OR M_Cou.TaxCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.TaxId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Tax},{(short)Modules.Master})) ORDER BY M_Cou.TaxName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<TaxViewModel>(RegId,$"SELECT M_Cou.TaxId,M_Cou.TaxCode,M_Cou.TaxName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Tax M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.TaxName LIKE '%{searchString}%' OR M_Cou.TaxCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.TaxId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Tax},{(short)Modules.Master})) ORDER BY M_Cou.TaxName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 TaxViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
                 TaxViewModelCount.taxViewModels = result == null ? null : result.ToList();
@@ -59,11 +59,11 @@ namespace AHHA.Infra.Services.Masters
             }
 
         }
-        public async Task<M_Tax> GetTaxByIdAsync(Int16 CompanyId, Int16 TaxId, Int32 UserId)
+        public async Task<M_Tax> GetTaxByIdAsync(string RegId, Int16 CompanyId, Int16 TaxId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Tax>($"SELECT TaxId,TaxCode,TaxName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Tax WHERE TaxId={TaxId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Tax>(RegId,$"SELECT TaxId,TaxCode,TaxName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Tax WHERE TaxId={TaxId}");
 
                 return result;
             }
@@ -88,7 +88,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> AddTaxAsync(Int16 CompanyId, M_Tax Tax, Int32 UserId)
+        public async Task<SqlResponce> AddTaxAsync(string RegId, Int16 CompanyId, M_Tax Tax, Int32 UserId)
         {
             bool isExist = false;
             var sqlResponce = new SqlResponce();
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 1 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxCode='{Tax.TaxCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxName='{Tax.TaxName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxCode='{Tax.TaxCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxName='{Tax.TaxName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +119,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (TaxId + 1) FROM dbo.M_Tax WHERE (TaxId + 1) NOT IN (SELECT TaxId FROM dbo.M_Tax)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (TaxId + 1) FROM dbo.M_Tax WHERE (TaxId + 1) NOT IN (SELECT TaxId FROM dbo.M_Tax)),1) AS MissId");
 
                         #region Saving Tax
 
@@ -193,7 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> UpdateTaxAsync(Int16 CompanyId, M_Tax Tax, Int32 UserId)
+        public async Task<SqlResponce> UpdateTaxAsync(string RegId, Int16 CompanyId, M_Tax Tax, Int32 UserId)
         {
             int IsActive = Tax.IsActive == true ? 1 : 0;
             bool isExist = false;
@@ -205,7 +205,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Tax.TaxId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxName='{Tax.TaxName} AND TaxId <>{Tax.TaxId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxName='{Tax.TaxName} AND TaxId <>{Tax.TaxId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -289,7 +289,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> DeleteTaxAsync(Int16 CompanyId, M_Tax Tax, Int32 UserId)
+        public async Task<SqlResponce> DeleteTaxAsync(string RegId, Int16 CompanyId, M_Tax Tax, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
             try
@@ -347,22 +347,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
-                parameters.Add("Id", Id, DbType.Int32);
-                return await _repository.GetExecuteDataSetStoredProcedure("USP_LMS_Training", parameters);
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
-                throw;
-            }
-        }
+        
 
     }
 }

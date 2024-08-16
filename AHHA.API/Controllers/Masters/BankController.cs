@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<BankController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId, CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _BankService.GetBankListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _BankService.GetBankListAsync(RegId, CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -104,10 +104,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId, CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +118,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            BankViewModel = _mapper.Map<BankViewModel>(await _BankService.GetBankByIdAsync(CompanyId, BankId, UserId));
+                            BankViewModel = _mapper.Map<BankViewModel>(await _BankService.GetBankByIdAsync(RegId, CompanyId, BankId, UserId));
 
                             if (BankViewModel == null)
                                 return NotFound();
@@ -155,10 +156,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId, CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -182,7 +184,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks2 = Bank.Remarks2,
                             };
 
-                            var createdBank = await _BankService.AddBankAsync(CompanyId, BankEntity, UserId);
+                            var createdBank = await _BankService.AddBankAsync(RegId, CompanyId, BankEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdBank);
 
                         }
@@ -218,10 +220,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId, CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -238,7 +241,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var BankToUpdate = await _BankService.GetBankByIdAsync(CompanyId, BankId, UserId);
+                                var BankToUpdate = await _BankService.GetBankByIdAsync(RegId, CompanyId, BankId, UserId);
 
                                 if (BankToUpdate == null)
                                     return NotFound($"M_Bank with Id = {BankId} not found");
@@ -260,7 +263,7 @@ namespace AHHA.API.Controllers.Masters
                                 EditDate = DateTime.Now,
                             };
 
-                            var sqlResponce = await _BankService.UpdateBankAsync(CompanyId, BankEntity, UserId);
+                            var sqlResponce = await _BankService.UpdateBankAsync(RegId, CompanyId, BankEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -294,21 +297,22 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId, CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var BankToDelete = await _BankService.GetBankByIdAsync(CompanyId, BankId, UserId);
+                            var BankToDelete = await _BankService.GetBankByIdAsync(RegId, CompanyId, BankId, UserId);
 
                             if (BankToDelete == null)
                                 return NotFound($"M_Bank with Id = {BankId} not found");
 
-                            var sqlResponce = await _BankService.DeleteBankAsync(CompanyId, BankToDelete, UserId);
+                            var sqlResponce = await _BankService.DeleteBankAsync(RegId, CompanyId, BankToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Bank_{BankId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

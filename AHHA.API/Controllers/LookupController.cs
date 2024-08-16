@@ -1,4 +1,5 @@
 ﻿using AHHA.Application.IServices;
+using AHHA.Core.Common;
 using AHHA.Core.Models.Masters;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -14,9 +15,6 @@ namespace AHHA.API.Controllers
     {
         private readonly ILookupService _LookupService;
         private readonly ILogger<LookupController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private Int32 RegId = 0;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -30,40 +28,22 @@ namespace AHHA.API.Controllers
 
         [HttpGet, Route("GetCountryLookup")]
         [Authorize]
-        public async Task<ActionResult> CountryLookup()
+        public async Task<ActionResult> CountryLookup([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var cacheData = _memoryCache.Get<IEnumerable<CountryLookupViewModel>>("CountryLookup");
+                    var cacheData = await _LookupService.GetCountryLooupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
-                    if (cacheData != null)
-                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     //return Ok(cacheData);
-                    else
-                    {
-                        var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                        cacheData = await _LookupService.GetCountryLooupListAsync(CompanyId, UserId);
-
-                        if (cacheData == null)
-                            return NotFound();
-
-                        _memoryCache.Set< IEnumerable<CountryLookupViewModel>>("CountryLookup", cacheData, expirationTime);
-
-                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                    }
                 }
                 else
                 {
-                    if (UserId == 0)
+                    if (headerViewModel.UserId == 0)
                         return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
+                    else if (headerViewModel.CompanyId == 0)
                         return NotFound("CompanyId Not Found");
                     else
                         return NotFound();

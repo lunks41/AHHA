@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<DepartmentController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _DepartmentService.GetDepartmentListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _DepartmentService.GetDepartmentListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            DepartmentViewModel = _mapper.Map<DepartmentViewModel>(await _DepartmentService.GetDepartmentByIdAsync(CompanyId, DepartmentId, UserId));
+                            DepartmentViewModel = _mapper.Map<DepartmentViewModel>(await _DepartmentService.GetDepartmentByIdAsync(RegId,CompanyId, DepartmentId, UserId));
 
                             if (DepartmentViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -178,7 +178,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Department.Remarks
                             };
 
-                            var createdDepartment = await _DepartmentService.AddDepartmentAsync(CompanyId, DepartmentEntity, UserId);
+                            var createdDepartment = await _DepartmentService.AddDepartmentAsync(RegId,CompanyId, DepartmentEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdDepartment);
 
                         }
@@ -215,9 +215,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var DepartmentToUpdate = await _DepartmentService.GetDepartmentByIdAsync(CompanyId, DepartmentId, UserId);
+                                var DepartmentToUpdate = await _DepartmentService.GetDepartmentByIdAsync(RegId,CompanyId, DepartmentId, UserId);
 
                                 if (DepartmentToUpdate == null)
                                     return NotFound($"M_Department with Id = {DepartmentId} not found");
@@ -251,7 +251,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Department.Remarks
                             };
 
-                            var sqlResponce = await _DepartmentService.UpdateDepartmentAsync(CompanyId, DepartmentEntity, UserId);
+                            var sqlResponce = await _DepartmentService.UpdateDepartmentAsync(RegId,CompanyId, DepartmentEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -286,20 +286,20 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Department, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var DepartmentToDelete = await _DepartmentService.GetDepartmentByIdAsync(CompanyId, DepartmentId, UserId);
+                            var DepartmentToDelete = await _DepartmentService.GetDepartmentByIdAsync(RegId,CompanyId, DepartmentId, UserId);
 
                             if (DepartmentToDelete == null)
                                 return NotFound($"M_Department with Id = {DepartmentId} not found");
 
-                            var sqlResponce = await _DepartmentService.DeleteDepartmentAsync(CompanyId, DepartmentToDelete, UserId);
+                            var sqlResponce = await _DepartmentService.DeleteDepartmentAsync(RegId,CompanyId, DepartmentToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Department_{DepartmentId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

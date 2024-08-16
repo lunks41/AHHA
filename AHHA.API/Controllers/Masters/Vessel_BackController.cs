@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<Vessel_BackController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _Vessel_BackService.GetVessel_BackListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _Vessel_BackService.GetVessel_BackListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            Vessel_BackViewModel = _mapper.Map<Vessel_BackViewModel>(await _Vessel_BackService.GetVessel_BackByIdAsync(CompanyId, Vessel_BackId, UserId));
+                            Vessel_BackViewModel = _mapper.Map<Vessel_BackViewModel>(await _Vessel_BackService.GetVessel_BackByIdAsync(RegId,CompanyId, Vessel_BackId, UserId));
 
                             if (Vessel_BackViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -184,7 +184,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Vessel_Back.Remarks
                             };
 
-                            var createdVessel_Back = await _Vessel_BackService.AddVessel_BackAsync(CompanyId, Vessel_BackEntity, UserId);
+                            var createdVessel_Back = await _Vessel_BackService.AddVessel_BackAsync(RegId,CompanyId, Vessel_BackEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdVessel_Back);
 
                         }
@@ -221,9 +221,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -240,7 +240,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var Vessel_BackToUpdate = await _Vessel_BackService.GetVessel_BackByIdAsync(CompanyId, Vessel_BackId, UserId);
+                                var Vessel_BackToUpdate = await _Vessel_BackService.GetVessel_BackByIdAsync(RegId,CompanyId, Vessel_BackId, UserId);
 
                                 if (Vessel_BackToUpdate == null)
                                     return NotFound($"M_Vessel_Back with Id = {Vessel_BackId} not found");
@@ -263,7 +263,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Vessel_Back.Remarks
                             };
 
-                            var sqlResponce = await _Vessel_BackService.UpdateVessel_BackAsync(CompanyId, Vessel_BackEntity, UserId);
+                            var sqlResponce = await _Vessel_BackService.UpdateVessel_BackAsync(RegId,CompanyId, Vessel_BackEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -298,20 +298,20 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var Vessel_BackToDelete = await _Vessel_BackService.GetVessel_BackByIdAsync(CompanyId, Vessel_BackId, UserId);
+                            var Vessel_BackToDelete = await _Vessel_BackService.GetVessel_BackByIdAsync(RegId,CompanyId, Vessel_BackId, UserId);
 
                             if (Vessel_BackToDelete == null)
                                 return NotFound($"M_Vessel_Back with Id = {Vessel_BackId} not found");
 
-                            var sqlResponce = await _Vessel_BackService.DeleteVessel_BackAsync(CompanyId, Vessel_BackToDelete, UserId);
+                            var sqlResponce = await _Vessel_BackService.DeleteVessel_BackAsync(RegId,CompanyId, Vessel_BackToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Vessel_Back_{Vessel_BackId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

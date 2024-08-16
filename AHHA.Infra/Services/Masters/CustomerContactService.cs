@@ -23,14 +23,14 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<CustomerContactViewModelCount> GetCustomerContactListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<CustomerContactViewModelCount> GetCustomerContactListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
             CustomerContactViewModelCount CustomerContactViewModelCount = new CustomerContactViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>($"SELECT COUNT(*) AS CountId FROM M_CustomerContact WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_CustomerContact WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<CustomerContactViewModel>($"SELECT M_Cou.CustomerId,M_Cou.OtherName,M_Cou.ContactName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerContact M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.ContactName LIKE '%{searchString}%' OR M_Cou.OtherName LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CustomerId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) ORDER BY M_Cou.ContactName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CustomerContactViewModel>(RegId,$"SELECT M_Cou.CustomerId,M_Cou.OtherName,M_Cou.ContactName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerContact M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.ContactName LIKE '%{searchString}%' OR M_Cou.OtherName LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CustomerId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) ORDER BY M_Cou.ContactName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 CustomerContactViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
                 CustomerContactViewModelCount.customerContactViewModels = result == null ? null : result.ToList();
@@ -59,11 +59,11 @@ namespace AHHA.Infra.Services.Masters
             }
 
         }
-        public async Task<M_CustomerContact> GetCustomerContactByIdAsync(Int16 CompanyId, Int32 CustomerId, Int32 UserId)
+        public async Task<M_CustomerContact> GetCustomerContactByIdAsync(string RegId, Int16 CompanyId, Int32 CustomerId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerContact>($"SELECT CustomerId,OtherName,ContactName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerContact WHERE CustomerId={CustomerId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerContact>(RegId,$"SELECT CustomerId,OtherName,ContactName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerContact WHERE CustomerId={CustomerId}");
 
                 return result;
             }
@@ -88,7 +88,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> AddCustomerContactAsync(Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
+        public async Task<SqlResponce> AddCustomerContactAsync(string RegId, Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
         {
             bool isExist = false;
             var sqlResponce = new SqlResponce();
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 1 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND OtherName='{CustomerContact.OtherName}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND OtherName='{CustomerContact.OtherName}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +119,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (CustomerId + 1) FROM dbo.M_CustomerContact WHERE (CustomerId + 1) NOT IN (SELECT CustomerId FROM dbo.M_CustomerContact)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (CustomerId + 1) FROM dbo.M_CustomerContact WHERE (CustomerId + 1) NOT IN (SELECT CustomerId FROM dbo.M_CustomerContact)),1) AS MissId");
 
                         #region Saving CustomerContact
 
@@ -193,7 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> UpdateCustomerContactAsync(Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
+        public async Task<SqlResponce> UpdateCustomerContactAsync(string RegId, Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
         {
             int IsActive = CustomerContact.IsActive == true ? 1 : 0;
             bool isExist = false;
@@ -205,7 +205,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (CustomerContact.CustomerId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName} AND CustomerId <>{CustomerContact.CustomerId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName} AND CustomerId <>{CustomerContact.CustomerId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -288,7 +288,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> DeleteCustomerContactAsync(Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
+        public async Task<SqlResponce> DeleteCustomerContactAsync(string RegId, Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
             try
@@ -344,22 +344,6 @@ namespace AHHA.Infra.Services.Masters
                 _context.SaveChanges();
 
                 throw new Exception(ex.ToString());
-            }
-        }
-        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
-                parameters.Add("Id", Id, DbType.Int32);
-                return await _repository.GetExecuteDataSetStoredProcedure("USP_LMS_Training", parameters);
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
-                throw;
             }
         }
 

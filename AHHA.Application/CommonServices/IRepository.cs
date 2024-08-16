@@ -14,7 +14,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns name="T"> return type as int,string or object etc which you provide on method</returns>
-        Task<IEnumerable<T>> GetQueryAsync<T>(string spName, object? Parameters = null);
+        Task<IEnumerable<T>> GetQueryAsync<T>(string RegId,string spName, object? Parameters = null);
 
         /// <summary>
         /// Get first row of Data By passing T as view model class by using query
@@ -24,7 +24,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns></returns>
-        Task<T> GetQuerySingleOrDefaultAsync<T>(string SpName, object? Parameters = null);
+        Task<T> GetQuerySingleOrDefaultAsync<T>(string RegId, string SpName, object? Parameters = null);
 
         /// <summary>
         /// Get first row of Data By passing T as view model class by using query
@@ -35,7 +35,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns></returns>
-        Task<T> GetQueryFirstAsync<T>(string spName, object? Parameters=null);
+        Task<T> GetQueryFirstAsync<T>(string RegId, string spName, object? Parameters=null);
 
         /// <summary>
         /// Get table type of data
@@ -44,14 +44,14 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns></returns>
-        Task<bool> GetExecuteScalarAsync(string SpName, object? Parameters);
+        Task<bool> GetExecuteScalarAsync(string RegId, string SpName, object? Parameters);
 
         /// <summary>
         /// Get table type of data
         /// </summary>
         /// <param name="storedProcedureName"></param>
         /// <returns></returns>
-        Task<DataSet> GetExecuteDataSetQuery(string storedProcedureName);
+        Task<DataSet> GetExecuteDataSetQuery(string RegId, string storedProcedureName);
 
         /// <summary>
         /// Get table type of data
@@ -59,6 +59,6 @@ namespace AHHA.Application.CommonServices
         /// <param name="storedProcedureName"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        Task<DataSet> GetExecuteDataSetStoredProcedure(string storedProcedureName, DynamicParameters parameters);
+        Task<DataSet> GetExecuteDataSetStoredProcedure(string RegId, string storedProcedureName, DynamicParameters parameters);
     }
 }

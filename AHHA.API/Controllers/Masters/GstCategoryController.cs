@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<GstCategoryController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _GstCategoryService.GetGstCategoryListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _GstCategoryService.GetGstCategoryListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            GstCategoryViewModel = _mapper.Map<GstCategoryViewModel>(await _GstCategoryService.GetGstCategoryByIdAsync(CompanyId, GstCategoryId, UserId));
+                            GstCategoryViewModel = _mapper.Map<GstCategoryViewModel>(await _GstCategoryService.GetGstCategoryByIdAsync(RegId,CompanyId, GstCategoryId, UserId));
 
                             if (GstCategoryViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -178,7 +178,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = GstCategory.Remarks
                             };
 
-                            var createdGstCategory = await _GstCategoryService.AddGstCategoryAsync(CompanyId, GstCategoryEntity, UserId);
+                            var createdGstCategory = await _GstCategoryService.AddGstCategoryAsync(RegId,CompanyId, GstCategoryEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdGstCategory);
 
                         }
@@ -215,9 +215,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var GstCategoryToUpdate = await _GstCategoryService.GetGstCategoryByIdAsync(CompanyId, GstCategoryId, UserId);
+                                var GstCategoryToUpdate = await _GstCategoryService.GetGstCategoryByIdAsync(RegId,CompanyId, GstCategoryId, UserId);
 
                                 if (GstCategoryToUpdate == null)
                                     return NotFound($"M_GstCategory with Id = {GstCategoryId} not found");
@@ -251,7 +251,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = GstCategory.Remarks
                             };
 
-                            var sqlResponce = await _GstCategoryService.UpdateGstCategoryAsync(CompanyId, GstCategoryEntity, UserId);
+                            var sqlResponce = await _GstCategoryService.UpdateGstCategoryAsync(RegId,CompanyId, GstCategoryEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -286,20 +286,20 @@ namespace AHHA.API.Controllers.Masters
         //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
         //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-        //        if (ValidateHeaders(CompanyId, UserId))
+        //        if (ValidateHeaders(RegId,CompanyId, UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
+        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GstCategory, UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var GstCategoryToDelete = await _GstCategoryService.GetGstCategoryByIdAsync(CompanyId, GstCategoryId, UserId);
+        //                    var GstCategoryToDelete = await _GstCategoryService.GetGstCategoryByIdAsync(RegId,CompanyId, GstCategoryId, UserId);
 
         //                    if (GstCategoryToDelete == null)
         //                        return NotFound($"M_GstCategory with Id = {GstCategoryId} not found");
 
-        //                    var sqlResponce = await _GstCategoryService.DeleteGstCategoryAsync(CompanyId, GstCategoryToDelete, UserId);
+        //                    var sqlResponce = await _GstCategoryService.DeleteGstCategoryAsync(RegId,CompanyId, GstCategoryToDelete, UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"GstCategory_{GstCategoryId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

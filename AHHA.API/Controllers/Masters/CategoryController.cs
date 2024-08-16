@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<CategoryController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _CategoryService.GetCategoryListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _CategoryService.GetCategoryListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            CategoryViewModel = _mapper.Map<CategoryViewModel>(await _CategoryService.GetCategoryByIdAsync(CompanyId, CategoryId, UserId));
+                            CategoryViewModel = _mapper.Map<CategoryViewModel>(await _CategoryService.GetCategoryByIdAsync(RegId,CompanyId, CategoryId, UserId));
 
                             if (CategoryViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -178,7 +178,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Category.Remarks
                             };
 
-                            var createdCategory = await _CategoryService.AddCategoryAsync(CompanyId, CategoryEntity, UserId);
+                            var createdCategory = await _CategoryService.AddCategoryAsync(RegId,CompanyId, CategoryEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCategory);
 
                         }
@@ -215,9 +215,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CategoryToUpdate = await _CategoryService.GetCategoryByIdAsync(CompanyId, CategoryId, UserId);
+                                var CategoryToUpdate = await _CategoryService.GetCategoryByIdAsync(RegId,CompanyId, CategoryId, UserId);
 
                                 if (CategoryToUpdate == null)
                                     return NotFound($"M_Category with Id = {CategoryId} not found");
@@ -251,7 +251,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Category.Remarks
                             };
 
-                            var sqlResponce = await _CategoryService.UpdateCategoryAsync(CompanyId, CategoryEntity, UserId);
+                            var sqlResponce = await _CategoryService.UpdateCategoryAsync(RegId,CompanyId, CategoryEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -286,20 +286,20 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Category, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var CategoryToDelete = await _CategoryService.GetCategoryByIdAsync(CompanyId, CategoryId, UserId);
+                            var CategoryToDelete = await _CategoryService.GetCategoryByIdAsync(RegId,CompanyId, CategoryId, UserId);
 
                             if (CategoryToDelete == null)
                                 return NotFound($"M_Category with Id = {CategoryId} not found");
 
-                            var sqlResponce = await _CategoryService.DeleteCategoryAsync(CompanyId, CategoryToDelete, UserId);
+                            var sqlResponce = await _CategoryService.DeleteCategoryAsync(RegId,CompanyId, CategoryToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Category_{CategoryId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

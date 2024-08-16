@@ -10,7 +10,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Admin
 {
-    [Route("api/[controller]")]
+    [Route("api/Admin")]
     [ApiController]
     public class TransactionCategoryController : ControllerBase
     {

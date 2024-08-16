@@ -3,6 +3,7 @@ using AHHA.Core.Models.Admin;
 using AHHA.Core.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers
 {
@@ -13,6 +14,7 @@ namespace AHHA.API.Controllers
         private readonly IConfiguration _configuration;
         private readonly IAuthService _authServices;
         private static Dictionary<string, string> _refreshTokens = new Dictionary<string, string>();
+        private string RegId = string.Empty;
 
         public AuthController(IConfiguration configuration, IAuthService authServices)
         {
@@ -29,6 +31,8 @@ namespace AHHA.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginViewModel user)
         {
+            RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+
             if (!ModelState.IsValid)
             {
                 return BadRequest();
@@ -66,7 +70,7 @@ namespace AHHA.API.Controllers
         //public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         //{
         //    // Check user credentials (in a real application, you'd authenticate against a database)
-        //    RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+        //    RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
         //    var user = _authServices.GetByUserName(model.UserName);
 

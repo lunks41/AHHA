@@ -23,14 +23,14 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<OrderTypeViewModelCount> GetOrderTypeListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<OrderTypeViewModelCount> GetOrderTypeListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
             OrderTypeViewModelCount OrderTypeViewModelCount = new OrderTypeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>($"SELECT COUNT(*) AS CountId FROM M_OrderType WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.OrderType},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_OrderType WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.OrderType},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<OrderTypeViewModel>($"SELECT M_Cou.OrderTypeId,M_Cou.OrderTypeCode,M_Cou.OrderTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_OrderType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.OrderTypeName LIKE '%{searchString}%' OR M_Cou.OrderTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.OrderTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) ORDER BY M_Cou.OrderTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<OrderTypeViewModel>(RegId,$"SELECT M_Cou.OrderTypeId,M_Cou.OrderTypeCode,M_Cou.OrderTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_OrderType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.OrderTypeName LIKE '%{searchString}%' OR M_Cou.OrderTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.OrderTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) ORDER BY M_Cou.OrderTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 OrderTypeViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
                 OrderTypeViewModelCount.orderTypeViewModels = result == null ? null : result.ToList();
@@ -59,11 +59,11 @@ namespace AHHA.Infra.Services.Masters
             }
 
         }
-        public async Task<M_OrderType> GetOrderTypeByIdAsync(Int16 CompanyId, Int32 OrderTypeId, Int32 UserId)
+        public async Task<M_OrderType> GetOrderTypeByIdAsync(string RegId, Int16 CompanyId, Int32 OrderTypeId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_OrderType>($"SELECT OrderTypeId,OrderTypeCode,OrderTypeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_OrderType WHERE OrderTypeId={OrderTypeId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_OrderType>(RegId,$"SELECT OrderTypeId,OrderTypeCode,OrderTypeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_OrderType WHERE OrderTypeId={OrderTypeId}");
 
                 return result;
             }
@@ -88,7 +88,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> AddOrderTypeAsync(Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
+        public async Task<SqlResponce> AddOrderTypeAsync(string RegId, Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
         {
             bool isExist = false;
             var sqlResponce = new SqlResponce();
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 1 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeCode='{OrderType.OrderTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeCode='{OrderType.OrderTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +119,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (OrderTypeId + 1) FROM dbo.M_OrderType WHERE (OrderTypeId + 1) NOT IN (SELECT OrderTypeId FROM dbo.M_OrderType)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (OrderTypeId + 1) FROM dbo.M_OrderType WHERE (OrderTypeId + 1) NOT IN (SELECT OrderTypeId FROM dbo.M_OrderType)),1) AS MissId");
 
                         #region Saving OrderType
 
@@ -193,7 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> UpdateOrderTypeAsync(Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
+        public async Task<SqlResponce> UpdateOrderTypeAsync(string RegId, Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
         {
             int IsActive = OrderType.IsActive == true ? 1 : 0;
             bool isExist = false;
@@ -205,7 +205,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (OrderType.OrderTypeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName} AND OrderTypeId <>{OrderType.OrderTypeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName} AND OrderTypeId <>{OrderType.OrderTypeId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -289,7 +289,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> DeleteOrderTypeAsync(Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
+        public async Task<SqlResponce> DeleteOrderTypeAsync(string RegId, Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
             try
@@ -347,22 +347,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
-                parameters.Add("Id", Id, DbType.Int32);
-                return await _repository.GetExecuteDataSetStoredProcedure("USP_LMS_Training", parameters);
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
-                throw;
-            }
-        }
+        
 
     }
 }

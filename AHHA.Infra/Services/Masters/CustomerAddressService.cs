@@ -23,14 +23,14 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<CustomerAddressViewModelCount> GetCustomerAddressListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<CustomerAddressViewModelCount> GetCustomerAddressListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
             CustomerAddressViewModelCount CustomerAddressViewModelCount = new CustomerAddressViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>($"SELECT COUNT(*) AS CountId FROM M_CustomerAddress WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_CustomerAddress WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<CustomerAddressViewModel>($"SELECT M_Cou.AddressId,M_Cou.Address1,M_Cou.CustomerAddressName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerAddress M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CustomerAddressName LIKE '%{searchString}%' OR M_Cou.Address1 LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.AddressId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) ORDER BY M_Cou.CustomerAddressName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CustomerAddressViewModel>(RegId,$"SELECT M_Cou.AddressId,M_Cou.Address1,M_Cou.CustomerAddressName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerAddress M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CustomerAddressName LIKE '%{searchString}%' OR M_Cou.Address1 LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.AddressId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) ORDER BY M_Cou.CustomerAddressName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 CustomerAddressViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
                 CustomerAddressViewModelCount.customerAddressViewModels = result == null ? null : result.ToList();
@@ -59,11 +59,11 @@ namespace AHHA.Infra.Services.Masters
             }
 
         }
-        public async Task<M_CustomerAddress> GetCustomerAddressByIdAsync(Int16 CompanyId, Int32 AddressId, Int32 UserId)
+        public async Task<M_CustomerAddress> GetCustomerAddressByIdAsync(string RegId, Int16 CompanyId, Int32 AddressId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerAddress>($"SELECT AddressId,Address1,CustomerAddressName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerAddress WHERE AddressId={AddressId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerAddress>(RegId,$"SELECT AddressId,Address1,CustomerAddressName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerAddress WHERE AddressId={AddressId}");
 
                 return result;
             }
@@ -88,7 +88,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> AddCustomerAddressAsync(Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
+        public async Task<SqlResponce> AddCustomerAddressAsync(string RegId, Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
         {
             bool isExist = false;
             var sqlResponce = new SqlResponce();
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 1 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))  UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))  UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +119,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (AddressId + 1) FROM dbo.M_CustomerAddress WHERE (AddressId + 1) NOT IN (SELECT AddressId FROM dbo.M_CustomerAddress)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (AddressId + 1) FROM dbo.M_CustomerAddress WHERE (AddressId + 1) NOT IN (SELECT AddressId FROM dbo.M_CustomerAddress)),1) AS MissId");
 
                         #region Saving CustomerAddress
 
@@ -193,7 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> UpdateCustomerAddressAsync(Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
+        public async Task<SqlResponce> UpdateCustomerAddressAsync(string RegId, Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
         {
             int IsActive = CustomerAddress.IsActive == true ? 1 : 0;
             bool isExist = false;
@@ -205,7 +205,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (CustomerAddress.AddressId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 2 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND AddressId <>{CustomerAddress.AddressId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND AddressId <>{CustomerAddress.AddressId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -288,7 +288,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> DeleteCustomerAddressAsync(Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
+        public async Task<SqlResponce> DeleteCustomerAddressAsync(string RegId, Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
             try
@@ -346,22 +346,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
-                parameters.Add("Id", Id, DbType.Int32);
-                return await _repository.GetExecuteDataSetStoredProcedure("USP_LMS_Training", parameters);
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
-                throw;
-            }
-        }
+        
 
     }
 }

@@ -18,12 +18,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICountryService _countryService;
         private readonly ILogger<CountryController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private Int32 RegId = 0;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
 
         public CountryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CountryController> logger, ICountryService countryService)
     : base(memoryCache, mapper, baseServices)
@@ -34,25 +28,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCountry")]
         [Authorize]
-        public async Task<ActionResult> GetAllCountry()
+        public async Task<ActionResult> GetAllCountry([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Country, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString= (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-
                         //Get the data from cache memory
                         var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
 
@@ -62,7 +47,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _countryService.GetCountryListAsync(CompanyId, pageSize, pageNumber,searchString.Trim(), UserId);
+                            cacheData = await _countryService.GetCountryListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -80,10 +65,10 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
+                    if (headerViewModel.UserId == 0)
+                        return NotFound("headerViewModel.UserId Not Found");
+                    else if (headerViewModel.CompanyId == 0)
+                        return NotFound("headerViewModel.CompanyId Not Found");
                     else
                         return NotFound();
                 }
@@ -98,17 +83,14 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCountrybyid/{CountryId}")]
         [Authorize]
-        public async Task<ActionResult<CountryViewModel>> GetCountryById(Int32 CountryId)
+        public async Task<ActionResult<CountryViewModel>> GetCountryById(Int32 CountryId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var countryViewModel = new CountryViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Country, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -118,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(CompanyId, CountryId, UserId));
+                            countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CountryId, headerViewModel.UserId));
 
                             if (countryViewModel == null)
                                 return NotFound();
@@ -150,16 +132,13 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddCountry")]
         [Authorize]
-        public async Task<ActionResult<CountryViewModel>> CreateCountry(CountryViewModel country)
+        public async Task<ActionResult<CountryViewModel>> CreateCountry(CountryViewModel country, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Country, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -174,12 +153,12 @@ namespace AHHA.API.Controllers.Masters
                                 CountryCode = country.CountryCode,
                                 CountryId = country.CountryId,
                                 CountryName = country.CountryName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = country.IsActive,
                                 Remarks = country.Remarks
                             };
 
-                            var createdCountry = await _countryService.AddCountryAsync(CompanyId, countryEntity, UserId);
+                            var createdCountry = await _countryService.AddCountryAsync(headerViewModel.RegId,headerViewModel.CompanyId, countryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCountry);
 
                         }
@@ -208,17 +187,14 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateCountry/{CountryId}")]
         [Authorize]
-        public async Task<ActionResult<CountryViewModel>> UpdateCountry(int CountryId, [FromBody] CountryViewModel country)
+        public async Task<ActionResult<CountryViewModel>> UpdateCountry(int CountryId, [FromBody] CountryViewModel country, [FromHeader] HeaderViewModel headerViewModel)
         {
             var countryViewModel = new CountryViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Country, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -235,7 +211,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CountryToUpdate = await _countryService.GetCountryByIdAsync(CompanyId, CountryId, UserId);
+                                var CountryToUpdate = await _countryService.GetCountryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
 
                                 if (CountryToUpdate == null)
                                     return NotFound($"M_Country with Id = {CountryId} not found");
@@ -246,13 +222,13 @@ namespace AHHA.API.Controllers.Masters
                                 CountryCode = country.CountryCode,
                                 CountryId = country.CountryId,
                                 CountryName = country.CountryName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = country.IsActive,
                                 Remarks = country.Remarks
                             };
 
-                            var sqlResponce = await _countryService.UpdateCountryAsync(CompanyId, countryEntity, UserId);
+                            var sqlResponce = await _countryService.UpdateCountryAsync(headerViewModel.RegId,headerViewModel.CompanyId, countryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -280,27 +256,24 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{CountryId}")]
         [Authorize]
-        public async Task<ActionResult<M_Country>> DeleteCountry(int CountryId)
+        public async Task<ActionResult<M_Country>> DeleteCountry(int CountryId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Country, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var CountryToDelete = await _countryService.GetCountryByIdAsync(CompanyId, CountryId, UserId);
+                            var CountryToDelete = await _countryService.GetCountryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
 
                             if (CountryToDelete == null)
                                 return NotFound($"M_Country with Id = {CountryId} not found");
 
-                            var sqlResponce = await _countryService.DeleteCountryAsync(CompanyId, CountryToDelete, UserId);
+                            var sqlResponce = await _countryService.DeleteCountryAsync(headerViewModel.RegId,headerViewModel.CompanyId, CountryToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Country_{CountryId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

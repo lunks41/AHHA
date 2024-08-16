@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<TaxCategoryController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _TaxCategoryService.GetTaxCategoryListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _TaxCategoryService.GetTaxCategoryListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            TaxCategoryViewModel = _mapper.Map<TaxCategoryViewModel>(await _TaxCategoryService.GetTaxCategoryByIdAsync(CompanyId, TaxCategoryId, UserId));
+                            TaxCategoryViewModel = _mapper.Map<TaxCategoryViewModel>(await _TaxCategoryService.GetTaxCategoryByIdAsync(RegId,CompanyId, TaxCategoryId, UserId));
 
                             if (TaxCategoryViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -178,7 +178,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = TaxCategory.Remarks
                             };
 
-                            var createdTaxCategory = await _TaxCategoryService.AddTaxCategoryAsync(CompanyId, TaxCategoryEntity, UserId);
+                            var createdTaxCategory = await _TaxCategoryService.AddTaxCategoryAsync(RegId,CompanyId, TaxCategoryEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdTaxCategory);
 
                         }
@@ -215,9 +215,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var TaxCategoryToUpdate = await _TaxCategoryService.GetTaxCategoryByIdAsync(CompanyId, TaxCategoryId, UserId);
+                                var TaxCategoryToUpdate = await _TaxCategoryService.GetTaxCategoryByIdAsync(RegId,CompanyId, TaxCategoryId, UserId);
 
                                 if (TaxCategoryToUpdate == null)
                                     return NotFound($"M_TaxCategory with Id = {TaxCategoryId} not found");
@@ -251,7 +251,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = TaxCategory.Remarks
                             };
 
-                            var sqlResponce = await _TaxCategoryService.UpdateTaxCategoryAsync(CompanyId, TaxCategoryEntity, UserId);
+                            var sqlResponce = await _TaxCategoryService.UpdateTaxCategoryAsync(RegId,CompanyId, TaxCategoryEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -286,20 +286,20 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.TaxCategory, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var TaxCategoryToDelete = await _TaxCategoryService.GetTaxCategoryByIdAsync(CompanyId, TaxCategoryId, UserId);
+                            var TaxCategoryToDelete = await _TaxCategoryService.GetTaxCategoryByIdAsync(RegId,CompanyId, TaxCategoryId, UserId);
 
                             if (TaxCategoryToDelete == null)
                                 return NotFound($"M_TaxCategory with Id = {TaxCategoryId} not found");
 
-                            var sqlResponce = await _TaxCategoryService.DeleteTaxCategoryAsync(CompanyId, TaxCategoryToDelete, UserId);
+                            var sqlResponce = await _TaxCategoryService.DeleteTaxCategoryAsync(RegId,CompanyId, TaxCategoryToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"TaxCategory_{TaxCategoryId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

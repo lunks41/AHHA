@@ -23,14 +23,14 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<CategoryViewModelCount> GetCategoryListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<CategoryViewModelCount> GetCategoryListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
             CategoryViewModelCount CategoryViewModelCount = new CategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>($"SELECT COUNT(*) AS CountId FROM M_Category WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Category},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_Category WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Category},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<CategoryViewModel>($"SELECT M_Cou.CategoryId,M_Cou.CategoryCode,M_Cou.CategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Category M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CategoryName LIKE '%{searchString}%' OR M_Cou.CategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Category},{(short)Modules.Master})) ORDER BY M_Cou.CategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CategoryViewModel>(RegId,$"SELECT M_Cou.CategoryId,M_Cou.CategoryCode,M_Cou.CategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Category M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CategoryName LIKE '%{searchString}%' OR M_Cou.CategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Category},{(short)Modules.Master})) ORDER BY M_Cou.CategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 CategoryViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
                 CategoryViewModelCount.categoryViewModels = result == null ? null : result.ToList();
@@ -59,11 +59,11 @@ namespace AHHA.Infra.Services.Masters
             }
 
         }
-        public async Task<M_Category> GetCategoryByIdAsync(Int16 CompanyId, Int16 CategoryId, Int32 UserId)
+        public async Task<M_Category> GetCategoryByIdAsync(string RegId, Int16 CompanyId, Int16 CategoryId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Category>($"SELECT CategoryId,CategoryCode,CategoryName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Category WHERE CategoryId={CategoryId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Category>(RegId,$"SELECT CategoryId,CategoryCode,CategoryName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Category WHERE CategoryId={CategoryId}");
 
                 return result;
             }
@@ -88,7 +88,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> AddCategoryAsync(Int16 CompanyId, M_Category Category, Int32 UserId)
+        public async Task<SqlResponce> AddCategoryAsync(string RegId, Int16 CompanyId, M_Category Category, Int32 UserId)
         {
             bool isExist = false;
             var sqlResponce = new SqlResponce();
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 1 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryCode='{Category.CategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryCode='{Category.CategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +119,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (CategoryId + 1) FROM dbo.M_Category WHERE (CategoryId + 1) NOT IN (SELECT CategoryId FROM dbo.M_Category)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (CategoryId + 1) FROM dbo.M_Category WHERE (CategoryId + 1) NOT IN (SELECT CategoryId FROM dbo.M_Category)),1) AS MissId");
 
                         #region Saving Category
 
@@ -193,7 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> UpdateCategoryAsync(Int16 CompanyId, M_Category Category, Int32 UserId)
+        public async Task<SqlResponce> UpdateCategoryAsync(string RegId, Int16 CompanyId, M_Category Category, Int32 UserId)
         {
             int IsActive = Category.IsActive == true ? 1 : 0;
             bool isExist = false;
@@ -205,7 +205,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Category.CategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName} AND CategoryId <>{Category.CategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName} AND CategoryId <>{Category.CategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -289,7 +289,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> DeleteCategoryAsync(Int16 CompanyId, M_Category Category, Int32 UserId)
+        public async Task<SqlResponce> DeleteCategoryAsync(string RegId, Int16 CompanyId, M_Category Category, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
             try
@@ -345,22 +345,6 @@ namespace AHHA.Infra.Services.Masters
                 _context.SaveChanges();
 
                 throw new Exception(ex.ToString());
-            }
-        }
-        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
-                parameters.Add("Id", Id, DbType.Int32);
-                return await _repository.GetExecuteDataSetStoredProcedure("USP_LMS_Training", parameters);
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
-                throw;
             }
         }
 

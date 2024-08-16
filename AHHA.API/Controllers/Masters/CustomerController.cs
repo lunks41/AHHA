@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<CustomerController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -38,11 +38,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -60,7 +60,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _CustomerService.GetCustomerListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _CustomerService.GetCustomerListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -104,9 +104,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -116,7 +116,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            CustomerViewModel = _mapper.Map<CustomerViewModel>(await _CustomerService.GetCustomerByIdAsync(CompanyId, CustomerId, UserId));
+                            CustomerViewModel = _mapper.Map<CustomerViewModel>(await _CustomerService.GetCustomerByIdAsync(RegId,CompanyId, CustomerId, UserId));
 
                             if (CustomerViewModel == null)
                                 return NotFound();
@@ -155,9 +155,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -177,7 +177,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Customer.Remarks
                             };
 
-                            var createdCustomer = await _CustomerService.AddCustomerAsync(CompanyId, CustomerEntity, UserId);
+                            var createdCustomer = await _CustomerService.AddCustomerAsync(RegId,CompanyId, CustomerEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCustomer);
 
                         }
@@ -214,9 +214,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -233,7 +233,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CustomerToUpdate = await _CustomerService.GetCustomerByIdAsync(CompanyId, CustomerId, UserId);
+                                var CustomerToUpdate = await _CustomerService.GetCustomerByIdAsync(RegId,CompanyId, CustomerId, UserId);
 
                                 if (CustomerToUpdate == null)
                                     return NotFound($"M_Customer with Id = {CustomerId} not found");
@@ -250,7 +250,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Customer.Remarks
                             };
 
-                            var sqlResponce = await _CustomerService.UpdateCustomerAsync(CompanyId, CustomerEntity, UserId);
+                            var sqlResponce = await _CustomerService.UpdateCustomerAsync(RegId,CompanyId, CustomerEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -285,20 +285,20 @@ namespace AHHA.API.Controllers.Masters
         //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
         //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-        //        if (ValidateHeaders(CompanyId, UserId))
+        //        if (ValidateHeaders(RegId,CompanyId, UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var CustomerToDelete = await _CustomerService.GetCustomerByIdAsync(CompanyId, CustomerId, UserId);
+        //                    var CustomerToDelete = await _CustomerService.GetCustomerByIdAsync(RegId,CompanyId, CustomerId, UserId);
 
         //                    if (CustomerToDelete == null)
         //                        return NotFound($"M_Customer with Id = {CustomerId} not found");
 
-        //                    var sqlResponce = await _CustomerService.DeleteCustomerAsync(CompanyId, CustomerToDelete, UserId);
+        //                    var sqlResponce = await _CustomerService.DeleteCustomerAsync(RegId,CompanyId, CustomerToDelete, UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"Customer_{CustomerId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

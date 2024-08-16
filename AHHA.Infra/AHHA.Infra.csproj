@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="NewFolder\" />
     <Folder Include="Services\Accounts\AP\" />
     <Folder Include="Services\Accounts\AR\" />
     <Folder Include="Services\Accounts\CB\" />

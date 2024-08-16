@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<BargeController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _BargeService.GetBargeListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _BargeService.GetBargeListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            BargeViewModel = _mapper.Map<BargeViewModel>(await _BargeService.GetBargeByIdAsync(CompanyId, BargeId, UserId));
+                            BargeViewModel = _mapper.Map<BargeViewModel>(await _BargeService.GetBargeByIdAsync(RegId,CompanyId, BargeId, UserId));
 
                             if (BargeViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -184,7 +184,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Barge.Remarks
                             };
 
-                            var createdBarge = await _BargeService.AddBargeAsync(CompanyId, BargeEntity, UserId);
+                            var createdBarge = await _BargeService.AddBargeAsync(RegId,CompanyId, BargeEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdBarge);
 
                         }
@@ -221,9 +221,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -240,7 +240,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var BargeToUpdate = await _BargeService.GetBargeByIdAsync(CompanyId, BargeId, UserId);
+                                var BargeToUpdate = await _BargeService.GetBargeByIdAsync(RegId,CompanyId, BargeId, UserId);
 
                                 if (BargeToUpdate == null)
                                     return NotFound($"M_Barge with Id = {BargeId} not found");
@@ -263,7 +263,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Barge.Remarks
                             };
 
-                            var sqlResponce = await _BargeService.UpdateBargeAsync(CompanyId, BargeEntity, UserId);
+                            var sqlResponce = await _BargeService.UpdateBargeAsync(RegId,CompanyId, BargeEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -298,20 +298,20 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var BargeToDelete = await _BargeService.GetBargeByIdAsync(CompanyId, BargeId, UserId);
+                            var BargeToDelete = await _BargeService.GetBargeByIdAsync(RegId,CompanyId, BargeId, UserId);
 
                             if (BargeToDelete == null)
                                 return NotFound($"M_Barge with Id = {BargeId} not found");
 
-                            var sqlResponce = await _BargeService.DeleteBargeAsync(CompanyId, BargeToDelete, UserId);
+                            var sqlResponce = await _BargeService.DeleteBargeAsync(RegId,CompanyId, BargeToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Barge_{BargeId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

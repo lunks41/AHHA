@@ -22,14 +22,14 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<PaymentTypeViewModelCount> GetPaymentTypeListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<PaymentTypeViewModelCount> GetPaymentTypeListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
             PaymentTypeViewModelCount PaymentTypeViewModelCount = new PaymentTypeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>($"SELECT COUNT(*) AS CountId FROM M_PaymentType WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Product},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_PaymentType WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Product},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<PaymentTypeViewModel>($"SELECT M_Cou.PaymentTypeId,M_Cou.PaymentTypeCode,M_Cou.PaymentTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_PaymentType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.PaymentTypeName LIKE '%{searchString}%' OR M_Cou.PaymentTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.PaymentTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Product},{(short)Modules.Master})) ORDER BY M_Cou.PaymentTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<PaymentTypeViewModel>(RegId,$"SELECT M_Cou.PaymentTypeId,M_Cou.PaymentTypeCode,M_Cou.PaymentTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_PaymentType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.PaymentTypeName LIKE '%{searchString}%' OR M_Cou.PaymentTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.PaymentTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Product},{(short)Modules.Master})) ORDER BY M_Cou.PaymentTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 PaymentTypeViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
                 PaymentTypeViewModelCount.paymentTypeViewModels = result == null ? null : result.ToList();
@@ -58,11 +58,11 @@ namespace AHHA.Infra.Services.Masters
             }
 
         }
-        public async Task<M_PaymentType> GetPaymentTypeByIdAsync(Int16 CompanyId, Int32 PaymentTypeId, Int32 UserId)
+        public async Task<M_PaymentType> GetPaymentTypeByIdAsync(string RegId, Int16 CompanyId, Int32 PaymentTypeId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_PaymentType>($"SELECT PaymentTypeId,PaymentTypeCode,PaymentTypeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_PaymentType WHERE PaymentTypeId={PaymentTypeId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_PaymentType>(RegId,$"SELECT PaymentTypeId,PaymentTypeCode,PaymentTypeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_PaymentType WHERE PaymentTypeId={PaymentTypeId}");
 
                 return result;
             }
@@ -87,7 +87,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> AddPaymentTypeAsync(Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
+        public async Task<SqlResponce> AddPaymentTypeAsync(string RegId, Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
         {
             bool isExist = false;
             var sqlResponce = new SqlResponce();
@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 1 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeCode='{PaymentType.PaymentTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeCode='{PaymentType.PaymentTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -118,7 +118,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (PaymentTypeId + 1) FROM dbo.M_PaymentType WHERE (PaymentTypeId + 1) NOT IN (SELECT PaymentTypeId FROM dbo.M_PaymentType)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (PaymentTypeId + 1) FROM dbo.M_PaymentType WHERE (PaymentTypeId + 1) NOT IN (SELECT PaymentTypeId FROM dbo.M_PaymentType)),1) AS MissId");
 
                         #region Saving PaymentType
 
@@ -192,7 +192,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> UpdatePaymentTypeAsync(Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
+        public async Task<SqlResponce> UpdatePaymentTypeAsync(string RegId, Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
         {
             int IsActive = PaymentType.IsActive == true ? 1 : 0;
             bool isExist = false;
@@ -204,7 +204,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (PaymentType.PaymentTypeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName} AND PaymentTypeId <>{PaymentType.PaymentTypeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName} AND PaymentTypeId <>{PaymentType.PaymentTypeId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -288,7 +288,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> DeletePaymentTypeAsync(Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
+        public async Task<SqlResponce> DeletePaymentTypeAsync(string RegId, Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
             try
@@ -346,22 +346,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
-                parameters.Add("Id", Id, DbType.Int32);
-                return await _repository.GetExecuteDataSetStoredProcedure("USP_LMS_Training", parameters);
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
-                throw;
-            }
-        }
+       
 
     }
 }

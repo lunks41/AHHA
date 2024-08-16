@@ -16,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IPortRegionService _portRegionService;
         private readonly ILogger<PortRegionController> _logger;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private Int32 RegId = 0;
 
         public PortRegionController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<PortRegionController> logger, IPortRegionService portRegionService)
     : base(memoryCache, mapper, baseServices)
@@ -31,23 +25,16 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("getPortRegion")]
-        public async Task<ActionResult> GetAllPortRegion()
+        public async Task<ActionResult> GetAllPortRegion([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
                         //Get the data from cache memory
                         var cacheData = _memoryCache.Get<PortRegionViewModelCount>("PortRegion");
 
@@ -56,7 +43,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _portRegionService.GetPortRegionListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _portRegionService.GetPortRegionListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
                             if (cacheData == null)
                                 return NotFound();
                             _memoryCache.Set<PortRegionViewModelCount>("PortRegion", cacheData, expirationTime);
@@ -71,9 +58,9 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                    if (UserId == 0)
+                    if (headerViewModel.UserId == 0)
                         return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
+                    else if (headerViewModel.CompanyId == 0)
                         return NotFound("CompanyId Not Found");
                     else
                         return NotFound();
@@ -89,17 +76,14 @@ namespace AHHA.API.Controllers.Masters
 
 
         [HttpGet, Route("getPortRegionbyid/{PortRegionId}")]
-        public async Task<ActionResult<PortRegionViewModel>> GetPortRegionById(Int32 PortRegionId)
+        public async Task<ActionResult<PortRegionViewModel>> GetPortRegionById(Int32 PortRegionId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var PortRegionViewModel = new PortRegionViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -109,7 +93,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            PortRegionViewModel = _mapper.Map<PortRegionViewModel>(await _portRegionService.GetPortRegionByIdAsync(CompanyId, PortRegionId, UserId));
+                            PortRegionViewModel = _mapper.Map<PortRegionViewModel>(await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId));
 
                             if (PortRegionViewModel == null)
                                 return NotFound();
@@ -141,16 +125,13 @@ namespace AHHA.API.Controllers.Masters
 
 
         [HttpPost, Route("addPortRegion")]
-        public async Task<ActionResult<PortRegionViewModel>> CreatePortRegion(PortRegionViewModel PortRegion)
+        public async Task<ActionResult<PortRegionViewModel>> CreatePortRegion(PortRegionViewModel PortRegion, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -166,12 +147,12 @@ namespace AHHA.API.Controllers.Masters
                                 PortRegionCode = PortRegion.PortRegionCode,
                                 PortRegionName = PortRegion.PortRegionName,
                                 CountryId = PortRegion.CountryId,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = PortRegion.IsActive,
                                 Remarks = PortRegion.Remarks
                             };
 
-                            var createdPortRegion = await _portRegionService.AddPortRegionAsync(CompanyId, PortRegionEntity, UserId);
+                            var createdPortRegion = await _portRegionService.AddPortRegionAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
                             return Ok(createdPortRegion);
 
                         }
@@ -200,17 +181,14 @@ namespace AHHA.API.Controllers.Masters
 
 
         [HttpPut, Route("updatePortRegion/{PortRegionId}")]
-        public async Task<ActionResult<PortRegionViewModel>> UpdatePortRegion(int PortRegionId, [FromBody] PortRegionViewModel PortRegion)
+        public async Task<ActionResult<PortRegionViewModel>> UpdatePortRegion(int PortRegionId, [FromBody] PortRegionViewModel PortRegion, [FromHeader] HeaderViewModel headerViewModel)
         {
             var PortRegionViewModel = new PortRegionViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -226,7 +204,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var PortRegionToUpdate = await _portRegionService.GetPortRegionByIdAsync(CompanyId, PortRegionId, UserId);
+                                var PortRegionToUpdate = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
 
                                 if (PortRegionToUpdate == null)
                                     return NotFound($"M_PortRegion with Id = {PortRegionId} not found");
@@ -237,7 +215,7 @@ namespace AHHA.API.Controllers.Masters
                                 PortRegionCode = PortRegion.PortRegionCode,
                                 PortRegionId = PortRegion.PortRegionId,
                                 PortRegionName = PortRegion.PortRegionName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = PortRegion.IsActive,
                                 Remarks = PortRegion.Remarks,
@@ -245,7 +223,7 @@ namespace AHHA.API.Controllers.Masters
                                
                             };
 
-                            var sqlResponce = await _portRegionService.UpdatePortRegionAsync(CompanyId, PortRegionEntity, UserId);
+                            var sqlResponce = await _portRegionService.UpdatePortRegionAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
                             return Ok(sqlResponce);
                         }
                         else
@@ -273,27 +251,24 @@ namespace AHHA.API.Controllers.Masters
 
 
         [HttpDelete, Route("deletePortRegion/{PortRegionId}")]
-        public async Task<ActionResult<M_PortRegion>> DeletePortRegion(int PortRegionId)
+        public async Task<ActionResult<M_PortRegion>> DeletePortRegion(int PortRegionId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var PortRegionToDelete = await _portRegionService.GetPortRegionByIdAsync(CompanyId, PortRegionId, UserId);
+                            var PortRegionToDelete = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
 
                             if (PortRegionToDelete == null)
                                 return NotFound($"M_PortRegion with Id = {PortRegionId} not found");
 
-                            var sqlResponce = await _portRegionService.DeletePortRegionAsync(CompanyId, PortRegionToDelete, UserId);
+                            var sqlResponce = await _portRegionService.DeletePortRegionAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"PortRegion_{PortRegionId}");
                             return Ok(sqlResponce);

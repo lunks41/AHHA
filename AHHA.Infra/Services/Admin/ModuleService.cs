@@ -21,11 +21,11 @@ namespace AHHA.Infra.Services.Admin
             _context = context;
         }
 
-        public async Task<IEnumerable<UsersModuleViewModel>> GetUsersModulesAsync(Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<UsersModuleViewModel>> GetUsersModulesAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
-                var productDetails = await _repository.GetQueryAsync<UsersModuleViewModel>($"exec Adm_GetUserModules {CompanyId},{UserId}");
+                var productDetails = await _repository.GetQueryAsync<UsersModuleViewModel>(RegId,$"exec Adm_GetUserModules {CompanyId},{UserId}");
 
                 return productDetails;
             }

@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<AccountSetupCategoryController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _AccountSetupCategoryService.GetAccountSetupCategoryListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _AccountSetupCategoryService.GetAccountSetupCategoryListAsync(RegId, CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -104,10 +104,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +118,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            AccountSetupCategoryViewModel = _mapper.Map<AccountSetupCategoryViewModel>(await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(CompanyId, AccSetupCategoryId, UserId));
+                            AccountSetupCategoryViewModel = _mapper.Map<AccountSetupCategoryViewModel>(await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(RegId, CompanyId, AccSetupCategoryId, UserId));
 
                             if (AccountSetupCategoryViewModel == null)
                                 return NotFound();
@@ -156,9 +157,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -177,7 +178,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = AccountSetupCategory.Remarks
                             };
 
-                            var createdAccountSetupCategory = await _AccountSetupCategoryService.AddAccountSetupCategoryAsync(CompanyId, AccountSetupCategoryEntity, UserId);
+                            var createdAccountSetupCategory = await _AccountSetupCategoryService.AddAccountSetupCategoryAsync(RegId,CompanyId, AccountSetupCategoryEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdAccountSetupCategory);
 
                         }
@@ -213,10 +214,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -233,7 +235,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var AccountSetupCategoryToUpdate = await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(CompanyId, AccSetupCategoryId, UserId);
+                                var AccountSetupCategoryToUpdate = await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(RegId, CompanyId, AccSetupCategoryId, UserId);
 
                                 if (AccountSetupCategoryToUpdate == null)
                                     return NotFound($"M_AccountSetupCategory with Id = {AccSetupCategoryId} not found");
@@ -250,7 +252,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = AccountSetupCategory.Remarks
                             };
 
-                            var sqlResponce = await _AccountSetupCategoryService.UpdateAccountSetupCategoryAsync(CompanyId, AccountSetupCategoryEntity, UserId);
+                            var sqlResponce = await _AccountSetupCategoryService.UpdateAccountSetupCategoryAsync(RegId, CompanyId, AccountSetupCategoryEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -284,21 +286,22 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var AccountSetupCategoryToDelete = await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(CompanyId, AccSetupCategoryId, UserId);
+                            var AccountSetupCategoryToDelete = await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(RegId, CompanyId, AccSetupCategoryId, UserId);
 
                             if (AccountSetupCategoryToDelete == null)
                                 return NotFound($"M_AccountSetupCategory with Id = {AccSetupCategoryId} not found");
 
-                            var sqlResponce = await _AccountSetupCategoryService.DeleteAccountSetupCategoryAsync(CompanyId, AccountSetupCategoryToDelete, UserId);
+                            var sqlResponce = await _AccountSetupCategoryService.DeleteAccountSetupCategoryAsync(RegId, CompanyId, AccountSetupCategoryToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"AccountSetupCategory_{AccSetupCategoryId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

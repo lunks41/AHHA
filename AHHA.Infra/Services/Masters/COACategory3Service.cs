@@ -23,14 +23,14 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<COACategoryViewModelCount> GetCOACategory3ListAsync(Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<COACategoryViewModelCount> GetCOACategory3ListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
             COACategoryViewModelCount COACategoryViewModelCount = new COACategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>($"SELECT COUNT(*) AS CountId FROM M_COACategory3 WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.COACategory3},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_COACategory3 WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.COACategory3},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<COACategoryViewModel>($"SELECT M_Cou.COACategory3Id,M_Cou.COACategory3Code,M_Cou.COACategory3Name,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_COACategory3 M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.COACategory3Name LIKE '%{searchString}%' OR M_Cou.COACategory3Code LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.COACategory3Id<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) ORDER BY M_Cou.COACategory3Name OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<COACategoryViewModel>(RegId,$"SELECT M_Cou.COACategory3Id,M_Cou.COACategory3Code,M_Cou.COACategory3Name,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_COACategory3 M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.COACategory3Name LIKE '%{searchString}%' OR M_Cou.COACategory3Code LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.COACategory3Id<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) ORDER BY M_Cou.COACategory3Name OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 COACategoryViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
                 COACategoryViewModelCount.COACategoryViewModels = result == null ? null : result.ToList();
@@ -59,11 +59,11 @@ namespace AHHA.Infra.Services.Masters
             }
 
         }
-        public async Task<M_COACategory3> GetCOACategory3ByIdAsync(Int16 CompanyId, Int16 COACategoryId, Int32 UserId)
+        public async Task<M_COACategory3> GetCOACategory3ByIdAsync(string RegId, Int16 CompanyId, Int16 COACategoryId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_COACategory3>($"SELECT COACategory3Id,COACategory3Code,COACategory3Name,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_COACategory3 WHERE COACategory3Id={COACategoryId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_COACategory3>(RegId,$"SELECT COACategory3Id,COACategory3Code,COACategory3Name,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_COACategory3 WHERE COACategory3Id={COACategoryId}");
 
                 return result;
             }
@@ -88,7 +88,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<SqlResponce> AddCOACategory3Async(Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
+        public async Task<SqlResponce> AddCOACategory3Async(string RegId, Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
         {
             bool isExist = false;
             var sqlResponce = new SqlResponce();
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 1 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT COACategory3Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Code='{COACategory3.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT COACategory3Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Name='{COACategory3.COACategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT COACategory3Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Code='{COACategory3.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT COACategory3Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Name='{COACategory3.COACategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +119,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>("SELECT ISNULL((SELECT TOP 1 (COACategory3Id + 1) FROM dbo.M_COACategory3 WHERE (COACategory3Id + 1) NOT IN (SELECT COACategory3Id FROM dbo.M_COACategory3)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (COACategory3Id + 1) FROM dbo.M_COACategory3 WHERE (COACategory3Id + 1) NOT IN (SELECT COACategory3Id FROM dbo.M_COACategory3)),1) AS MissId");
 
                         #region Saving COACategory3
 
@@ -193,7 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> UpdateCOACategory3Async(Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
+        public async Task<SqlResponce> UpdateCOACategory3Async(string RegId, Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
         {
             int IsActive = COACategory3.IsActive == true ? 1 : 0;
             bool isExist = false;
@@ -205,7 +205,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (COACategory3.COACategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>($"SELECT 2 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT COACategory3Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Name='{COACategory3.COACategoryName} AND COACategory3Id <>{COACategory3.COACategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT COACategory3Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Name='{COACategory3.COACategoryName} AND COACategory3Id <>{COACategory3.COACategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -289,7 +289,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
-        public async Task<SqlResponce> DeleteCOACategory3Async(Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
+        public async Task<SqlResponce> DeleteCOACategory3Async(string RegId, Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
             try
@@ -347,22 +347,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
-                parameters.Add("Id", Id, DbType.Int32);
-                return await _repository.GetExecuteDataSetStoredProcedure("USP_LMS_Training", parameters);
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
-                throw;
-            }
-        }
+       
 
     }
 }

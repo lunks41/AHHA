@@ -1,4 +1,5 @@
 ﻿using AHHA.Application.IServices;
+using AHHA.Core.Common;
 using AHHA.Core.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -22,13 +23,15 @@ namespace AHHA.API.Controllers
         }
 
         [NonAction]
-        public bool ValidateHeaders(Int16 CompanyId, Int32 UserId)
+        public bool ValidateHeaders(string RegId, Int16 CompanyId, Int32 UserId)
         {
             //RegID Check from json file
             //proper message for 
             bool IsValidate = false;
 
-            if (CompanyId > 0 && UserId > 0)
+            DBGetConnection dBGetConnection = new DBGetConnection();
+
+            if (CompanyId > 0 && UserId > 0 && dBGetConnection.ValidateRegId(RegId))
             {
                 IsValidate = true;
             }
@@ -36,9 +39,9 @@ namespace AHHA.API.Controllers
         }
 
         [NonAction]
-        public UserGroupRightsViewModel ValidateScreen(Int16 CompanyId, Int16 ModuleId, Int32 TransactionId, Int32 UserId)
+        public UserGroupRightsViewModel ValidateScreen(string RegId, Int16 CompanyId, Int16 ModuleId, Int32 TransactionId, Int32 UserId)
         {
-            return _baseServices.ValidateScreen(CompanyId, ModuleId, TransactionId, UserId);
+            return _baseServices.ValidateScreen(RegId, CompanyId, ModuleId, TransactionId, UserId);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<GroupCreditLimitController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _GroupCreditLimitService.GetGroupCreditLimitListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _GroupCreditLimitService.GetGroupCreditLimitListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            GroupCreditLimtViewModel = _mapper.Map<GroupCreditLimtViewModel>(await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(CompanyId, GroupCreditLimitId, UserId));
+                            GroupCreditLimtViewModel = _mapper.Map<GroupCreditLimtViewModel>(await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(RegId,CompanyId, GroupCreditLimitId, UserId));
 
                             if (GroupCreditLimtViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -178,7 +178,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = GroupCreditLimit.Remarks
                             };
 
-                            var createdGroupCreditLimit = await _GroupCreditLimitService.AddGroupCreditLimitAsync(CompanyId, GroupCreditLimitEntity, UserId);
+                            var createdGroupCreditLimit = await _GroupCreditLimitService.AddGroupCreditLimitAsync(RegId,CompanyId, GroupCreditLimitEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdGroupCreditLimit);
 
                         }
@@ -215,9 +215,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var GroupCreditLimitToUpdate = await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(CompanyId, GroupCreditLimitId, UserId);
+                                var GroupCreditLimitToUpdate = await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(RegId,CompanyId, GroupCreditLimitId, UserId);
 
                                 if (GroupCreditLimitToUpdate == null)
                                     return NotFound($"M_GroupCreditLimit with Id = {GroupCreditLimitId} not found");
@@ -251,7 +251,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = GroupCreditLimit.Remarks
                             };
 
-                            var sqlResponce = await _GroupCreditLimitService.UpdateGroupCreditLimitAsync(CompanyId, GroupCreditLimitEntity, UserId);
+                            var sqlResponce = await _GroupCreditLimitService.UpdateGroupCreditLimitAsync(RegId,CompanyId, GroupCreditLimitEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -286,20 +286,20 @@ namespace AHHA.API.Controllers.Masters
         //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
         //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-        //        if (ValidateHeaders(CompanyId, UserId))
+        //        if (ValidateHeaders(RegId,CompanyId, UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
+        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt, UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var GroupCreditLimitToDelete = await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(CompanyId, GroupCreditLimitId, UserId);
+        //                    var GroupCreditLimitToDelete = await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(RegId,CompanyId, GroupCreditLimitId, UserId);
 
         //                    if (GroupCreditLimitToDelete == null)
         //                        return NotFound($"M_GroupCreditLimit with Id = {GroupCreditLimitId} not found");
 
-        //                    var sqlResponce = await _GroupCreditLimitService.DeleteGroupCreditLimitAsync(CompanyId, GroupCreditLimitToDelete, UserId);
+        //                    var sqlResponce = await _GroupCreditLimitService.DeleteGroupCreditLimitAsync(RegId,CompanyId, GroupCreditLimitToDelete, UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"GroupCreditLimit_{GroupCreditLimitId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

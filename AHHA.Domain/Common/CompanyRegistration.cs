@@ -9,7 +9,7 @@ namespace AHHA.Core.Common
 {
     public class CompanyRegistration
     {
-        public Int16 RegId { get; set; }
+        public string RegId { get; set; }
         public string CompanyName { get; set; }
         public string ConnectionStringName { get; set; }
     }

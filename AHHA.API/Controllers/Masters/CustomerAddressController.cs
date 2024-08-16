@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<CustomerAddressController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _CustomerAddressService.GetCustomerAddressListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _CustomerAddressService.GetCustomerAddressListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            CustomerAddressViewModel = _mapper.Map<CustomerAddressViewModel>(await _CustomerAddressService.GetCustomerAddressByIdAsync(CompanyId, AddressId, UserId));
+                            CustomerAddressViewModel = _mapper.Map<CustomerAddressViewModel>(await _CustomerAddressService.GetCustomerAddressByIdAsync(RegId,CompanyId, AddressId, UserId));
 
                             if (CustomerAddressViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -189,7 +189,7 @@ namespace AHHA.API.Controllers.Masters
                                 IsActive = CustomerAddress.IsActive,
                             };
 
-                            var createdCustomerAddress = await _CustomerAddressService.AddCustomerAddressAsync(CompanyId, CustomerAddressEntity, UserId);
+                            var createdCustomerAddress = await _CustomerAddressService.AddCustomerAddressAsync(RegId,CompanyId, CustomerAddressEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCustomerAddress);
 
                         }
@@ -226,9 +226,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -245,7 +245,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CustomerAddressToUpdate = await _CustomerAddressService.GetCustomerAddressByIdAsync(CompanyId, AddressId, UserId);
+                                var CustomerAddressToUpdate = await _CustomerAddressService.GetCustomerAddressByIdAsync(RegId,CompanyId, AddressId, UserId);
 
                                 if (CustomerAddressToUpdate == null)
                                     return NotFound($"M_CustomerAddress with Id = {AddressId} not found");
@@ -273,7 +273,7 @@ namespace AHHA.API.Controllers.Masters
                                 IsActive = CustomerAddress.IsActive,
                             };
 
-                            var sqlResponce = await _CustomerAddressService.UpdateCustomerAddressAsync(CompanyId, CustomerAddressEntity, UserId);
+                            var sqlResponce = await _CustomerAddressService.UpdateCustomerAddressAsync(RegId,CompanyId, CustomerAddressEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -308,20 +308,20 @@ namespace AHHA.API.Controllers.Masters
         //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
         //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-        //        if (ValidateHeaders(CompanyId, UserId))
+        //        if (ValidateHeaders(RegId,CompanyId, UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var CustomerAddressToDelete = await _CustomerAddressService.GetCustomerAddressByIdAsync(CompanyId, AddressId, UserId);
+        //                    var CustomerAddressToDelete = await _CustomerAddressService.GetCustomerAddressByIdAsync(RegId,CompanyId, AddressId, UserId);
 
         //                    if (CustomerAddressToDelete == null)
         //                        return NotFound($"M_CustomerAddress with Id = {AddressId} not found");
 
-        //                    var sqlResponce = await _CustomerAddressService.DeleteCustomerAddressAsync(CompanyId, CustomerAddressToDelete, UserId);
+        //                    var sqlResponce = await _CustomerAddressService.DeleteCustomerAddressAsync(RegId,CompanyId, CustomerAddressToDelete, UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"CustomerAddress_{AddressId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

@@ -20,11 +20,11 @@ namespace AHHA.Infra.Services.Admin
             _context = context;
         }
 
-        public async Task<IEnumerable<CompanyViewModel>> GetUserCompanyListAsync(Int32 UserId)
+        public async Task<IEnumerable<CompanyViewModel>> GetUserCompanyListAsync(string RegId, Int32 UserId)
         {
             try
             {
-                return await _repository.GetQueryAsync<CompanyViewModel>($"SELECT CompanyId,CompanyName FROM AdmCompany WHERE IsActive=1 AND CompanyId IN (SELECT CompanyId FROM AdmUserRights WHERE UserId={UserId})");
+                return await _repository.GetQueryAsync<CompanyViewModel>(RegId,$"SELECT CompanyId,CompanyName FROM AdmCompany WHERE IsActive=1 AND CompanyId IN (SELECT CompanyId FROM AdmUserRights WHERE UserId={UserId})");
             }
             catch (Exception ex)
             {

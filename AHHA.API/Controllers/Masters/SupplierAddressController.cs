@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<SupplierAddressController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            SupplierAddressViewModel = _mapper.Map<SupplierAddressViewModel>(await _SupplierAddressService.GetSupplierAddressByIdAsync(CompanyId, SupplierAddressId, UserId));
+                            SupplierAddressViewModel = _mapper.Map<SupplierAddressViewModel>(await _SupplierAddressService.GetSupplierAddressByIdAsync(RegId,CompanyId, SupplierAddressId, UserId));
 
                             if (SupplierAddressViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -189,7 +189,7 @@ namespace AHHA.API.Controllers.Masters
                                 IsActive = SupplierAddress.IsActive,
                             };
 
-                            var createdSupplierAddress = await _SupplierAddressService.AddSupplierAddressAsync(CompanyId, SupplierAddressEntity, UserId);
+                            var createdSupplierAddress = await _SupplierAddressService.AddSupplierAddressAsync(RegId,CompanyId, SupplierAddressEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdSupplierAddress);
 
                         }
@@ -226,9 +226,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -245,7 +245,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(CompanyId, SupplierAddressId, UserId);
+                                var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(RegId,CompanyId, SupplierAddressId, UserId);
 
                                 if (SupplierAddressToUpdate == null)
                                     return NotFound($"M_SupplierAddress with Id = {SupplierAddressId} not found");
@@ -273,7 +273,7 @@ namespace AHHA.API.Controllers.Masters
                                 IsActive = SupplierAddress.IsActive,
                             };
 
-                            var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(CompanyId, SupplierAddressEntity, UserId);
+                            var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(RegId,CompanyId, SupplierAddressEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -308,20 +308,20 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(CompanyId, SupplierAddressId, UserId);
+                            var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(RegId,CompanyId, SupplierAddressId, UserId);
 
                             if (SupplierAddressToDelete == null)
                                 return NotFound($"M_SupplierAddress with Id = {SupplierAddressId} not found");
 
-                            var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(CompanyId, SupplierAddressToDelete, UserId);
+                            var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(RegId,CompanyId, SupplierAddressToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"SupplierAddress_{SupplierAddressId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

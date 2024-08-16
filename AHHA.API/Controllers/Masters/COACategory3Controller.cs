@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<COACategory3Controller> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _COACategory3Service.GetCOACategory3ListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _COACategory3Service.GetCOACategory3ListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            COACategoryViewModel = _mapper.Map<COACategoryViewModel>(await _COACategory3Service.GetCOACategory3ByIdAsync(CompanyId, COACategoryId, UserId));
+                            COACategoryViewModel = _mapper.Map<COACategoryViewModel>(await _COACategory3Service.GetCOACategory3ByIdAsync(RegId,CompanyId, COACategoryId, UserId));
 
                             if (COACategoryViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -178,7 +178,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = COACategory3.Remarks
                             };
 
-                            var createdCOACategory3 = await _COACategory3Service.AddCOACategory3Async(CompanyId, COACategory3Entity, UserId);
+                            var createdCOACategory3 = await _COACategory3Service.AddCOACategory3Async(RegId,CompanyId, COACategory3Entity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCOACategory3);
 
                         }
@@ -215,9 +215,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var COACategory3ToUpdate = await _COACategory3Service.GetCOACategory3ByIdAsync(CompanyId, COACategoryId, UserId);
+                                var COACategory3ToUpdate = await _COACategory3Service.GetCOACategory3ByIdAsync(RegId,CompanyId, COACategoryId, UserId);
 
                                 if (COACategory3ToUpdate == null)
                                     return NotFound($"M_COACategory3 with Id = {COACategoryId} not found");
@@ -251,7 +251,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = COACategory3.Remarks
                             };
 
-                            var sqlResponce = await _COACategory3Service.UpdateCOACategory3Async(CompanyId, COACategory3Entity, UserId);
+                            var sqlResponce = await _COACategory3Service.UpdateCOACategory3Async(RegId,CompanyId, COACategory3Entity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -286,20 +286,20 @@ namespace AHHA.API.Controllers.Masters
         //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
         //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-        //        if (ValidateHeaders(CompanyId, UserId))
+        //        if (ValidateHeaders(RegId,CompanyId, UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var COACategory3ToDelete = await _COACategory3Service.GetCOACategory3ByIdAsync(CompanyId, COACategoryId, UserId);
+        //                    var COACategory3ToDelete = await _COACategory3Service.GetCOACategory3ByIdAsync(RegId,CompanyId, COACategoryId, UserId);
 
         //                    if (COACategory3ToDelete == null)
         //                        return NotFound($"M_COACategory3 with Id = {COACategoryId} not found");
 
-        //                    var sqlResponce = await _COACategory3Service.DeleteCOACategory3Async(CompanyId, COACategory3ToDelete, UserId);
+        //                    var sqlResponce = await _COACategory3Service.DeleteCOACategory3Async(RegId,CompanyId, COACategory3ToDelete, UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"COACategory3_{COACategoryId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

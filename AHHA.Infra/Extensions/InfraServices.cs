@@ -84,14 +84,16 @@ public static class InfraServices
         #endregion
 
 
-
         serviceCollection.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
         {
-            Int16 regId = 0;
+            DBGetConnection dBGetConnection = new DBGetConnection();
+            string regId = string.Empty;
             var connectionString=string.Empty;
 
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-            //regId = Convert.ToInt16(httpContextAccessor.HttpContext.Request.Headers["regId"].First());
+            regId = httpContextAccessor.HttpContext.Request.Headers["regId"].First().ToString();
+
+            var getConnectionStringName = dBGetConnection.GetconnectionDB(regId);
 
             ////read the company registration data from json
             //string regCompanyData = File.ReadAllText("regCompany.json");
@@ -100,12 +102,12 @@ public static class InfraServices
             //// find out the regId & get the connectionstring from there
             //var getConnectionStringName = regCompany.Where(b => b.RegId == regId).FirstOrDefault().ConnectionStringName;
 
-            //if (getConnectionStringName == null)
-            //    connectionString = configuration.GetConnectionString(getConnectionStringName);
-            //else 
-            //    connectionString = configuration.GetConnectionString(getConnectionStringName);
+            if (getConnectionStringName == null)
+                connectionString = configuration.GetConnectionString(getConnectionStringName);
+            else
+                connectionString = configuration.GetConnectionString(getConnectionStringName);
 
-            connectionString = configuration.GetConnectionString("DbConnection");
+           // connectionString = configuration.GetConnectionString("DbConnection");
             options.UseSqlServer(connectionString,
                         b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
         });

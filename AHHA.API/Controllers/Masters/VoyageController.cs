@@ -19,7 +19,7 @@ namespace AHHA.API.Controllers.Masters
         private readonly ILogger<VoyageController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
         private Int16 pageSize = 10;
         private Int16 pageNumber = 1;
         private string searchString = string.Empty;
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Masters
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,7 +61,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _VoyageService.GetVoyageListAsync(CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            cacheData = await _VoyageService.GetVoyageListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -105,9 +105,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            VoyageViewModel = _mapper.Map<VoyageViewModel>(await _VoyageService.GetVoyageByIdAsync(CompanyId, VoyageId, UserId));
+                            VoyageViewModel = _mapper.Map<VoyageViewModel>(await _VoyageService.GetVoyageByIdAsync(RegId,CompanyId, VoyageId, UserId));
 
                             if (VoyageViewModel == null)
                                 return NotFound();
@@ -156,9 +156,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -180,7 +180,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Voyage.Remarks
                             };
 
-                            var createdVoyage = await _VoyageService.AddVoyageAsync(CompanyId, VoyageEntity, UserId);
+                            var createdVoyage = await _VoyageService.AddVoyageAsync(RegId,CompanyId, VoyageEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdVoyage);
 
                         }
@@ -217,9 +217,9 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
 
                     if (userGroupRight != null)
                     {
@@ -236,7 +236,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var VoyageToUpdate = await _VoyageService.GetVoyageByIdAsync(CompanyId, VoyageId, UserId);
+                                var VoyageToUpdate = await _VoyageService.GetVoyageByIdAsync(RegId,CompanyId, VoyageId, UserId);
 
                                 if (VoyageToUpdate == null)
                                     return NotFound($"M_Voyage with Id = {VoyageId} not found");
@@ -256,7 +256,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Voyage.Remarks
                             };
 
-                            var sqlResponce = await _VoyageService.UpdateVoyageAsync(CompanyId, VoyageEntity, UserId);
+                            var sqlResponce = await _VoyageService.UpdateVoyageAsync(RegId,CompanyId, VoyageEntity, UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -291,20 +291,20 @@ namespace AHHA.API.Controllers.Masters
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var userGroupRight = ValidateScreen(CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var VoyageToDelete = await _VoyageService.GetVoyageByIdAsync(CompanyId, VoyageId, UserId);
+                            var VoyageToDelete = await _VoyageService.GetVoyageByIdAsync(RegId,CompanyId, VoyageId, UserId);
 
                             if (VoyageToDelete == null)
                                 return NotFound($"M_Voyage with Id = {VoyageId} not found");
 
-                            var sqlResponce = await _VoyageService.DeleteVoyageAsync(CompanyId, VoyageToDelete, UserId);
+                            var sqlResponce = await _VoyageService.DeleteVoyageAsync(RegId,CompanyId, VoyageToDelete, UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Voyage_{VoyageId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

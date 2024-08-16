@@ -16,7 +16,7 @@ namespace AHHA.API.Controllers.Admin
         private readonly ILogger<ModuleController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
 
         public ModuleController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ModuleController> logger, IModuleService moduleService)
     : base(memoryCache, mapper, baseServices)
@@ -39,11 +39,11 @@ namespace AHHA.API.Controllers.Admin
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId, CompanyId, UserId))
                 {
-                    var UsersModulesdata = await _moduleService.GetUsersModulesAsync(CompanyId, UserId);
+                    var UsersModulesdata = await _moduleService.GetUsersModulesAsync(RegId,CompanyId, UserId);
 
                     return Ok(UsersModulesdata);
                 }

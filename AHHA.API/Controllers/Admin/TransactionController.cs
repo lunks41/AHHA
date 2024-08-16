@@ -21,7 +21,7 @@ namespace AHHA.API.Controllers.Admin
         private readonly ILogger<TransactionController> _logger;
         private Int16 CompanyId = 0;
         private Int32 UserId = 0;
-        private Int32 RegId = 0;
+        private string RegId = string.Empty;
 
         public TransactionController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<TransactionController> logger, ITransactionService transactionService)
     : base(memoryCache, mapper, baseServices)
@@ -46,11 +46,11 @@ namespace AHHA.API.Controllers.Admin
                 //var people = JsonFileHelper.ReadFromJsonFile<Person>();
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId,CompanyId, UserId))
                 {
-                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAsync(CompanyId, Module.ModuleId, UserId);
+                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAsync(RegId,CompanyId, Module.ModuleId, UserId);
 
                     return Ok(UsersTransactionsdata);
                 }
@@ -79,11 +79,11 @@ namespace AHHA.API.Controllers.Admin
             {
                 CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Convert.ToInt32(Request.Headers.TryGetValue("regId", out StringValues regIdValue));
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
-                if (ValidateHeaders(CompanyId, UserId))
+                if (ValidateHeaders(RegId, CompanyId, UserId))
                 {
-                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAllAsync(CompanyId, UserId);
+                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAllAsync(RegId,CompanyId, UserId);
 
                     return Ok(UsersTransactionsdata);
                 }

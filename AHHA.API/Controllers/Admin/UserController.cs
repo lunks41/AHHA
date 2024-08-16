@@ -13,7 +13,7 @@ using System.Text;
 
 namespace AHHA.API.Controllers.Admin
 {
-    [Route("api/[controller]")]
+    [Route("api/Admin")]
     [ApiController]
     public class UserController : BaseController
     {

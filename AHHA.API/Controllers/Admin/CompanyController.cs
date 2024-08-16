@@ -11,6 +11,7 @@ namespace AHHA.API.Controllers.Admin
         private readonly ICompanyService _companyService;
         private readonly ILogger<CompanyController> _logger;
         private Int32 UserId = 0;
+        private string RegId = string.Empty;
 
         public CompanyController(ILogger<CompanyController> logger, ICompanyService companyService)
         {
@@ -28,11 +29,11 @@ namespace AHHA.API.Controllers.Admin
             try
             {
                 UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                string RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
 
                 if (UserId > 0 && RegId.Length > 0)
                 {
-                    var Companydata = await _companyService.GetUserCompanyListAsync(UserId);
+                    var Companydata = await _companyService.GetUserCompanyListAsync(RegId,UserId);
 
                     return Ok(Companydata);
                 }

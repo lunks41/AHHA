@@ -23,11 +23,11 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<IEnumerable<CountryLookupViewModel>> GetCountryLooupListAsync(Int16 CompanyId,Int32 UserId)
+        public async Task<IEnumerable<CountryLookupViewModel>> GetCountryLooupListAsync(string RegId, Int16 CompanyId,Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQueryAsync<CountryLookupViewModel>($"SELECT CountryId,CountryCode,CountryName FROM M_Country WHERE CountryId<>0 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Country},{(short)Modules.Master})) order by CountryName");
+                var result = await _repository.GetQueryAsync<CountryLookupViewModel>(RegId,$"SELECT CountryId,CountryCode,CountryName FROM M_Country WHERE CountryId<>0 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Country},{(short)Modules.Master})) order by CountryName");
 
                 return result;
 
