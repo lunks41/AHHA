@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<COACategoryViewModel>(RegId,$"SELECT M_Cou.COACategory2Id,M_Cou.COACategory2Code,M_Cou.COACategory2Name,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_COACategory2 M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.COACategory2Name LIKE '%{searchString}%' OR M_Cou.COACategory2Code LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.COACategory2Id<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.COACategory2},{(short)Modules.Master})) ORDER BY M_Cou.COACategory2Name OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                COACategoryViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                COACategoryViewModelCount.COACategoryViewModels = result == null ? null : result.ToList();
+                COACategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                COACategoryViewModelCount.data = result == null ? null : result.ToList();
 
                 return COACategoryViewModelCount;
             }

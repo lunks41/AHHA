@@ -2,7 +2,7 @@
 {
     public class SubCategoryViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<SubCategoryViewModel> subCategoryViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<SubCategoryViewModel> data { get; set; }
     }
 }

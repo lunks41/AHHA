@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<PortViewModel>(RegId,$"SELECT M_Cou.PortId,M_Cou.PortCode,M_Cou.PortName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Port M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.PortName LIKE '%{searchString}%' OR M_Cou.PortCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.PortId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Port},{(short)Modules.Master})) ORDER BY M_Cou.PortName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                PortViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                PortViewModelCount.portViewModels = result == null ? null : result.ToList();
+                PortViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                PortViewModelCount.data = result == null ? null : result.ToList();
 
                 return PortViewModelCount;
             }

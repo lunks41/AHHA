@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<AccountSetupViewModel>(RegId,$"SELECT M_Cou.AccountSetupId,M_Cou.AccountSetupCode,M_Cou.AccountSetupName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_AccountSetup M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.AccountSetupName LIKE '%{searchString}%' OR M_Cou.AccountSetupCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.AccountSetupId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) ORDER BY M_Cou.AccountSetupName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                AccountSetupViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                AccountSetupViewModelCount.accountSetupViewModels = result == null ? null : result.ToList();
+                AccountSetupViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                AccountSetupViewModelCount.data = result == null ? null : result.ToList();
 
                 return AccountSetupViewModelCount;
             }

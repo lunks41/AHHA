@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<EmployeeViewModel>(RegId,$"SELECT M_Cou.EmployeeId,M_Cou.EmployeeCode,M_Cou.EmployeeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Employee M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.EmployeeName LIKE '%{searchString}%' OR M_Cou.EmployeeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.EmployeeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Employee},{(short)Modules.Master})) ORDER BY M_Cou.EmployeeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                EmployeeViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                EmployeeViewModelCount.employeeViewModels = result == null ? null : result.ToList();
+                EmployeeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                EmployeeViewModelCount.data = result == null ? null : result.ToList();
 
                 return EmployeeViewModelCount;
             }

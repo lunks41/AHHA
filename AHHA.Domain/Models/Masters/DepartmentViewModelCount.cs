@@ -2,7 +2,7 @@
 {
     public class DepartmentViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<DepartmentViewModel>  departmentViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<DepartmentViewModel> data { get; set; }
     }
 }

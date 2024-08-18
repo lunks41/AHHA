@@ -2,7 +2,7 @@
 {
     public class VesselViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<VesselViewModel>  vesselViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<VesselViewModel> data { get; set; }
     }
 }

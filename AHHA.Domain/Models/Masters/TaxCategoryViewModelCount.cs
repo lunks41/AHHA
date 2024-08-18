@@ -2,7 +2,7 @@
 {
     public class TaxCategoryViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<TaxCategoryViewModel>  taxCategoryViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<TaxCategoryViewModel> data { get; set; }
     }
 }

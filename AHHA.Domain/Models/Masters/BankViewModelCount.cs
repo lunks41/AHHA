@@ -2,7 +2,7 @@
 {
     public class BankViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<BankViewModel> bankViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<BankViewModel> data { get; set; }
     }
 }

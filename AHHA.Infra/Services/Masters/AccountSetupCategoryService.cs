@@ -1,12 +1,10 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -32,8 +30,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<AccountSetupCategoryViewModel>(RegId,$"SELECT M_Cou.AccSetupCategoryId,M_Cou.AccSetupCategoryCode,M_Cou.AccSetupCategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_AccountSetupCategory M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.AccSetupCategoryName LIKE '%{searchString}%' OR M_Cou.AccSetupCategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.AccSetupCategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) ORDER BY M_Cou.AccSetupCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                AccountSetupCategoryViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                AccountSetupCategoryViewModelCount.accountSetupCategoryViewModels = result == null ? null : result.ToList();
+                AccountSetupCategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                AccountSetupCategoryViewModelCount.data = result == null ? null : result.ToList();
 
                 return AccountSetupCategoryViewModelCount;
             }

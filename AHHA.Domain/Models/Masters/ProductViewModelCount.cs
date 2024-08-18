@@ -2,7 +2,7 @@
 {
     public class ProductViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<ProductViewModel> productViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<ProductViewModel> data { get; set; }
     }
 }

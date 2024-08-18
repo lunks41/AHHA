@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<CustomerViewModel>(RegId,$"SELECT M_Cou.CustomerId,M_Cou.CustomerCode,M_Cou.CustomerName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Customer M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CustomerName LIKE '%{searchString}%' OR M_Cou.CustomerCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CustomerId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) ORDER BY M_Cou.CustomerName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                CustomerViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                CustomerViewModelCount.customerViewModels = result == null ? null : result.ToList();
+                CustomerViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                CustomerViewModelCount.data = result == null ? null : result.ToList();
 
                 return CustomerViewModelCount;
             }

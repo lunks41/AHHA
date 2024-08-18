@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<SupplierViewModel>(RegId,$"SELECT M_Cou.SupplierId,M_Cou.SupplierCode,M_Cou.SupplierName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Supplier M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SupplierName LIKE '%{searchString}%' OR M_Cou.SupplierCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.SupplierId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Supplier},{(short)Modules.Master})) ORDER BY M_Cou.SupplierName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                SupplierViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                SupplierViewModelCount.supplierViewModels = result == null ? null : result.ToList();
+                SupplierViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                SupplierViewModelCount.data = result == null ? null : result.ToList();
 
                 return SupplierViewModelCount;
             }

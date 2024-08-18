@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<OrderTypeViewModel>(RegId,$"SELECT M_Cou.OrderTypeId,M_Cou.OrderTypeCode,M_Cou.OrderTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_OrderType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.OrderTypeName LIKE '%{searchString}%' OR M_Cou.OrderTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.OrderTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) ORDER BY M_Cou.OrderTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                OrderTypeViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                OrderTypeViewModelCount.orderTypeViewModels = result == null ? null : result.ToList();
+                OrderTypeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                OrderTypeViewModelCount.data = result == null ? null : result.ToList();
 
                 return OrderTypeViewModelCount;
             }

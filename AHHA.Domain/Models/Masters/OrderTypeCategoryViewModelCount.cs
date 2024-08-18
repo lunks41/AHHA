@@ -2,7 +2,7 @@
 {
     public class OrderTypeCategoryViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<OrderTypeCategoryViewModel>  orderTypeCategoryViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<OrderTypeCategoryViewModel> data { get; set; }
     }
 }

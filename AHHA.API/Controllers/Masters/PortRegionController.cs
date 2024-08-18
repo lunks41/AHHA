@@ -35,21 +35,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<PortRegionViewModelCount>("PortRegion");
+                        var portRegionData = await _portRegionService.GetPortRegionListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, "", headerViewModel.UserId);
 
-                        if (cacheData != null)
-                            return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _portRegionService.GetPortRegionListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
-                            if (cacheData == null)
-                                return NotFound();
-                            _memoryCache.Set<PortRegionViewModelCount>("PortRegion", cacheData, expirationTime);
-
-                            return Ok(cacheData);
-                        }
+                        return Ok(portRegionData);
                     }
                     else
                     {
@@ -69,8 +57,7 @@ namespace AHHA.API.Controllers.Masters
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                 "Error retrieving data from the database");
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 
@@ -10,8 +11,6 @@ namespace AHHA.API.Controllers.Admin
     {
         private readonly ICompanyService _companyService;
         private readonly ILogger<CompanyController> _logger;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
 
         public CompanyController(ILogger<CompanyController> logger, ICompanyService companyService)
         {
@@ -24,24 +23,21 @@ namespace AHHA.API.Controllers.Admin
         //http://118.189.194.191:8080/ahharestapiproject/ahha/userCompany/{UserId}
 
         [HttpGet, Route("GetUserCompany")]
-        public async Task<ActionResult> GetUserCompany()
+        public async Task<ActionResult> GetUserCompany([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
-
-                if (UserId > 0 && RegId.Length > 0)
+                if (headerViewModel.UserId > 0 && headerViewModel.RegId != "")
                 {
-                    var Companydata = await _companyService.GetUserCompanyListAsync(RegId,UserId);
+                    var Companydata = await _companyService.GetUserCompanyListAsync(headerViewModel.RegId, headerViewModel.UserId);
 
                     return Ok(Companydata);
                 }
                 else
                 {
-                    if (UserId == 0)
+                    if (headerViewModel.UserId == 0)
                         return NotFound("UserId Not Found");
-                    else if (RegId.Length == 0)
+                    else if (headerViewModel.RegId.Length == 0)
                         return NotFound("RegistrationId Not Found");
                     else
                         return NotFound();

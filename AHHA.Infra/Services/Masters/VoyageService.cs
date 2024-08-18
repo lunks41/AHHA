@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<VoyageViewModel>(RegId,$"SELECT M_Cou.VoyageId,M_Cou.VoyageNo,M_Cou.VoyageName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Voyage M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.VoyageName LIKE '%{searchString}%' OR M_Cou.VoyageNo LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.VoyageId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) ORDER BY M_Cou.VoyageName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                VoyageViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                VoyageViewModelCount.voyageViewModels = result == null ? null : result.ToList();
+                VoyageViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                VoyageViewModelCount.data = result == null ? null : result.ToList();
 
                 return VoyageViewModelCount;
             }

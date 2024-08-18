@@ -19,9 +19,6 @@ namespace AHHA.API.Controllers.Admin
     {
         private readonly ITransactionService _transactionService;
         private readonly ILogger<TransactionController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
 
         public TransactionController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<TransactionController> logger, ITransactionService transactionService)
     : base(memoryCache, mapper, baseServices)
@@ -38,27 +35,21 @@ namespace AHHA.API.Controllers.Admin
         // [dbo].[Adm_GetUserTransactions_All]
 
         [HttpGet, Route("GetUsersTransactions")]
-        public async Task<ActionResult> GetUsersTransactions([FromBody] ModuleViewModel Module)
+        public async Task<ActionResult> GetUsersTransactions([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                //Convert Json file to object class
-                //var people = JsonFileHelper.ReadFromJsonFile<Person>();
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
-
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAsync(RegId,CompanyId, Module.ModuleId, UserId);
+                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.ModuleId, headerViewModel.UserId);
 
                     return Ok(UsersTransactionsdata);
                 }
                 else
                 {
-                    if (UserId == 0)
+                    if (headerViewModel.UserId == 0)
                         return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
+                    else if (headerViewModel.CompanyId == 0)
                         return NotFound("CompanyId Not Found");
                     else
                         return NotFound();
@@ -73,25 +64,21 @@ namespace AHHA.API.Controllers.Admin
         }
 
         [HttpGet, Route("GetUsersTransactionsAll")]
-        public async Task<ActionResult> GetUsersTransactionsAll()
+        public async Task<ActionResult> GetUsersTransactionsAll([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
-
-                if (ValidateHeaders(RegId, CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAllAsync(RegId,CompanyId, UserId);
+                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAllAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
                     return Ok(UsersTransactionsdata);
                 }
                 else
                 {
-                    if (UserId == 0)
+                    if (headerViewModel.UserId == 0)
                         return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
+                    else if (headerViewModel.CompanyId == 0)
                         return NotFound("CompanyId Not Found");
                     else
                         return NotFound();

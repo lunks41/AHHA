@@ -2,7 +2,7 @@
 {
     public class CustomerViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<CustomerViewModel>  customerViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<CustomerViewModel> data { get; set; }
     }
 }

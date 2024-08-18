@@ -2,7 +2,7 @@
 {
     public class UomViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<UomViewModel>  uomViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<UomViewModel> data { get; set; }
     }
 }

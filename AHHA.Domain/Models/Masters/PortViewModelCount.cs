@@ -2,7 +2,7 @@
 {
     public class PortViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<PortViewModel>  portViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<PortViewModel> data { get; set; }
     }
 }

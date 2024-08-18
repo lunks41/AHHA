@@ -2,7 +2,7 @@
 {
     public class GstViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<GstViewModel>  gstViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<GstViewModel> data { get; set; }
     }
 }

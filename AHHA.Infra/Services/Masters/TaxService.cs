@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<TaxViewModel>(RegId,$"SELECT M_Cou.TaxId,M_Cou.TaxCode,M_Cou.TaxName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Tax M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.TaxName LIKE '%{searchString}%' OR M_Cou.TaxCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.TaxId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Tax},{(short)Modules.Master})) ORDER BY M_Cou.TaxName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                TaxViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                TaxViewModelCount.taxViewModels = result == null ? null : result.ToList();
+                TaxViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                TaxViewModelCount.data = result == null ? null : result.ToList();
 
                 return TaxViewModelCount;
             }

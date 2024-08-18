@@ -2,7 +2,7 @@
 {
     public class CategoryViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<CategoryViewModel> categoryViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<CategoryViewModel> data { get; set; }
     }
 }

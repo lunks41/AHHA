@@ -2,7 +2,7 @@
 {
     public class AccountSetupCategoryViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<AccountSetupCategoryViewModel> accountSetupCategoryViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<AccountSetupCategoryViewModel> data { get; set; }
     }
 }

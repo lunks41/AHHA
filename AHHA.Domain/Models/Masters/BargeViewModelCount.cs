@@ -2,7 +2,7 @@
 {
     public class BargeViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<BargeViewModel> bargeViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<BargeViewModel> data { get; set; }
     }
 }

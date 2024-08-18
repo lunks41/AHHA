@@ -2,7 +2,7 @@
 {
     public class PortRegionViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<PortRegionViewModel> portRegionViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<PortRegionViewModel> data { get; set; }
     }
 }

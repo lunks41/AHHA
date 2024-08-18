@@ -2,7 +2,7 @@
 {
     public class ChartOfAccountViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<ChartOfAccountViewModel>  chartOfAccountViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<ChartOfAccountViewModel> data { get; set; }
     }
 }

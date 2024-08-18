@@ -1,5 +1,6 @@
 ﻿using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,9 +15,6 @@ namespace AHHA.API.Controllers.Admin
     {
         private readonly IModuleService _moduleService;
         private readonly ILogger<ModuleController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
 
         public ModuleController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ModuleController> logger, IModuleService moduleService)
     : base(memoryCache, mapper, baseServices)
@@ -33,25 +31,21 @@ namespace AHHA.API.Controllers.Admin
 
         [HttpGet, Route("GetUsersModules")]
         [Authorize]
-        public async Task<ActionResult> GetUsersModules()
+        public async Task<ActionResult> GetUsersModules([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
-
-                if (ValidateHeaders(RegId, CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var UsersModulesdata = await _moduleService.GetUsersModulesAsync(RegId,CompanyId, UserId);
+                    var UsersModulesdata = await _moduleService.GetUsersModulesAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
                     return Ok(UsersModulesdata);
                 }
                 else
                 {
-                    if (UserId == 0)
+                    if (headerViewModel.UserId == 0)
                         return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
+                    else if (headerViewModel.CompanyId == 0)
                         return NotFound("CompanyId Not Found");
                     else
                         return NotFound();

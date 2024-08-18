@@ -2,7 +2,7 @@
 {
     public class EmployeeViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<EmployeeViewModel>  employeeViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<EmployeeViewModel> data { get; set; }
     }
 }

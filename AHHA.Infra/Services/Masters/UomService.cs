@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<UomViewModel>(RegId,$"SELECT M_Cou.UomId,M_Cou.UomCode,M_Cou.UomName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Uom M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.UomName LIKE '%{searchString}%' OR M_Cou.UomCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.UomId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Uom},{(short)Modules.Master})) ORDER BY M_Cou.UomName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                UomViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                UomViewModelCount.uomViewModels = result == null ? null : result.ToList();
+                UomViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                UomViewModelCount.data = result == null ? null : result.ToList();
 
                 return UomViewModelCount;
             }

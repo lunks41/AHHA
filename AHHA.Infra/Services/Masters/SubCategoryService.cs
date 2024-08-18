@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<SubCategoryViewModel>(RegId,$"SELECT M_Cou.SubCategoryId,M_Cou.SubCategoryCode,M_Cou.SubCategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SubCategory M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SubCategoryName LIKE '%{searchString}%' OR M_Cou.SubCategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.SubCategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.SubCategory},{(short)Modules.Master})) ORDER BY M_Cou.SubCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                SubCategoryViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                SubCategoryViewModelCount.subCategoryViewModels = result == null ? null : result.ToList();
+                SubCategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                SubCategoryViewModelCount.data = result == null ? null : result.ToList();
 
                 return SubCategoryViewModelCount;
             }

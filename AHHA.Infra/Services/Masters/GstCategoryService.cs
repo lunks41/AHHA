@@ -32,8 +32,8 @@ namespace AHHA.Infra.Services.Masters
 
                 var result = await _repository.GetQueryAsync<GstCategoryViewModel>(RegId,$"SELECT M_Cou.GstCategoryId,M_Cou.GstCategoryCode,M_Cou.GstCategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_GstCategory M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.GstCategoryName LIKE '%{searchString}%' OR M_Cou.GstCategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.GstCategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.GstCategory},{(short)Modules.Master})) ORDER BY M_Cou.GstCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                GstCategoryViewModelCount.Total_records = totalcount == null ? 0 : totalcount.CountId;
-                GstCategoryViewModelCount.gstCategoryViewModels = result == null ? null : result.ToList();
+                GstCategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                GstCategoryViewModelCount.data = result == null ? null : result.ToList();
 
                 return GstCategoryViewModelCount;
             }

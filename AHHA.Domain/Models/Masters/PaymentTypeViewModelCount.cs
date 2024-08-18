@@ -2,7 +2,7 @@
 {
     public class PaymentTypeViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<PaymentTypeViewModel>  paymentTypeViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<PaymentTypeViewModel> data { get; set; }
     }
 }

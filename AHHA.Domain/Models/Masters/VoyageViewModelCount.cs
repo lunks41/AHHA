@@ -2,7 +2,7 @@
 {
     public class VoyageViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<VoyageViewModel>  voyageViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<VoyageViewModel> data { get; set; }
     }
 }

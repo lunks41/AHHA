@@ -2,7 +2,7 @@
 {
     public class SupplierAddressViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<SupplierAddressViewModel>  supplierAddressViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<SupplierAddressViewModel> data { get; set; }
     }
 }

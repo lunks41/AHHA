@@ -2,7 +2,7 @@
 {
     public class TaxViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<TaxViewModel>  taxViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<TaxViewModel> data { get; set; }
     }
 }

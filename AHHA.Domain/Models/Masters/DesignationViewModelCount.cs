@@ -2,7 +2,7 @@
 {
     public class DesignationViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<DesignationViewModel> designationViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<DesignationViewModel> data { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 {
     public class CustomeGroupCreditLimtViewModelCount
     {
-        public long Total_records { get; set; }
-        public List<CustomeGroupCreditLimtViewModel>  customeGroupCreditLimtViewModels { get; set; }
+        public long totalRecords { get; set; }
+        public List<CustomeGroupCreditLimtViewModel> data { get; set; }
     }
 }

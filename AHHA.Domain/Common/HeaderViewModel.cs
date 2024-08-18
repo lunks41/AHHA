@@ -10,7 +10,7 @@ namespace AHHA.Core.Common
     public class HeaderViewModel
     {
         [FromHeader]
-        public string RegId { get; set; } = string.Empty;
+        public string RegId { get; set; }
         [FromHeader]
         public Int16 CompanyId { get; set; }
         [FromHeader]
@@ -21,5 +21,7 @@ namespace AHHA.Core.Common
         public Int16 pageNumber { get; set; }
         [FromHeader]
         public string searchString { get; set; }
+        [FromHeader]
+        public Int16 ModuleId { get; set; }
     }
 }
