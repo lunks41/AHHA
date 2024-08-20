@@ -1,15 +1,10 @@
 ﻿using AHHA.Application.IServices;
 using AHHA.Application.IServices.Admin;
-using AHHA.Core.Common;
 using AHHA.Core.Models.Admin;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace AHHA.API.Controllers.Admin
 {
@@ -23,7 +18,6 @@ namespace AHHA.API.Controllers.Admin
         //Update
         //resetpassword
         //Delete
-
 
         private readonly IUserService _countryService;
         private readonly ILogger<UserController> _logger;
@@ -39,7 +33,6 @@ namespace AHHA.API.Controllers.Admin
             _configuration = configuration;
             _configuration = configuration;
         }
-
 
         //[HttpPost]
         //[Route("register")]
@@ -61,6 +54,5 @@ namespace AHHA.API.Controllers.Admin
 
         //    return Ok(new SqlResponce { Id = 1, Message = "User created successfully!" });
         //}
-
     }
 }

@@ -1,12 +1,10 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -28,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             CustomeGroupCreditLimtViewModelCount CustomeGroupCreditLimtViewModelCount = new CustomeGroupCreditLimtViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<CustomeGroupCreditLimtViewModel>(RegId,$"SELECT M_Cou.GroupCreditLimitId,M_Cou.GroupCreditLimitCode,M_Cou.GroupCreditLimitName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomeGroupCreditLimt M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.GroupCreditLimitName LIKE '%{searchString}%' OR M_Cou.GroupCreditLimitCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.GroupCreditLimitId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) ORDER BY M_Cou.GroupCreditLimitName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CustomeGroupCreditLimtViewModel>(RegId, $"SELECT M_Cou.GroupCreditLimitId,M_Cou.GroupCreditLimitCode,M_Cou.GroupCreditLimitName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomeGroupCreditLimt M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.GroupCreditLimitName LIKE '%{searchString}%' OR M_Cou.GroupCreditLimitCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.GroupCreditLimitId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) ORDER BY M_Cou.GroupCreditLimitName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 CustomeGroupCreditLimtViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 CustomeGroupCreditLimtViewModelCount.data = result == null ? null : result.ToList();
@@ -57,13 +55,13 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_CustomeGroupCreditLimt> GetCustomeGroupCreditLimtByIdAsync(string RegId, Int16 CompanyId, Int32 GroupCreditLimitId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomeGroupCreditLimt>(RegId,$"SELECT GroupCreditLimitId,GroupCreditLimitCode,GroupCreditLimitName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomeGroupCreditLimt WHERE GroupCreditLimitId={GroupCreditLimitId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomeGroupCreditLimt>(RegId, $"SELECT GroupCreditLimitId,GroupCreditLimitCode,GroupCreditLimitName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomeGroupCreditLimt WHERE GroupCreditLimitId={GroupCreditLimitId}");
 
                 return result;
             }
@@ -88,6 +86,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddCustomeGroupCreditLimtAsync(string RegId, Int16 CompanyId, M_CustomeGroupCreditLimt CustomeGroupCreditLimt, Int32 UserId)
         {
             bool isExist = false;
@@ -96,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitCode='{CustomeGroupCreditLimt.GroupCreditLimitCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitName='{CustomeGroupCreditLimt.GroupCreditLimitName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitCode='{CustomeGroupCreditLimt.GroupCreditLimitCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitName='{CustomeGroupCreditLimt.GroupCreditLimitName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +118,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (GroupCreditLimitId + 1) FROM dbo.M_CustomeGroupCreditLimt WHERE (GroupCreditLimitId + 1) NOT IN (SELECT GroupCreditLimitId FROM dbo.M_CustomeGroupCreditLimt)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (GroupCreditLimitId + 1) FROM dbo.M_CustomeGroupCreditLimt WHERE (GroupCreditLimitId + 1) NOT IN (SELECT GroupCreditLimitId FROM dbo.M_CustomeGroupCreditLimt)),1) AS MissId");
 
                         #region Saving CustomeGroupCreditLimt
 
@@ -130,9 +129,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var CustomeGroupCreditLimtToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving CustomeGroupCreditLimt
 
                         #region Save AuditLog
+
                         if (CustomeGroupCreditLimtToSave > 0)
                         {
                             //Saving Audit log
@@ -160,8 +160,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -193,6 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateCustomeGroupCreditLimtAsync(string RegId, Int16 CompanyId, M_CustomeGroupCreditLimt CustomeGroupCreditLimt, Int32 UserId)
         {
             int IsActive = CustomeGroupCreditLimt.IsActive == true ? 1 : 0;
@@ -205,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (CustomeGroupCreditLimt.GroupCreditLimitId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitName='{CustomeGroupCreditLimt.GroupCreditLimitName} AND GroupCreditLimitId <>{CustomeGroupCreditLimt.GroupCreditLimitId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitName='{CustomeGroupCreditLimt.GroupCreditLimitName} AND GroupCreditLimitId <>{CustomeGroupCreditLimt.GroupCreditLimitId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -232,7 +233,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update CustomeGroupCreditLimt
 
                             if (counToUpdate > 0)
                             {
@@ -289,6 +290,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteCustomeGroupCreditLimtAsync(string RegId, Int16 CompanyId, M_CustomeGroupCreditLimt CustomeGroupCreditLimt, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();

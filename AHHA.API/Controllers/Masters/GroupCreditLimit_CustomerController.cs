@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IGroupCreditLimit_CustomerService _GroupCreditLimit_CustomerService;
         private readonly ILogger<GroupCreditLimit_CustomerController> _logger;
-        
-       
-       
-       
-       
-        
 
         public GroupCreditLimit_CustomerController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<GroupCreditLimit_CustomerController> logger, IGroupCreditLimit_CustomerService GroupCreditLimit_CustomerService)
     : base(memoryCache, mapper, baseServices)
@@ -37,23 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt_Customer, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt_Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                            var cacheData = await _GroupCreditLimit_CustomerService.GetGroupCreditLimit_CustomerListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _GroupCreditLimit_CustomerService.GetGroupCreditLimit_CustomerListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                           return Ok(cacheData);
-
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -62,7 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -80,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var GroupCreditLimt_CustomerViewModel = new GroupCreditLimt_CustomerViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt_Customer, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt_Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -95,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            GroupCreditLimt_CustomerViewModel = _mapper.Map<GroupCreditLimt_CustomerViewModel>(await _GroupCreditLimit_CustomerService.GetGroupCreditLimit_CustomerByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId));
+                            GroupCreditLimt_CustomerViewModel = _mapper.Map<GroupCreditLimt_CustomerViewModel>(await _GroupCreditLimit_CustomerService.GetGroupCreditLimit_CustomerByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId));
 
                             if (GroupCreditLimt_CustomerViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -115,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -131,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt_Customer, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt_Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -152,9 +133,8 @@ namespace AHHA.API.Controllers.Masters
                                 CustomerId = GroupCreditLimit_Customer.CustomerId,
                             };
 
-                            var createdGroupCreditLimit_Customer = await _GroupCreditLimit_CustomerService.AddGroupCreditLimit_CustomerAsync(headerViewModel.RegId,headerViewModel.CompanyId, GroupCreditLimit_CustomerEntity, headerViewModel.UserId);
+                            var createdGroupCreditLimit_Customer = await _GroupCreditLimit_CustomerService.AddGroupCreditLimit_CustomerAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimit_CustomerEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdGroupCreditLimit_Customer);
-
                         }
                         else
                         {
@@ -186,12 +166,9 @@ namespace AHHA.API.Controllers.Masters
             var GroupCreditLimt_CustomerViewModel = new GroupCreditLimt_CustomerViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt_Customer, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GroupCreditLimt_Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -208,7 +185,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var GroupCreditLimit_CustomerToUpdate = await _GroupCreditLimit_CustomerService.GetGroupCreditLimit_CustomerByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
+                                var GroupCreditLimit_CustomerToUpdate = await _GroupCreditLimit_CustomerService.GetGroupCreditLimit_CustomerByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
 
                                 if (GroupCreditLimit_CustomerToUpdate == null)
                                     return NotFound($"M_GroupCreditLimt_Customer with Id = {GroupCreditLimitId} not found");
@@ -223,7 +200,7 @@ namespace AHHA.API.Controllers.Masters
                                 EditDate = DateTime.Now,
                             };
 
-                            var sqlResponce = await _GroupCreditLimit_CustomerService.UpdateGroupCreditLimit_CustomerAsync(headerViewModel.RegId,headerViewModel.CompanyId, GroupCreditLimit_CustomerEntity, headerViewModel.UserId);
+                            var sqlResponce = await _GroupCreditLimit_CustomerService.UpdateGroupCreditLimit_CustomerAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimit_CustomerEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -255,8 +232,8 @@ namespace AHHA.API.Controllers.Masters
         //{
         //    try
         //    {
-        //        
-        //        
+        //
+        //
 
         //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
@@ -300,4 +277,3 @@ namespace AHHA.API.Controllers.Masters
         //}
     }
 }
-

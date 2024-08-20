@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AHHA.Core.Entities.Admin
 {
@@ -12,6 +7,7 @@ namespace AHHA.Core.Entities.Admin
     {
         [Key]
         public long ErrId { get; set; }
+
         public Int16 CompanyId { get; set; }
         public Int16 ModuleId { get; set; }
         public Int32 TransactionId { get; set; }
@@ -21,6 +17,7 @@ namespace AHHA.Core.Entities.Admin
         public Int16 ModeId { get; set; }
         public string Remarks { get; set; }
         public Int32 CreateById { get; set; }
+
         [NotMapped]
         public DateTime CreateDate { get; set; }
     }

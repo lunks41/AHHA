@@ -1,9 +1,6 @@
-﻿using AHHA.API.ExceptionHandling;
-using AHHA.API.Mapping;
+﻿using AHHA.API.Mapping;
 using AHHA.Infra.Data;
 using AHHA.Infra.Extensions;
-using AspNetCoreRateLimit;
-using Microsoft.AspNetCore.Diagnostics;
 
 namespace AHHA.API.Extensions
 {

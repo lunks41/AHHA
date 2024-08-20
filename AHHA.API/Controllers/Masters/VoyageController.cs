@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -74,7 +73,6 @@ namespace AHHA.API.Controllers.Masters
             var VoyageViewModel = new VoyageViewModel();
             try
             {
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, headerViewModel.UserId);
@@ -107,7 +105,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -149,7 +146,6 @@ namespace AHHA.API.Controllers.Masters
 
                             var createdVoyage = await _VoyageService.AddVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdVoyage);
-
                         }
                         else
                         {
@@ -294,5 +290,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-
-

@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ISupplierAddressService _SupplierAddressService;
         private readonly ILogger<SupplierAddressController> _logger;
-        
-       
-       
-       
-       
-        
 
         public SupplierAddressController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierAddressController> logger, ISupplierAddressService SupplierAddressService)
     : base(memoryCache, mapper, baseServices)
@@ -37,30 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                        
-                       
-                            var cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                           
-
-                            
-                            return Ok(cacheData);
-                       
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -69,12 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                    
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -92,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var SupplierAddressViewModel = new SupplierAddressViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -107,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            SupplierAddressViewModel = _mapper.Map<SupplierAddressViewModel>(await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId));
+                            SupplierAddressViewModel = _mapper.Map<SupplierAddressViewModel>(await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId));
 
                             if (SupplierAddressViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -127,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -139,16 +111,13 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddSupplierAddress")]
         [Authorize]
-        public async Task<ActionResult<SupplierAddressViewModel>> CreateSupplierAddress(SupplierAddressViewModel SupplierAddress,[FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierAddressViewModel>> CreateSupplierAddress(SupplierAddressViewModel SupplierAddress, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -179,9 +148,8 @@ namespace AHHA.API.Controllers.Masters
                                 IsActive = SupplierAddress.IsActive,
                             };
 
-                            var createdSupplierAddress = await _SupplierAddressService.AddSupplierAddressAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
+                            var createdSupplierAddress = await _SupplierAddressService.AddSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdSupplierAddress);
-
                         }
                         else
                         {
@@ -213,12 +181,9 @@ namespace AHHA.API.Controllers.Masters
             var SupplierAddressViewModel = new SupplierAddressViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -235,7 +200,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
+                                var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
 
                                 if (SupplierAddressToUpdate == null)
                                     return NotFound($"M_SupplierAddress with Id = {SupplierAddressId} not found");
@@ -263,7 +228,7 @@ namespace AHHA.API.Controllers.Masters
                                 IsActive = SupplierAddress.IsActive,
                             };
 
-                            var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
+                            var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -295,23 +260,20 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
+                            var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
 
                             if (SupplierAddressToDelete == null)
                                 return NotFound($"M_SupplierAddress with Id = {SupplierAddressId} not found");
 
-                            var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"SupplierAddress_{SupplierAddressId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
@@ -340,5 +302,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-
-

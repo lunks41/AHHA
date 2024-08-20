@@ -1,12 +1,10 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -28,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             DepartmentViewModelCount DepartmentViewModelCount = new DepartmentViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_Department WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Department WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<DepartmentViewModel>(RegId,$"SELECT M_Cou.DepartmentId,M_Cou.DepartmentCode,M_Cou.DepartmentName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Department M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.DepartmentName LIKE '%{searchString}%' OR M_Cou.DepartmentCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.DepartmentId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master})) ORDER BY M_Cou.DepartmentName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<DepartmentViewModel>(RegId, $"SELECT M_Cou.DepartmentId,M_Cou.DepartmentCode,M_Cou.DepartmentName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Department M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.DepartmentName LIKE '%{searchString}%' OR M_Cou.DepartmentCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.DepartmentId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master})) ORDER BY M_Cou.DepartmentName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 DepartmentViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 DepartmentViewModelCount.data = result == null ? null : result.ToList();
@@ -57,13 +55,13 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_Department> GetDepartmentByIdAsync(string RegId, Int16 CompanyId, Int32 DepartmentId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Department>(RegId,$"SELECT DepartmentId,DepartmentCode,DepartmentName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Department WHERE DepartmentId={DepartmentId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Department>(RegId, $"SELECT DepartmentId,DepartmentCode,DepartmentName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Department WHERE DepartmentId={DepartmentId}");
 
                 return result;
             }
@@ -88,6 +86,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddDepartmentAsync(string RegId, Int16 CompanyId, M_Department Department, Int32 UserId)
         {
             bool isExist = false;
@@ -96,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentCode='{Department.DepartmentCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentCode='{Department.DepartmentCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +118,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (DepartmentId + 1) FROM dbo.M_Department WHERE (DepartmentId + 1) NOT IN (SELECT DepartmentId FROM dbo.M_Department)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (DepartmentId + 1) FROM dbo.M_Department WHERE (DepartmentId + 1) NOT IN (SELECT DepartmentId FROM dbo.M_Department)),1) AS MissId");
 
                         #region Saving Department
 
@@ -130,9 +129,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var DepartmentToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving Department
 
                         #region Save AuditLog
+
                         if (DepartmentToSave > 0)
                         {
                             //Saving Audit log
@@ -160,8 +160,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -193,6 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateDepartmentAsync(string RegId, Int16 CompanyId, M_Department Department, Int32 UserId)
         {
             int IsActive = Department.IsActive == true ? 1 : 0;
@@ -205,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Department.DepartmentId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName} AND DepartmentId <>{Department.DepartmentId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName} AND DepartmentId <>{Department.DepartmentId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -232,7 +233,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update Department
 
                             if (counToUpdate > 0)
                             {
@@ -289,6 +290,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteDepartmentAsync(string RegId, Int16 CompanyId, M_Department Department, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
@@ -347,7 +349,5 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-       
-
     }
 }

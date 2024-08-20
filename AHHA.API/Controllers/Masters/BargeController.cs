@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IBargeService _BargeService;
         private readonly ILogger<BargeController> _logger;
-        
-       
-       
-       
-       
-        
 
         public BargeController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BargeController> logger, IBargeService BargeService)
     : base(memoryCache, mapper, baseServices)
@@ -37,29 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                      
-                            var cacheData = await _BargeService.GetBargeListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _BargeService.GetBargeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                          
-
-                            
-                            return Ok(cacheData);
-                        
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -68,12 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                    
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -91,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var BargeViewModel = new BargeViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -106,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            BargeViewModel = _mapper.Map<BargeViewModel>(await _BargeService.GetBargeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeId, headerViewModel.UserId));
+                            BargeViewModel = _mapper.Map<BargeViewModel>(await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeId, headerViewModel.UserId));
 
                             if (BargeViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -126,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -142,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,9 +143,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Barge.Remarks
                             };
 
-                            var createdBarge = await _BargeService.AddBargeAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeEntity, headerViewModel.UserId);
+                            var createdBarge = await _BargeService.AddBargeAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdBarge);
-
                         }
                         else
                         {
@@ -207,12 +176,9 @@ namespace AHHA.API.Controllers.Masters
             var BargeViewModel = new BargeViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -229,7 +195,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var BargeToUpdate = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeId, headerViewModel.UserId);
+                                var BargeToUpdate = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeId, headerViewModel.UserId);
 
                                 if (BargeToUpdate == null)
                                     return NotFound($"M_Barge with Id = {BargeId} not found");
@@ -252,7 +218,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Barge.Remarks
                             };
 
-                            var sqlResponce = await _BargeService.UpdateBargeAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeEntity, headerViewModel.UserId);
+                            var sqlResponce = await _BargeService.UpdateBargeAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -284,23 +250,20 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var BargeToDelete = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeId, headerViewModel.UserId);
+                            var BargeToDelete = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeId, headerViewModel.UserId);
 
                             if (BargeToDelete == null)
                                 return NotFound($"M_Barge with Id = {BargeId} not found");
 
-                            var sqlResponce = await _BargeService.DeleteBargeAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _BargeService.DeleteBargeAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Barge_{BargeId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
@@ -329,4 +292,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-

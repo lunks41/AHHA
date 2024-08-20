@@ -6,6 +6,7 @@ namespace AHHA.Core.Entities.Admin
     {
         [Key]
         public Int16 CompanyId { get; set; }
+
         public string CompanyCode { get; set; }
         public string CompanyName { get; set; }
         public string RegistrationNo { get; set; }

@@ -1,6 +1,4 @@
-﻿
-
-using AHHA.Application.CommonServices;
+﻿using AHHA.Application.CommonServices;
 using AHHA.Core.Common;
 using AHHA.Infra.Data;
 using Dapper;
@@ -8,7 +6,6 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Data;
-using System.Text.RegularExpressions;
 
 namespace AHHA.Infra.Repository
 {
@@ -94,8 +91,8 @@ namespace AHHA.Infra.Repository
             return await Task.FromResult(dataSet);
         }
 
+        #region Private Methods
 
-        #region Private Methods        
         private IDbConnection CreateConnection(string RegId)
         {
             DBGetConnection dBGetConnection = new DBGetConnection();
@@ -110,7 +107,6 @@ namespace AHHA.Infra.Repository
             }
             catch (Exception)
             {
-
                 throw;
             }
             finally
@@ -119,7 +115,6 @@ namespace AHHA.Infra.Repository
             }
         }
 
-        #endregion
-
+        #endregion Private Methods
     }
 }

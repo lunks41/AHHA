@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -92,7 +91,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -138,7 +136,6 @@ namespace AHHA.API.Controllers.Masters
 
                             var createdVessel = await _VesselService.AddVesselAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdVessel);
-
                         }
                         else
                         {
@@ -286,5 +283,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-
-

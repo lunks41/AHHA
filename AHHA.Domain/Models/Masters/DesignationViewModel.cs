@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace AHHA.Core.Models.Masters
+﻿namespace AHHA.Core.Models.Masters
 {
     public class DesignationViewModel
     {

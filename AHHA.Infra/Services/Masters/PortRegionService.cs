@@ -8,7 +8,6 @@ using AHHA.Infra.Data;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
-using static Dapper.SqlMapper;
 
 namespace AHHA.Infra.Services.Masters
 {
@@ -58,8 +57,8 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_PortRegion> GetPortRegionByIdAsync(string RegId, Int16 CompanyId, Int32 PortRegionId, Int32 UserId)
         {
             try
@@ -89,6 +88,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddPortRegionAsync(string RegId, Int16 CompanyId, M_PortRegion PortRegion, Int32 UserId)
         {
             bool isExist = false;
@@ -131,9 +131,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var PortRegionToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving PortRegion
 
                         #region Save AuditLog
+
                         if (PortRegionToSave > 0)
                         {
                             //Saving Audit log
@@ -161,8 +162,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -194,6 +195,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdatePortRegionAsync(string RegId, Int16 CompanyId, M_PortRegion PortRegion, Int32 UserId)
         {
             int IsActive = PortRegion.IsActive == true ? 1 : 0;
@@ -234,7 +236,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update PortRegion
 
                             if (counToUpdate > 0)
                             {
@@ -291,6 +293,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeletePortRegionAsync(string RegId, Int16 CompanyId, M_PortRegion PortRegion, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
@@ -349,6 +352,5 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-
     }
 }

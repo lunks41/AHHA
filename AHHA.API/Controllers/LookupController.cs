@@ -1,11 +1,9 @@
 ﻿using AHHA.Application.IServices;
 using AHHA.Core.Common;
-using AHHA.Core.Models.Masters;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers
 {
@@ -23,7 +21,7 @@ namespace AHHA.API.Controllers
             _LookupService = LookupService;
         }
 
-        //create the lookup for all masters 
+        //create the lookup for all masters
 
         [HttpGet, Route("GetCountryLookup")]
         [Authorize]
@@ -72,8 +70,7 @@ namespace AHHA.API.Controllers
                 }
                 else
                 {
-                    
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -112,6 +109,5 @@ namespace AHHA.API.Controllers
                  "Error retrieving data from the database");
             }
         }
-
     }
 }

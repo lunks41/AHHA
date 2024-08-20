@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using System.Reflection;
 
 namespace AHHA.Infra.Extensions;
@@ -67,28 +66,27 @@ public static class InfraServices
         serviceCollection.AddScoped<IVesselService, VesselService>();
         serviceCollection.AddScoped<IVessel_BackService, Vessel_BackService>();
         serviceCollection.AddScoped<IVoyageService, VoyageService>();
-        
-        #endregion
+
+        #endregion Master Services
 
         #region Admin Services
         serviceCollection.AddScoped<IUserService, UserService>();
         serviceCollection.AddScoped<IModuleService, ModuleService>();
         serviceCollection.AddScoped<ICompanyService, CompanyService>();
         serviceCollection.AddScoped<ITransactionService, TransactionService>();
-        #endregion
+        #endregion Admin Services
 
         #region
         serviceCollection.AddScoped<ILookupService, LookupService>();
-        #endregion
+        #endregion Services
 
         #endregion
-
 
         serviceCollection.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
         {
             DBGetConnection dBGetConnection = new DBGetConnection();
             string regId = string.Empty;
-            var connectionString=string.Empty;
+            var connectionString = string.Empty;
 
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
             regId = httpContextAccessor.HttpContext.Request.Headers["regId"].First().ToString();
@@ -107,13 +105,13 @@ public static class InfraServices
             else
                 connectionString = configuration.GetConnectionString(getConnectionStringName);
 
-           // connectionString = configuration.GetConnectionString("DbConnection");
+            // connectionString = configuration.GetConnectionString("DbConnection");
             options.UseSqlServer(connectionString,
                         b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
         });
 
         //serviceCollection.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
-            
+
         //    configuration.GetConnectionString("DbConnection"),
         //        b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));//Why use this line (b=>b.MigrationsAssembly)?
 

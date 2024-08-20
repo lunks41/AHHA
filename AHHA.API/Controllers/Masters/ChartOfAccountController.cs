@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IChartOfAccountService _ChartOfAccountService;
         private readonly ILogger<ChartOfAccountController> _logger;
-        
-       
-       
-       
-       
-        
 
         public ChartOfAccountController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ChartOfAccountController> logger, IChartOfAccountService ChartOfAccountService)
     : base(memoryCache, mapper, baseServices)
@@ -37,30 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                        
-                       
-                           var cacheData = await _ChartOfAccountService.GetChartOfAccountListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _ChartOfAccountService.GetChartOfAccountListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                           
-
-                            
-                            return Ok(cacheData);
-                      
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -69,12 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                  
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -92,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var ChartOfAccountViewModel = new ChartOfAccountViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -107,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            ChartOfAccountViewModel = _mapper.Map<ChartOfAccountViewModel>(await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GLId, headerViewModel.UserId));
+                            ChartOfAccountViewModel = _mapper.Map<ChartOfAccountViewModel>(await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId));
 
                             if (ChartOfAccountViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -127,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -143,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -175,9 +144,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = ChartOfAccount.Remarks
                             };
 
-                            var createdChartOfAccount = await _ChartOfAccountService.AddChartOfAccountAsync(headerViewModel.RegId,headerViewModel.CompanyId, ChartOfAccountEntity, headerViewModel.UserId);
+                            var createdChartOfAccount = await _ChartOfAccountService.AddChartOfAccountAsync(headerViewModel.RegId, headerViewModel.CompanyId, ChartOfAccountEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdChartOfAccount);
-
                         }
                         else
                         {
@@ -209,12 +177,9 @@ namespace AHHA.API.Controllers.Masters
             var ChartOfAccountViewModel = new ChartOfAccountViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -231,7 +196,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var ChartOfAccountToUpdate = await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GLId, headerViewModel.UserId);
+                                var ChartOfAccountToUpdate = await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId);
 
                                 if (ChartOfAccountToUpdate == null)
                                     return NotFound($"M_ChartOfAccount with Id = {GLId} not found");
@@ -256,7 +221,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = ChartOfAccount.Remarks
                             };
 
-                            var sqlResponce = await _ChartOfAccountService.UpdateChartOfAccountAsync(headerViewModel.RegId,headerViewModel.CompanyId, ChartOfAccountEntity, headerViewModel.UserId);
+                            var sqlResponce = await _ChartOfAccountService.UpdateChartOfAccountAsync(headerViewModel.RegId, headerViewModel.CompanyId, ChartOfAccountEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -288,23 +253,20 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.ChartOfAccount, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var ChartOfAccountToDelete = await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GLId, headerViewModel.UserId);
+                            var ChartOfAccountToDelete = await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId);
 
                             if (ChartOfAccountToDelete == null)
                                 return NotFound($"M_ChartOfAccount with Id = {GLId} not found");
 
-                            var sqlResponce = await _ChartOfAccountService.DeleteChartOfAccountAsync(headerViewModel.RegId,headerViewModel.CompanyId, ChartOfAccountToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _ChartOfAccountService.DeleteChartOfAccountAsync(headerViewModel.RegId, headerViewModel.CompanyId, ChartOfAccountToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"ChartOfAccount_{GLId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
@@ -333,4 +295,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-

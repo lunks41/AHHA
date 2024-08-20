@@ -1,12 +1,10 @@
 ﻿using AHHA.Application.IServices;
-using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Models.Admin;
 using AHHA.Core.Models.Auth;
 using AHHA.Infra.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -26,7 +24,7 @@ namespace AHHA.Infra.Services
             _configuration = configuration;
         }
 
-        public bool IsAuthenticated(string userName, string password,string UserPassword)
+        public bool IsAuthenticated(string userName, string password, string UserPassword)
         {
             return BC.Verify(userName.ToLower().Trim() + password.Trim(), UserPassword);
         }
@@ -47,7 +45,7 @@ namespace AHHA.Infra.Services
             var response = new LoginResponse();
             var identityUser = GetByUserName(user.userName.ToLower().Trim());
 
-            if (identityUser is null || (IsAuthenticated(user.userName, user.userPassword,identityUser.UserPassword)) == false)
+            if (identityUser is null || (IsAuthenticated(user.userName, user.userPassword, identityUser.UserPassword)) == false)
             {
                 //return new dynamic { "User Not Exist" };
                 return new LoginResponse { token = "User Not Exist", refreshToken = "" };
@@ -106,7 +104,6 @@ namespace AHHA.Infra.Services
 
         private ClaimsPrincipal? GetTokenPrincipal(string token)
         {
-
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Jwt:SecretKey").Value));
 
             var validation = new TokenValidationParameters

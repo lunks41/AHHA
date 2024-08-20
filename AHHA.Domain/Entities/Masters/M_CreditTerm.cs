@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AHHA.Core.Entities.Masters
 {
@@ -11,6 +6,7 @@ namespace AHHA.Core.Entities.Masters
     {
         [Key]
         public Int16 CreditTermId { get; set; }
+
         public Int16 CompanyId { get; set; }
         public string CreditTermCode { get; set; }
         public string CreditTermName { get; set; }

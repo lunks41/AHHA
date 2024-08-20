@@ -7,9 +7,13 @@ namespace AHHA.Application.IServices.Masters
     public interface ICountryService
     {
         public Task<CountryViewModelCount> GetCountryListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId);
+
         public Task<M_Country> GetCountryByIdAsync(string RegId, Int16 CompanyId, Int32 CountryId, Int32 UserId);
+
         public Task<SqlResponce> AddCountryAsync(string RegId, Int16 CompanyId, M_Country M_Country, Int32 UserId);
+
         public Task<SqlResponce> UpdateCountryAsync(string RegId, Int16 CompanyId, M_Country M_Country, Int32 UserId);
+
         public Task<SqlResponce> DeleteCountryAsync(string RegId, Int16 CompanyId, M_Country M_Country, Int32 UserId);
 
         //public Task<SqlResponce> AddCountryAsync(M_Country M_Country, Int16 CompanyId);
@@ -24,6 +28,5 @@ namespace AHHA.Application.IServices.Masters
         //    Task<bool> DeleteAsync(int Id, int UpdatedBy);
         //    Task<IEnumerable<DropDownModel>> GetDropDownAsync(string TypeName);
         //}
-
     }
 }

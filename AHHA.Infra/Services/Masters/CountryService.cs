@@ -1,5 +1,4 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
@@ -25,7 +24,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<CountryViewModelCount> GetCountryListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-
             CountryViewModelCount countryViewModelCount = new CountryViewModelCount();
             try
             {
@@ -58,8 +56,8 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_Country> GetCountryByIdAsync(string RegId, Int16 CompanyId, Int32 CountryId, Int32 UserId)
         {
             try
@@ -89,6 +87,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddCountryAsync(string RegId, Int16 CompanyId, M_Country country, Int32 UserId)
         {
             bool isExist = false;
@@ -131,9 +130,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var countryToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving Country
 
                         #region Save AuditLog
+
                         if (countryToSave > 0)
                         {
                             //Saving Audit log
@@ -161,8 +161,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -194,6 +194,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateCountryAsync(string RegId, Int16 CompanyId, M_Country country, Int32 UserId)
         {
             int IsActive = country.IsActive == true ? 1 : 0;
@@ -233,7 +234,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update Country
 
                             if (counToUpdate > 0)
                             {
@@ -290,6 +291,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteCountryAsync(string RegId, Int16 CompanyId, M_Country country, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
@@ -348,6 +350,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<DataSet> GetTrainingByIdsAsync(int Id)
         {
             try
@@ -364,6 +367,5 @@ namespace AHHA.Infra.Services.Masters
                 throw;
             }
         }
-
     }
 }

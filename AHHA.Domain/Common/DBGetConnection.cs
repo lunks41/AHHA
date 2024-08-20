@@ -1,10 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace AHHA.Core.Common
 {
@@ -19,7 +13,7 @@ namespace AHHA.Core.Common
             var regCompany = JsonConvert.DeserializeObject<IEnumerable<CompanyRegistration>>(regCompanyData);
 
             // find out the regId & get the connectionstring from there
-            return  regCompany.Where(b => b.RegId == regId).FirstOrDefault().ConnectionStringName;
+            return regCompany.Where(b => b.RegId == regId).FirstOrDefault().ConnectionStringName;
         }
 
         public bool ValidateRegId(string regId)

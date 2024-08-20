@@ -7,11 +7,9 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
-
     [Route("api/Master")]
     [ApiController]
     public class CountryController : BaseController
@@ -34,7 +32,7 @@ namespace AHHA.API.Controllers.Masters
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -47,7 +45,7 @@ namespace AHHA.API.Controllers.Masters
                         else
                         {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _countryService.GetCountryListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                            cacheData = await _countryService.GetCountryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
                                 return NotFound();
@@ -88,9 +86,9 @@ namespace AHHA.API.Controllers.Masters
             var countryViewModel = new CountryViewModel();
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -100,7 +98,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CountryId, headerViewModel.UserId));
+                            countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId));
 
                             if (countryViewModel == null)
                                 return NotFound();
@@ -120,7 +118,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -136,9 +133,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -158,9 +155,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = country.Remarks
                             };
 
-                            var createdCountry = await _countryService.AddCountryAsync(headerViewModel.RegId,headerViewModel.CompanyId, countryEntity, headerViewModel.UserId);
+                            var createdCountry = await _countryService.AddCountryAsync(headerViewModel.RegId, headerViewModel.CompanyId, countryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCountry);
-
                         }
                         else
                         {
@@ -192,9 +188,9 @@ namespace AHHA.API.Controllers.Masters
             var countryViewModel = new CountryViewModel();
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -211,7 +207,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CountryToUpdate = await _countryService.GetCountryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
+                                var CountryToUpdate = await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
 
                                 if (CountryToUpdate == null)
                                     return NotFound($"M_Country with Id = {CountryId} not found");
@@ -228,7 +224,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = country.Remarks
                             };
 
-                            var sqlResponce = await _countryService.UpdateCountryAsync(headerViewModel.RegId,headerViewModel.CompanyId, countryEntity, headerViewModel.UserId);
+                            var sqlResponce = await _countryService.UpdateCountryAsync(headerViewModel.RegId, headerViewModel.CompanyId, countryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -260,20 +256,20 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Country, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var CountryToDelete = await _countryService.GetCountryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
+                            var CountryToDelete = await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
 
                             if (CountryToDelete == null)
                                 return NotFound($"M_Country with Id = {CountryId} not found");
 
-                            var sqlResponce = await _countryService.DeleteCountryAsync(headerViewModel.RegId,headerViewModel.CompanyId, CountryToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _countryService.DeleteCountryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Country_{CountryId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);

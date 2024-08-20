@@ -1,12 +1,10 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -28,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             DesignationViewModelCount DesignationViewModelCount = new DesignationViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_Designation WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Designation WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<DesignationViewModel>(RegId,$"SELECT M_Cou.DesignationId,M_Cou.DesignationCode,M_Cou.DesignationName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Designation M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.DesignationName LIKE '%{searchString}%' OR M_Cou.DesignationCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.DesignationId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master})) ORDER BY M_Cou.DesignationName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<DesignationViewModel>(RegId, $"SELECT M_Cou.DesignationId,M_Cou.DesignationCode,M_Cou.DesignationName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Designation M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.DesignationName LIKE '%{searchString}%' OR M_Cou.DesignationCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.DesignationId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master})) ORDER BY M_Cou.DesignationName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 DesignationViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 DesignationViewModelCount.data = result == null ? null : result.ToList();
@@ -57,13 +55,13 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_Designation> GetDesignationByIdAsync(string RegId, Int16 CompanyId, Int16 DesignationId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Designation>(RegId,$"SELECT DesignationId,DesignationCode,DesignationName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Designation WHERE DesignationId={DesignationId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Designation>(RegId, $"SELECT DesignationId,DesignationCode,DesignationName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Designation WHERE DesignationId={DesignationId}");
 
                 return result;
             }
@@ -88,6 +86,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddDesignationAsync(string RegId, Int16 CompanyId, M_Designation Designation, Int32 UserId)
         {
             bool isExist = false;
@@ -96,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationCode='{Designation.DesignationCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationCode='{Designation.DesignationCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +118,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (DesignationId + 1) FROM dbo.M_Designation WHERE (DesignationId + 1) NOT IN (SELECT DesignationId FROM dbo.M_Designation)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (DesignationId + 1) FROM dbo.M_Designation WHERE (DesignationId + 1) NOT IN (SELECT DesignationId FROM dbo.M_Designation)),1) AS MissId");
 
                         #region Saving Designation
 
@@ -130,9 +129,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var DesignationToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving Designation
 
                         #region Save AuditLog
+
                         if (DesignationToSave > 0)
                         {
                             //Saving Audit log
@@ -160,8 +160,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -193,6 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateDesignationAsync(string RegId, Int16 CompanyId, M_Designation Designation, Int32 UserId)
         {
             int IsActive = Designation.IsActive == true ? 1 : 0;
@@ -205,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Designation.DesignationId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName} AND DesignationId <>{Designation.DesignationId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName} AND DesignationId <>{Designation.DesignationId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -232,7 +233,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update Designation
 
                             if (counToUpdate > 0)
                             {
@@ -289,6 +290,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteDesignationAsync(string RegId, Int16 CompanyId, M_Designation Designation, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
@@ -347,7 +349,5 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-       
-
     }
 }

@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers
         public bool ValidateHeaders(string RegId, Int16 CompanyId, Int32 UserId)
         {
             //RegID Check from json file
-            //proper message for 
+            //proper message for
             bool IsValidate = false;
 
             DBGetConnection dBGetConnection = new DBGetConnection();

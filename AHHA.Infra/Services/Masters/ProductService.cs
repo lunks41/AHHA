@@ -1,15 +1,10 @@
-﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices.Masters;
-using AHHA.Core.Entities.Masters;
-using AHHA.Infra.Data;
+﻿using AHHA.Application.IServices.Masters;
 
 namespace AHHA.Infra.Services.Masters
 {
     public class ProductService : IProductService
     {
-        
     }
-
 
     //public class ProductService : IProductService
     //{

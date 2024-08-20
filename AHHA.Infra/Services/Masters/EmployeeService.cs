@@ -1,12 +1,10 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -28,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             EmployeeViewModelCount EmployeeViewModelCount = new EmployeeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_Employee WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Employee},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Employee WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Employee},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<EmployeeViewModel>(RegId,$"SELECT M_Cou.EmployeeId,M_Cou.EmployeeCode,M_Cou.EmployeeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Employee M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.EmployeeName LIKE '%{searchString}%' OR M_Cou.EmployeeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.EmployeeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Employee},{(short)Modules.Master})) ORDER BY M_Cou.EmployeeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<EmployeeViewModel>(RegId, $"SELECT M_Cou.EmployeeId,M_Cou.EmployeeCode,M_Cou.EmployeeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Employee M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.EmployeeName LIKE '%{searchString}%' OR M_Cou.EmployeeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.EmployeeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Employee},{(short)Modules.Master})) ORDER BY M_Cou.EmployeeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 EmployeeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 EmployeeViewModelCount.data = result == null ? null : result.ToList();
@@ -57,13 +55,13 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_Employee> GetEmployeeByIdAsync(string RegId, Int16 CompanyId, Int32 EmployeeId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Employee>(RegId,$"SELECT EmployeeId,EmployeeCode,EmployeeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Employee WHERE EmployeeId={EmployeeId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Employee>(RegId, $"SELECT EmployeeId,EmployeeCode,EmployeeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Employee WHERE EmployeeId={EmployeeId}");
 
                 return result;
             }
@@ -88,6 +86,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddEmployeeAsync(string RegId, Int16 CompanyId, M_Employee Employee, Int32 UserId)
         {
             bool isExist = false;
@@ -96,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeCode='{Employee.EmployeeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeName='{Employee.EmployeeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeCode='{Employee.EmployeeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeName='{Employee.EmployeeName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +118,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (EmployeeId + 1) FROM dbo.M_Employee WHERE (EmployeeId + 1) NOT IN (SELECT EmployeeId FROM dbo.M_Employee)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (EmployeeId + 1) FROM dbo.M_Employee WHERE (EmployeeId + 1) NOT IN (SELECT EmployeeId FROM dbo.M_Employee)),1) AS MissId");
 
                         #region Saving Employee
 
@@ -130,9 +129,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var EmployeeToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving Employee
 
                         #region Save AuditLog
+
                         if (EmployeeToSave > 0)
                         {
                             //Saving Audit log
@@ -160,8 +160,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -193,6 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateEmployeeAsync(string RegId, Int16 CompanyId, M_Employee Employee, Int32 UserId)
         {
             int IsActive = Employee.IsActive == true ? 1 : 0;
@@ -205,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Employee.EmployeeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeName='{Employee.EmployeeName} AND EmployeeId <>{Employee.EmployeeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeName='{Employee.EmployeeName} AND EmployeeId <>{Employee.EmployeeId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -232,7 +233,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update Employee
 
                             if (counToUpdate > 0)
                             {
@@ -289,6 +290,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteEmployeeAsync(string RegId, Int16 CompanyId, M_Employee Employee, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
@@ -347,7 +349,5 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-       
-
     }
 }

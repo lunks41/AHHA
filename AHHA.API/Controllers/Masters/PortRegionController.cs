@@ -6,7 +6,6 @@ using AHHA.Core.Models.Masters;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -29,9 +28,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -61,16 +60,15 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-
         [HttpGet, Route("getPortRegionbyid/{PortRegionId}")]
         public async Task<ActionResult<PortRegionViewModel>> GetPortRegionById(Int32 PortRegionId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var PortRegionViewModel = new PortRegionViewModel();
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -80,7 +78,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            PortRegionViewModel = _mapper.Map<PortRegionViewModel>(await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId));
+                            PortRegionViewModel = _mapper.Map<PortRegionViewModel>(await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId));
 
                             if (PortRegionViewModel == null)
                                 return NotFound();
@@ -100,7 +98,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -110,15 +107,14 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-
         [HttpPost, Route("addPortRegion")]
         public async Task<ActionResult<PortRegionViewModel>> CreatePortRegion(PortRegionViewModel PortRegion, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -139,9 +135,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = PortRegion.Remarks
                             };
 
-                            var createdPortRegion = await _portRegionService.AddPortRegionAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
+                            var createdPortRegion = await _portRegionService.AddPortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
                             return Ok(createdPortRegion);
-
                         }
                         else
                         {
@@ -166,16 +161,15 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-
         [HttpPut, Route("updatePortRegion/{PortRegionId}")]
         public async Task<ActionResult<PortRegionViewModel>> UpdatePortRegion(int PortRegionId, [FromBody] PortRegionViewModel PortRegion, [FromHeader] HeaderViewModel headerViewModel)
         {
             var PortRegionViewModel = new PortRegionViewModel();
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -191,7 +185,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var PortRegionToUpdate = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
+                                var PortRegionToUpdate = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
 
                                 if (PortRegionToUpdate == null)
                                     return NotFound($"M_PortRegion with Id = {PortRegionId} not found");
@@ -207,10 +201,9 @@ namespace AHHA.API.Controllers.Masters
                                 IsActive = PortRegion.IsActive,
                                 Remarks = PortRegion.Remarks,
                                 CountryId = PortRegion.CountryId
-                               
                             };
 
-                            var sqlResponce = await _portRegionService.UpdatePortRegionAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
+                            var sqlResponce = await _portRegionService.UpdatePortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
                             return Ok(sqlResponce);
                         }
                         else
@@ -236,7 +229,6 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-
         [HttpDelete, Route("deletePortRegion/{PortRegionId}")]
         public async Task<ActionResult<M_PortRegion>> DeletePortRegion(int PortRegionId, [FromHeader] HeaderViewModel headerViewModel)
         {
@@ -244,18 +236,18 @@ namespace AHHA.API.Controllers.Masters
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.PortRegion, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var PortRegionToDelete = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
+                            var PortRegionToDelete = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
 
                             if (PortRegionToDelete == null)
                                 return NotFound($"M_PortRegion with Id = {PortRegionId} not found");
 
-                            var sqlResponce = await _portRegionService.DeletePortRegionAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortRegionToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _portRegionService.DeletePortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"PortRegion_{PortRegionId}");
                             return Ok(sqlResponce);

@@ -1,5 +1,4 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
@@ -28,9 +27,9 @@ namespace AHHA.Infra.Services.Masters
             AccountSetupViewModelCount AccountSetupViewModelCount = new AccountSetupViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_AccountSetup WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountSetup WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<AccountSetupViewModel>(RegId,$"SELECT M_ACC.AccSetupId,M_ACC.AccSetupCode,M_ACC.AccSetupName,M_ACC.CompanyId,M_ACC.AccSetupCategoryId,M_Accsc.AccSetupCategoryCode,M_Accsc.AccSetupCategoryName,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountSetup M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById INNER JOIN dbo.M_AccountSetupCategory M_Accsc ON M_Accsc.AccSetupCategoryId = M_ACC.AccSetupCategoryId  WHERE (M_ACC.AccSetupName LIKE '%{searchString}%' OR M_ACC.AccSetupCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccSetupCategoryName LIKE '%{searchString}%' OR M_Accsc.AccSetupCategoryCode LIKE '%{searchString}%') AND M_ACC.AccSetupId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) ORDER BY M_ACC.AccSetupName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<AccountSetupViewModel>(RegId, $"SELECT M_ACC.AccSetupId,M_ACC.AccSetupCode,M_ACC.AccSetupName,M_ACC.CompanyId,M_ACC.AccSetupCategoryId,M_Accsc.AccSetupCategoryCode,M_Accsc.AccSetupCategoryName,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountSetup M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById INNER JOIN dbo.M_AccountSetupCategory M_Accsc ON M_Accsc.AccSetupCategoryId = M_ACC.AccSetupCategoryId  WHERE (M_ACC.AccSetupName LIKE '%{searchString}%' OR M_ACC.AccSetupCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccSetupCategoryName LIKE '%{searchString}%' OR M_Accsc.AccSetupCategoryCode LIKE '%{searchString}%') AND M_ACC.AccSetupId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) ORDER BY M_ACC.AccSetupName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 AccountSetupViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 AccountSetupViewModelCount.data = result == null ? null : result.ToList();
@@ -57,13 +56,13 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_AccountSetup> GetAccountSetupByIdAsync(string RegId, Int16 CompanyId, Int16 AccSetupId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountSetup>(RegId,$"SELECT AccountSetupId,AccountSetupCode,AccountSetupName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountSetup WHERE AccountSetupId={AccSetupId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountSetup>(RegId, $"SELECT AccountSetupId,AccountSetupCode,AccountSetupName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountSetup WHERE AccountSetupId={AccSetupId}");
 
                 return result;
             }
@@ -88,6 +87,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddAccountSetupAsync(string RegId, Int16 CompanyId, M_AccountSetup AccountSetup, Int32 UserId)
         {
             bool isExist = false;
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupCode='{AccountSetup.AccSetupId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupName='{AccountSetup.AccSetupName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupCode='{AccountSetup.AccSetupId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupName='{AccountSetup.AccSetupName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -119,7 +119,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (AccountSetupId + 1) FROM dbo.M_AccountSetup WHERE (AccountSetupId + 1) NOT IN (SELECT AccountSetupId FROM dbo.M_AccountSetup)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AccountSetupId + 1) FROM dbo.M_AccountSetup WHERE (AccountSetupId + 1) NOT IN (SELECT AccountSetupId FROM dbo.M_AccountSetup)),1) AS MissId");
 
                         #region Saving AccountSetup
 
@@ -130,9 +130,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var AccountSetupToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving AccountSetup
 
                         #region Save AuditLog
+
                         if (AccountSetupToSave > 0)
                         {
                             //Saving Audit log
@@ -160,8 +161,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -193,6 +194,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateAccountSetupAsync(string RegId, Int16 CompanyId, M_AccountSetup AccountSetup, Int32 UserId)
         {
             int IsActive = AccountSetup.IsActive == true ? 1 : 0;
@@ -205,7 +207,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (AccountSetup.AccSetupId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupName='{AccountSetup.AccSetupName} AND AccountSetupId <>{AccountSetup.AccSetupId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupName='{AccountSetup.AccSetupName} AND AccountSetupId <>{AccountSetup.AccSetupId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -232,7 +234,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update AccountSetup
 
                             if (counToUpdate > 0)
                             {
@@ -289,6 +291,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteAccountSetupAsync(string RegId, Int16 CompanyId, M_AccountSetup AccountSetup, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();
@@ -347,14 +350,15 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-        public async Task<DataSet> GetTrainingByIdsAsync(string RegId,int Id)
+
+        public async Task<DataSet> GetTrainingByIdsAsync(string RegId, int Id)
         {
             try
             {
                 var parameters = new DynamicParameters();
                 parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
                 parameters.Add("Id", Id, DbType.Int32);
-                return await _repository.GetExecuteDataSetStoredProcedure(RegId,"USP_LMS_Training", parameters);
+                return await _repository.GetExecuteDataSetStoredProcedure(RegId, "USP_LMS_Training", parameters);
             }
             catch (Exception ex)
             {
@@ -363,6 +367,5 @@ namespace AHHA.Infra.Services.Masters
                 throw;
             }
         }
-
     }
 }

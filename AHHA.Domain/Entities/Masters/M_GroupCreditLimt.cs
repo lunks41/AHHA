@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AHHA.Core.Entities.Masters
 {
     public class M_GroupCreditLimt
     {
         public Int16 CompanyId { get; set; }
+
         [Key]
         public Int32 GroupCreditLimitId { get; set; }
+
         public string GroupCreditLimitCode { get; set; }
         public string GroupCreditLimitName { get; set; }
         public string Remarks { get; set; }

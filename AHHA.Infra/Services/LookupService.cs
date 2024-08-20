@@ -1,15 +1,9 @@
 ﻿using AHHA.Application.CommonServices;
 using AHHA.Application.IServices;
-using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
-using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
-using Dapper;
-using Microsoft.EntityFrameworkCore;
-using System.Data;
-using System.Reflection;
 
 namespace AHHA.Infra.Services.Masters
 {
@@ -24,14 +18,13 @@ namespace AHHA.Infra.Services.Masters
             _context = context;
         }
 
-        public async Task<IEnumerable<CountryLookupViewModel>> GetCountryLooupListAsync(string RegId, Int16 CompanyId,Int32 UserId)
+        public async Task<IEnumerable<CountryLookupViewModel>> GetCountryLooupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQueryAsync<CountryLookupViewModel>(RegId,$"SELECT CountryId,CountryCode,CountryName FROM M_Country WHERE CountryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Country},{(short)Modules.Master})) order by CountryName");
+                var result = await _repository.GetQueryAsync<CountryLookupViewModel>(RegId, $"SELECT CountryId,CountryCode,CountryName FROM M_Country WHERE CountryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Country},{(short)Modules.Master})) order by CountryName");
 
                 return result;
-
             }
             catch (Exception ex)
             {
@@ -62,7 +55,6 @@ namespace AHHA.Infra.Services.Masters
                 var result = await _repository.GetQueryAsync<VesselLookupViewModel>(RegId, $"SELECT VesselId,VesselCode,VesselName FROM M_Vessel WHERE VesselId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) order by VesselName");
 
                 return result;
-
             }
             catch (Exception ex)
             {
@@ -93,7 +85,6 @@ namespace AHHA.Infra.Services.Masters
                 var result = await _repository.GetQueryAsync<BargeLookupViewModel>(RegId, $"SELECT BargeId,BargeCode,BargeName FROM M_Barge WHERE BargeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Barge},{(short)Modules.Master})) order by BargeName");
 
                 return result;
-
             }
             catch (Exception ex)
             {

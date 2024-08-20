@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICOACategory2Service _COACategory2Service;
         private readonly ILogger<COACategory2Controller> _logger;
-        
-       
-       
-       
-       
-        
 
         public COACategory2Controller(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<COACategory2Controller> logger, ICOACategory2Service COACategory2Service)
     : base(memoryCache, mapper, baseServices)
@@ -37,30 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory2, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory2, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                        
-                      
-                            var cacheData = await _COACategory2Service.GetCOACategory2ListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _COACategory2Service.GetCOACategory2ListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                           
-
-                            
-                            return Ok(cacheData);
-                       
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -69,12 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                    
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -92,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var COACategoryViewModel = new COACategoryViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory2, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory2, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -107,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            COACategoryViewModel = _mapper.Map<COACategoryViewModel>(await _COACategory2Service.GetCOACategory2ByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId));
+                            COACategoryViewModel = _mapper.Map<COACategoryViewModel>(await _COACategory2Service.GetCOACategory2ByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId));
 
                             if (COACategoryViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -127,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -143,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory2, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory2, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -168,9 +137,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = COACategory2.Remarks
                             };
 
-                            var createdCOACategory2 = await _COACategory2Service.AddCOACategory2Async(headerViewModel.RegId,headerViewModel.CompanyId, COACategory2Entity, headerViewModel.UserId);
+                            var createdCOACategory2 = await _COACategory2Service.AddCOACategory2Async(headerViewModel.RegId, headerViewModel.CompanyId, COACategory2Entity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCOACategory2);
-
                         }
                         else
                         {
@@ -202,12 +170,9 @@ namespace AHHA.API.Controllers.Masters
             var COACategoryViewModel = new COACategoryViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory2, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory2, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -224,7 +189,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var COACategory2ToUpdate = await _COACategory2Service.GetCOACategory2ByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId);
+                                var COACategory2ToUpdate = await _COACategory2Service.GetCOACategory2ByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId);
 
                                 if (COACategory2ToUpdate == null)
                                     return NotFound($"M_COACategory2 with Id = {COACategoryId} not found");
@@ -241,7 +206,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = COACategory2.Remarks
                             };
 
-                            var sqlResponce = await _COACategory2Service.UpdateCOACategory2Async(headerViewModel.RegId,headerViewModel.CompanyId, COACategory2Entity, headerViewModel.UserId);
+                            var sqlResponce = await _COACategory2Service.UpdateCOACategory2Async(headerViewModel.RegId, headerViewModel.CompanyId, COACategory2Entity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -273,8 +238,8 @@ namespace AHHA.API.Controllers.Masters
         //{
         //    try
         //    {
-        //        
-        //        
+        //
+        //
 
         //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
@@ -318,4 +283,3 @@ namespace AHHA.API.Controllers.Masters
         //}
     }
 }
-

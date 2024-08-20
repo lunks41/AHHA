@@ -1,13 +1,7 @@
 ﻿using AHHA.Application.CommonServices;
 using AHHA.Application.IServices.Admin;
-using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
-using AHHA.Core.Entities.Masters;
-using AHHA.Core.Models;
 using AHHA.Infra.Data;
-using Dapper;
-using Microsoft.EntityFrameworkCore;
-using System.Data;
 
 namespace AHHA.Infra.Services.Admin
 {
@@ -21,6 +15,5 @@ namespace AHHA.Infra.Services.Admin
             _repository = repository;
             _context = context;
         }
-
     }
 }

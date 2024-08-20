@@ -68,9 +68,6 @@ namespace AHHA.API.Controllers.Masters
             var TaxViewModel = new TaxViewModel();
             try
             {
-
-
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
@@ -103,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -119,9 +115,6 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-
-
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
@@ -146,7 +139,6 @@ namespace AHHA.API.Controllers.Masters
 
                             var createdTax = await _TaxService.AddTaxAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdTax);
-
                         }
                         else
                         {
@@ -178,9 +170,6 @@ namespace AHHA.API.Controllers.Masters
             var TaxViewModel = new TaxViewModel();
             try
             {
-
-
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
@@ -249,9 +238,6 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-
-
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
@@ -294,5 +280,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-
-

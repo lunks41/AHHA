@@ -4,8 +4,6 @@ using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Models.Admin;
 using AHHA.Infra.Data;
-using Dapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace AHHA.Infra.Services.Admin
 {
@@ -24,7 +22,7 @@ namespace AHHA.Infra.Services.Admin
         {
             try
             {
-                return await _repository.GetQueryAsync<CompanyViewModel>(RegId,$"SELECT CompanyId,CompanyName FROM AdmCompany WHERE IsActive=1 AND CompanyId IN (SELECT CompanyId FROM AdmUserRights WHERE UserId={UserId})");
+                return await _repository.GetQueryAsync<CompanyViewModel>(RegId, $"SELECT CompanyId,CompanyName FROM AdmCompany WHERE IsActive=1 AND CompanyId IN (SELECT CompanyId FROM AdmUserRights WHERE UserId={UserId})");
             }
             catch (Exception ex)
             {
@@ -47,6 +45,5 @@ namespace AHHA.Infra.Services.Admin
                 throw new Exception(ex.ToString());
             }
         }
-
     }
 }

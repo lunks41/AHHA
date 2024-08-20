@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ISubCategoryService _SubCategoryService;
         private readonly ILogger<SubCategoryController> _logger;
-        
-       
-       
-       
-       
-        
 
         public SubCategoryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SubCategoryController> logger, ISubCategoryService SubCategoryService)
     : base(memoryCache, mapper, baseServices)
@@ -37,27 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                        
-                       
-                            var cacheData = await _SubCategoryService.GetSubCategoryListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _SubCategoryService.GetSubCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                           return Ok(cacheData);
-                       
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -66,12 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                   
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -89,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var SubCategoryViewModel = new SubCategoryViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -104,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            SubCategoryViewModel = _mapper.Map<SubCategoryViewModel>(await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId));
+                            SubCategoryViewModel = _mapper.Map<SubCategoryViewModel>(await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId));
 
                             if (SubCategoryViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -124,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -140,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -165,9 +137,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = SubCategory.Remarks
                             };
 
-                            var createdSubCategory = await _SubCategoryService.AddSubCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryEntity, headerViewModel.UserId);
+                            var createdSubCategory = await _SubCategoryService.AddSubCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdSubCategory);
-
                         }
                         else
                         {
@@ -199,12 +170,9 @@ namespace AHHA.API.Controllers.Masters
             var SubCategoryViewModel = new SubCategoryViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -221,7 +189,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var SubCategoryToUpdate = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
+                                var SubCategoryToUpdate = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
 
                                 if (SubCategoryToUpdate == null)
                                     return NotFound($"M_SubCategory with Id = {SubCategoryId} not found");
@@ -238,7 +206,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = SubCategory.Remarks
                             };
 
-                            var sqlResponce = await _SubCategoryService.UpdateSubCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryEntity, headerViewModel.UserId);
+                            var sqlResponce = await _SubCategoryService.UpdateSubCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -270,23 +238,20 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var SubCategoryToDelete = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
+                            var SubCategoryToDelete = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
 
                             if (SubCategoryToDelete == null)
                                 return NotFound($"M_SubCategory with Id = {SubCategoryId} not found");
 
-                            var sqlResponce = await _SubCategoryService.DeleteSubCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _SubCategoryService.DeleteSubCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"SubCategory_{SubCategoryId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
@@ -315,4 +280,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-

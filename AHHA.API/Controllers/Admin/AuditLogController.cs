@@ -1,9 +1,8 @@
-﻿using AHHA.Application.IServices.Masters;
-using AHHA.Application.IServices;
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace AHHA.API.Controllers.Setting
 {
@@ -10,6 +9,5 @@ namespace AHHA.API.Controllers.Setting
         //Getlist --moduleid/trsid/userid/compid
         //Getbyid --moduleid/trsid/userid/compid/gridname
         //Upsert  --moduleid/trsid/userid/compid/gridname
-
     }
 }

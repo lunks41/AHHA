@@ -1,5 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Diagnostics;
 using System.Net;
 
 namespace AHHA.API.ExceptionHandling
@@ -38,5 +37,4 @@ namespace AHHA.API.ExceptionHandling
             return true;
         }
     }
-
 }

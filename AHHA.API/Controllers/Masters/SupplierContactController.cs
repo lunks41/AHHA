@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ISupplierContactService _SupplierContactService;
         private readonly ILogger<SupplierContactController> _logger;
-
-
-
-
-
-
 
         public SupplierContactController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierContactController> logger, ISupplierContactService SupplierContactService)
     : base(memoryCache, mapper, baseServices)
@@ -75,9 +68,6 @@ namespace AHHA.API.Controllers.Masters
             var SupplierContactViewModel = new SupplierContactViewModel();
             try
             {
-
-
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
@@ -110,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -126,9 +115,6 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-
-
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
@@ -161,7 +147,6 @@ namespace AHHA.API.Controllers.Masters
 
                             var createdSupplierContact = await _SupplierContactService.AddSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdSupplierContact);
-
                         }
                         else
                         {
@@ -193,9 +178,6 @@ namespace AHHA.API.Controllers.Masters
             var SupplierContactViewModel = new SupplierContactViewModel();
             try
             {
-
-
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
@@ -272,9 +254,6 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-
-
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
@@ -317,5 +296,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-
-

@@ -35,7 +35,7 @@ namespace AHHA.API.Controllers.Admin
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.ModuleId, headerViewModel.UserId);
+                    var UsersTransactionsdata = await _transactionService.GetUsersTransactionsAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.ModuleId, headerViewModel.UserId);
 
                     return Ok(UsersTransactionsdata);
                 }
@@ -85,6 +85,5 @@ namespace AHHA.API.Controllers.Admin
                  "Error retrieving data from the database");
             }
         }
-
     }
 }

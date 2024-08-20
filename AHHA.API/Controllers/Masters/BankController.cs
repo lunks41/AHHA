@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IBankService _BankService;
         private readonly ILogger<BankController> _logger;
-        
-       
-       
-       
-       
-        
 
         public BankController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BankController> logger, IBankService BankService)
     : base(memoryCache, mapper, baseServices)
@@ -37,29 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                        
-                       
-                           
-                            var cacheData = await _BankService.GetBankListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _BankService.GetBankListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                            
-                            return Ok(cacheData);
-                        
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -68,12 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                    
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -91,10 +68,6 @@ namespace AHHA.API.Controllers.Masters
             var BankViewModel = new BankViewModel();
             try
             {
-                
-                
-                
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
@@ -127,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -143,10 +115,6 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
@@ -175,7 +143,6 @@ namespace AHHA.API.Controllers.Masters
 
                             var createdBank = await _BankService.AddBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdBank);
-
                         }
                         else
                         {
@@ -207,10 +174,6 @@ namespace AHHA.API.Controllers.Masters
             var BankViewModel = new BankViewModel();
             try
             {
-                
-                
-                
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
@@ -284,10 +247,6 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);

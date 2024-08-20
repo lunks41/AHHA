@@ -14,7 +14,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns name="T"> return type as int,string or object etc which you provide on method</returns>
-        Task<IEnumerable<T>> GetQueryAsync<T>(string RegId,string spName, object? Parameters = null);
+        Task<IEnumerable<T>> GetQueryAsync<T>(string RegId, string spName, object? Parameters = null);
 
         /// <summary>
         /// Get first row of Data By passing T as view model class by using query
@@ -35,7 +35,7 @@ namespace AHHA.Application.CommonServices
         /// <param name="Parameters"></param>
         /// <param name="ConStr"></param>
         /// <returns></returns>
-        Task<T> GetQueryFirstAsync<T>(string RegId, string spName, object? Parameters=null);
+        Task<T> GetQueryFirstAsync<T>(string RegId, string spName, object? Parameters = null);
 
         /// <summary>
         /// Get table type of data

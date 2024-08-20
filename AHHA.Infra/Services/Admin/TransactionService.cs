@@ -29,7 +29,7 @@ namespace AHHA.Infra.Services.Admin
                 //parameter.Add(new SqlParameter("@ModuleId", ModuleId));
                 //parameter.Add(new SqlParameter("@UserId", UserId));
 
-                var productDetails = await _repository.GetQueryAsync<TransactionViewModel>(RegId,$"exec Adm_GetUserTransactions {CompanyId},{ModuleId},{UserId}");
+                var productDetails = await _repository.GetQueryAsync<TransactionViewModel>(RegId, $"exec Adm_GetUserTransactions {CompanyId},{ModuleId},{UserId}");
 
                 //var productDetails = await Task.Run(() => _context.AdmTransaction
                 //                .FromSqlRaw(@"exec Adm_GetUserTransactions @CompanyId,@ModuleId,@UserId", parameter.ToArray()).ToListAsync());
@@ -88,6 +88,5 @@ namespace AHHA.Infra.Services.Admin
                 throw new Exception(ex.ToString());
             }
         }
-
     }
 }

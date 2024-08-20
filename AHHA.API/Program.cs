@@ -37,7 +37,7 @@ builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrateg
 builder.Services.AddSingleton<IExceptionHandler, GlobalExcaptionHandler>();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
-#endregion
+#endregion Caching & IP Rate Limiting
 
 builder.Services.AddLogging();
 builder.Services.RegisterService(builder.Configuration);//From API Exenstions Folder
@@ -72,9 +72,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 //    });
 //});
 
-#endregion
+#endregion JWT Token
 
-builder.Services.AddCors(options => {
+builder.Services.AddCors(options =>
+{
     options.AddPolicy("CORSPolicy", builder => builder.WithOrigins("*").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
@@ -91,11 +92,11 @@ app.UseCors("CORSPolicy");
 
 //if (app.Environment.IsDevelopment())
 //{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AHHA API V1");
-    });
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AHHA API V1");
+});
 //}
 
 app.UseHttpsRedirection();

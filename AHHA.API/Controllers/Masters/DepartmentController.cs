@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IDepartmentService _DepartmentService;
         private readonly ILogger<DepartmentController> _logger;
-        
-       
-       
-       
-       
-        
 
         public DepartmentController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<DepartmentController> logger, IDepartmentService DepartmentService)
     : base(memoryCache, mapper, baseServices)
@@ -37,30 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                        
-                  
-                            var cacheData = await _DepartmentService.GetDepartmentListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _DepartmentService.GetDepartmentListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                            
-
-                            
-                            return Ok(cacheData);
-                       
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -69,11 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                                            return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -91,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var DepartmentViewModel = new DepartmentViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -106,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            DepartmentViewModel = _mapper.Map<DepartmentViewModel>(await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId));
+                            DepartmentViewModel = _mapper.Map<DepartmentViewModel>(await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId));
 
                             if (DepartmentViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -126,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -142,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -167,9 +137,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Department.Remarks
                             };
 
-                            var createdDepartment = await _DepartmentService.AddDepartmentAsync(headerViewModel.RegId,headerViewModel.CompanyId, DepartmentEntity, headerViewModel.UserId);
+                            var createdDepartment = await _DepartmentService.AddDepartmentAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdDepartment);
-
                         }
                         else
                         {
@@ -201,12 +170,9 @@ namespace AHHA.API.Controllers.Masters
             var DepartmentViewModel = new DepartmentViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -223,7 +189,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var DepartmentToUpdate = await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId);
+                                var DepartmentToUpdate = await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId);
 
                                 if (DepartmentToUpdate == null)
                                     return NotFound($"M_Department with Id = {DepartmentId} not found");
@@ -240,7 +206,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Department.Remarks
                             };
 
-                            var sqlResponce = await _DepartmentService.UpdateDepartmentAsync(headerViewModel.RegId,headerViewModel.CompanyId, DepartmentEntity, headerViewModel.UserId);
+                            var sqlResponce = await _DepartmentService.UpdateDepartmentAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -272,23 +238,20 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Department, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var DepartmentToDelete = await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId);
+                            var DepartmentToDelete = await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId);
 
                             if (DepartmentToDelete == null)
                                 return NotFound($"M_Department with Id = {DepartmentId} not found");
 
-                            var sqlResponce = await _DepartmentService.DeleteDepartmentAsync(headerViewModel.RegId,headerViewModel.CompanyId, DepartmentToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _DepartmentService.DeleteDepartmentAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Department_{DepartmentId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
@@ -317,5 +280,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-
-

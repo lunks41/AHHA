@@ -1,6 +1,4 @@
-﻿using AHHA.Core.Entities.Masters;
-
-namespace AHHA.Application.IServices.Masters
+﻿namespace AHHA.Application.IServices.Masters
 {
     public interface IProductService
     {

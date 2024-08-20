@@ -4,9 +4,6 @@ using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Models.Admin;
 using AHHA.Infra.Data;
-using Dapper;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 
 namespace AHHA.Infra.Services.Admin
 {
@@ -25,7 +22,7 @@ namespace AHHA.Infra.Services.Admin
         {
             try
             {
-                var productDetails = await _repository.GetQueryAsync<UsersModuleViewModel>(RegId,$"exec Adm_GetUserModules {CompanyId},{UserId}");
+                var productDetails = await _repository.GetQueryAsync<UsersModuleViewModel>(RegId, $"exec Adm_GetUserModules {CompanyId},{UserId}");
 
                 return productDetails;
             }
@@ -50,6 +47,5 @@ namespace AHHA.Infra.Services.Admin
                 throw new Exception(ex.ToString());
             }
         }
-
     }
 }

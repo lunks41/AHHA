@@ -7,9 +7,13 @@ namespace AHHA.Application.IServices.Masters
     public interface ITaxCategoryService
     {
         public Task<TaxCategoryViewModelCount> GetTaxCategoryListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId);
+
         public Task<M_TaxCategory> GetTaxCategoryByIdAsync(string RegId, Int16 CompanyId, Int16 COACategoryId, Int32 UserId);
+
         public Task<SqlResponce> AddTaxCategoryAsync(string RegId, Int16 CompanyId, M_TaxCategory M_TaxCategory, Int32 UserId);
+
         public Task<SqlResponce> UpdateTaxCategoryAsync(string RegId, Int16 CompanyId, M_TaxCategory M_TaxCategory, Int32 UserId);
+
         public Task<SqlResponce> DeleteTaxCategoryAsync(string RegId, Int16 CompanyId, M_TaxCategory M_TaxCategory, Int32 UserId);
     }
 }

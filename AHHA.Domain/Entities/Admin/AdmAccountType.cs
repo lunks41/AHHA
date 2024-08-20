@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AHHA.Core.Entities.Admin
 {
@@ -11,6 +6,7 @@ namespace AHHA.Core.Entities.Admin
     {
         [Key]
         public Int16 AccTypeId { get; set; }
+
         public Int16 CompanyId { get; set; }
         public string AccTypeCode { get; set; }
         public string AccTypeName { get; set; }

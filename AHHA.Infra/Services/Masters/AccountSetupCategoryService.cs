@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             AccountSetupCategoryViewModelCount AccountSetupCategoryViewModelCount = new AccountSetupCategoryViewModelCount();
             try
             {
-               var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_AccountSetupCategory");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountSetupCategory");
 
-                var result = await _repository.GetQueryAsync<AccountSetupCategoryViewModel>(RegId,$"SELECT M_AccSetCa.AccSetupCategoryId,M_AccSetCa.AccSetupCategoryCode,M_AccSetCa.AccSetupCategoryName,M_AccSetCa.Remarks,M_AccSetCa.IsActive,M_AccSetCa.CreateById,M_AccSetCa.CreateDate,M_AccSetCa.EditById,M_AccSetCa.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountSetupCategory M_AccSetCa LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_AccSetCa.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_AccSetCa.EditById WHERE M_AccSetCa.AccSetupCategoryId<>0 AND  ( M_AccSetCa.AccSetupCategoryName LIKE '%{searchString}%' OR M_AccSetCa.AccSetupCategoryCode LIKE '%{searchString}%' OR M_AccSetCa.Remarks LIKE '%{searchString}%') ORDER BY M_AccSetCa.AccSetupCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<AccountSetupCategoryViewModel>(RegId, $"SELECT M_AccSetCa.AccSetupCategoryId,M_AccSetCa.AccSetupCategoryCode,M_AccSetCa.AccSetupCategoryName,M_AccSetCa.Remarks,M_AccSetCa.IsActive,M_AccSetCa.CreateById,M_AccSetCa.CreateDate,M_AccSetCa.EditById,M_AccSetCa.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountSetupCategory M_AccSetCa LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_AccSetCa.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_AccSetCa.EditById WHERE M_AccSetCa.AccSetupCategoryId<>0 AND  ( M_AccSetCa.AccSetupCategoryName LIKE '%{searchString}%' OR M_AccSetCa.AccSetupCategoryCode LIKE '%{searchString}%' OR M_AccSetCa.Remarks LIKE '%{searchString}%') ORDER BY M_AccSetCa.AccSetupCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 AccountSetupCategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 AccountSetupCategoryViewModelCount.data = result == null ? null : result.ToList();
@@ -55,13 +55,13 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_AccountSetupCategory> GetAccountSetupCategoryByIdAsync(string RegId, Int16 CompanyId, Int16 AccSetupCategoryId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountSetupCategory>(RegId,$"SELECT AccSetupCategoryId,AccSetupCategoryCode,AccSetupCategoryName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountSetupCategory WHERE AccSetupCategoryId={AccSetupCategoryId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountSetupCategory>(RegId, $"SELECT AccSetupCategoryId,AccSetupCategoryCode,AccSetupCategoryName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountSetupCategory WHERE AccSetupCategoryId={AccSetupCategoryId}");
 
                 return result;
             }
@@ -86,6 +86,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory AccountSetupCategory, Int32 UserId)
         {
             bool isExist = false;
@@ -94,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryCode='{AccountSetupCategory.AccSetupCategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryCode='{AccountSetupCategory.AccSetupCategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -117,7 +118,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (AccSetupCategoryId + 1) FROM dbo.M_AccountSetupCategory WHERE (AccSetupCategoryId + 1) NOT IN (SELECT AccSetupCategoryId FROM dbo.M_AccountSetupCategory)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AccSetupCategoryId + 1) FROM dbo.M_AccountSetupCategory WHERE (AccSetupCategoryId + 1) NOT IN (SELECT AccSetupCategoryId FROM dbo.M_AccountSetupCategory)),1) AS MissId");
 
                         #region Saving AccountSetupCategory
 
@@ -128,9 +129,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var AccountSetupCategoryToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving AccountSetupCategory
 
                         #region Save AuditLog
+
                         if (AccountSetupCategoryToSave > 0)
                         {
                             //Saving Audit log
@@ -158,8 +160,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -191,6 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory AccountSetupCategory, Int32 UserId)
         {
             int IsActive = AccountSetupCategory.IsActive == true ? 1 : 0;
@@ -203,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (AccountSetupCategory.AccSetupCategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,RegId,$"SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName} AND AccSetupCategoryId <>{AccountSetupCategory.AccSetupCategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName} AND AccSetupCategoryId <>{AccountSetupCategory.AccSetupCategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -229,7 +232,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update AccountSetupCategory
 
                             if (counToUpdate > 0)
                             {
@@ -286,6 +289,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory AccountSetupCategory, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();

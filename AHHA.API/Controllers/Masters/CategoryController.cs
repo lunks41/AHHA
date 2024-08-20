@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICategoryService _CategoryService;
         private readonly ILogger<CategoryController> _logger;
-        
-       
-       
-       
-       
-        
 
         public CategoryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CategoryController> logger, ICategoryService CategoryService)
     : base(memoryCache, mapper, baseServices)
@@ -37,28 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                 
-                           var cacheData = await _CategoryService.GetCategoryListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _CategoryService.GetCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                           
-
-                            
-                            return Ok(cacheData);
-                      
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -67,11 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -89,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var CategoryViewModel = new CategoryViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -104,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            CategoryViewModel = _mapper.Map<CategoryViewModel>(await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CategoryId, headerViewModel.UserId));
+                            CategoryViewModel = _mapper.Map<CategoryViewModel>(await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId));
 
                             if (CategoryViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -124,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -140,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -165,9 +137,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Category.Remarks
                             };
 
-                            var createdCategory = await _CategoryService.AddCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, CategoryEntity, headerViewModel.UserId);
+                            var createdCategory = await _CategoryService.AddCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCategory);
-
                         }
                         else
                         {
@@ -199,12 +170,9 @@ namespace AHHA.API.Controllers.Masters
             var CategoryViewModel = new CategoryViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -221,7 +189,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CategoryToUpdate = await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CategoryId, headerViewModel.UserId);
+                                var CategoryToUpdate = await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId);
 
                                 if (CategoryToUpdate == null)
                                     return NotFound($"M_Category with Id = {CategoryId} not found");
@@ -238,7 +206,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Category.Remarks
                             };
 
-                            var sqlResponce = await _CategoryService.UpdateCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, CategoryEntity, headerViewModel.UserId);
+                            var sqlResponce = await _CategoryService.UpdateCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -270,23 +238,20 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var CategoryToDelete = await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CategoryId, headerViewModel.UserId);
+                            var CategoryToDelete = await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId);
 
                             if (CategoryToDelete == null)
                                 return NotFound($"M_Category with Id = {CategoryId} not found");
 
-                            var sqlResponce = await _CategoryService.DeleteCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, CategoryToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _CategoryService.DeleteCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Category_{CategoryId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
@@ -315,4 +280,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-

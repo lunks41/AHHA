@@ -1,13 +1,10 @@
-﻿using AHHA.API.Controllers.Masters;
+﻿using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
-using AHHA.Application.IServices;
+using AHHA.Core.Common;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using AHHA.Core.Common;
-using AHHA.Infra.Services.Masters;
-using Microsoft.AspNetCore.Authorization;
 
 namespace AHHA.API.Controllers.Admin
 {

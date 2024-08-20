@@ -1,9 +1,6 @@
-﻿
-
-using AHHA.Core.Entities.Admin;
+﻿using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace AHHA.Infra.Data
 {
@@ -15,6 +12,7 @@ namespace AHHA.Infra.Data
         }
 
         #region Admin
+
         public DbSet<AdmAccountGroup> AdmAccountGroup { get; set; }
         public DbSet<AdmAccountType> AdmAccountType { get; set; }
         public DbSet<AdmAuditLog> AdmAuditLog { get; set; }
@@ -30,9 +28,10 @@ namespace AHHA.Infra.Data
         public DbSet<AdmUserLog> AdmUserLog { get; set; }
         public DbSet<AdmUserRights> AdmUserRights { get; set; }
 
-        #endregion
+        #endregion Admin
 
         #region DbSet Section - Masters
+
         public DbSet<M_Product> M_Product { get; set; }
         public DbSet<M_Country> M_Country { get; set; }
         public DbSet<M_AccountSetup> M_AccountSetup { get; set; }
@@ -81,6 +80,6 @@ namespace AHHA.Infra.Data
         public DbSet<M_Vessel_Back> M_Vessel_Back { get; set; }
         public DbSet<M_Voyage> M_Voyage { get; set; }
 
-        #endregion
+        #endregion DbSet Section - Masters
     }
 }

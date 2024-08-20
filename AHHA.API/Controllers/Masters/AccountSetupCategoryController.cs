@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -33,7 +32,7 @@ namespace AHHA.API.Controllers.Masters
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -41,10 +40,10 @@ namespace AHHA.API.Controllers.Masters
 
                         var AccountSetupCategoryData = await _AccountSetupCategoryService.GetAccountSetupCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
-                            if (AccountSetupCategoryData == null)
-                                return NotFound();
+                        if (AccountSetupCategoryData == null)
+                            return NotFound();
 
-                            return StatusCode(StatusCodes.Status202Accepted, AccountSetupCategoryData);
+                        return StatusCode(StatusCodes.Status202Accepted, AccountSetupCategoryData);
                     }
                     else
                     {
@@ -76,10 +75,10 @@ namespace AHHA.API.Controllers.Masters
             var AccountSetupCategoryViewModel = new AccountSetupCategoryViewModel();
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
-                    
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+
                     _logger.LogInformation("Check the ValidateScrren");
 
                     if (userGroupRight != null)
@@ -110,7 +109,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -126,9 +124,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -147,9 +145,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = AccountSetupCategory.Remarks
                             };
 
-                            var createdAccountSetupCategory = await _AccountSetupCategoryService.AddAccountSetupCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, AccountSetupCategoryEntity, headerViewModel.UserId);
+                            var createdAccountSetupCategory = await _AccountSetupCategoryService.AddAccountSetupCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupCategoryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdAccountSetupCategory);
-
                         }
                         else
                         {
@@ -181,9 +178,9 @@ namespace AHHA.API.Controllers.Masters
             var AccountSetupCategoryViewModel = new AccountSetupCategoryViewModel();
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -249,9 +246,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -291,4 +288,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-

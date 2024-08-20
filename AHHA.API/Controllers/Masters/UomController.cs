@@ -36,7 +36,6 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-
                         headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
 
                         var UomData = await _UomService.GetUomListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
@@ -103,7 +102,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -143,7 +141,6 @@ namespace AHHA.API.Controllers.Masters
 
                             var createdUom = await _UomService.AddUomAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdUom);
-
                         }
                         else
                         {
@@ -285,5 +282,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-
-

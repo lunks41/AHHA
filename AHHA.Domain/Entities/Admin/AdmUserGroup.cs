@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AHHA.Core.Entities.Admin
 {
@@ -11,6 +6,7 @@ namespace AHHA.Core.Entities.Admin
     {
         [Key]
         public Int32 UserGroupId { get; set; }
+
         public string UserGroupCode { get; set; }
         public string UserGroupName { get; set; }
         public string Remarks { get; set; }

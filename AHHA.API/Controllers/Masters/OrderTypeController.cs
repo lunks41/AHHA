@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IOrderTypeService _OrderTypeService;
         private readonly ILogger<OrderTypeController> _logger;
-        
-       
-       
-       
-       
-        
 
         public OrderTypeController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<OrderTypeController> logger, IOrderTypeService OrderTypeService)
     : base(memoryCache, mapper, baseServices)
@@ -37,25 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                        
-                            var cacheData = await _OrderTypeService.GetOrderTypeListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _OrderTypeService.GetOrderTypeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                            return Ok(cacheData);
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -64,12 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                    
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -87,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var OrderTypeViewModel = new OrderTypeViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -102,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            OrderTypeViewModel = _mapper.Map<OrderTypeViewModel>(await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId));
+                            OrderTypeViewModel = _mapper.Map<OrderTypeViewModel>(await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId));
 
                             if (OrderTypeViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -122,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -138,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -163,9 +137,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = OrderType.Remarks
                             };
 
-                            var createdOrderType = await _OrderTypeService.AddOrderTypeAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeEntity, headerViewModel.UserId);
+                            var createdOrderType = await _OrderTypeService.AddOrderTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdOrderType);
-
                         }
                         else
                         {
@@ -197,12 +170,9 @@ namespace AHHA.API.Controllers.Masters
             var OrderTypeViewModel = new OrderTypeViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -219,7 +189,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var OrderTypeToUpdate = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
+                                var OrderTypeToUpdate = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
 
                                 if (OrderTypeToUpdate == null)
                                     return NotFound($"M_OrderType with Id = {OrderTypeId} not found");
@@ -236,7 +206,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = OrderType.Remarks
                             };
 
-                            var sqlResponce = await _OrderTypeService.UpdateOrderTypeAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeEntity, headerViewModel.UserId);
+                            var sqlResponce = await _OrderTypeService.UpdateOrderTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -268,8 +238,8 @@ namespace AHHA.API.Controllers.Masters
         //{
         //    try
         //    {
-        //        
-        //        
+        //
+        //
 
         //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
@@ -313,5 +283,3 @@ namespace AHHA.API.Controllers.Masters
         //}
     }
 }
-
-

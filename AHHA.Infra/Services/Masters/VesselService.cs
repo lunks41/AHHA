@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             VesselViewModelCount VesselViewModelCount = new VesselViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_Vessel WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Vessel},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Vessel WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Vessel},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<VesselViewModel>(RegId,$"SELECT M_Vess.VesselId,M_Vess.CompanyId,M_Vess.VesselCode,M_Vess.VesselName,M_Vess.CallSign,M_Vess.IMOCode,M_Vess.GRT,M_Vess.LicenseNo,M_Vess.VesselType,M_Vess.Flag,M_Vess.Remarks,M_Vess.IsActive,M_Vess.CreateById,M_Vess.CreateDate,M_Vess.EditById,M_Vess.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_Vessel M_Vess LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Vess.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Vess.EditById WHERE (M_Vess.VesselName LIKE '%{searchString}%' OR M_Vess.VesselCode LIKE '%{searchString}%' OR M_Vess.VesselType LIKE '%{searchString}%') AND M_Vess.VesselId <>0 AND M_Vess.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany(1,25,1)) ORDER BY M_Vess.VesselName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<VesselViewModel>(RegId, $"SELECT M_Vess.VesselId,M_Vess.CompanyId,M_Vess.VesselCode,M_Vess.VesselName,M_Vess.CallSign,M_Vess.IMOCode,M_Vess.GRT,M_Vess.LicenseNo,M_Vess.VesselType,M_Vess.Flag,M_Vess.Remarks,M_Vess.IsActive,M_Vess.CreateById,M_Vess.CreateDate,M_Vess.EditById,M_Vess.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_Vessel M_Vess LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Vess.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Vess.EditById WHERE (M_Vess.VesselName LIKE '%{searchString}%' OR M_Vess.VesselCode LIKE '%{searchString}%' OR M_Vess.VesselType LIKE '%{searchString}%') AND M_Vess.VesselId <>0 AND M_Vess.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany(1,25,1)) ORDER BY M_Vess.VesselName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 VesselViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 VesselViewModelCount.data = result == null ? null : result.ToList();
@@ -55,13 +55,13 @@ namespace AHHA.Infra.Services.Masters
 
                 throw new Exception(ex.ToString());
             }
-
         }
+
         public async Task<M_Vessel> GetVesselByIdAsync(string RegId, Int16 CompanyId, Int32 VesselId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Vessel>(RegId,$"SELECT VesselId,VesselCode,VesselName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Vessel WHERE VesselId={VesselId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Vessel>(RegId, $"SELECT VesselId,VesselCode,VesselName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Vessel WHERE VesselId={VesselId}");
 
                 return result;
             }
@@ -86,6 +86,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddVesselAsync(string RegId, Int16 CompanyId, M_Vessel Vessel, Int32 UserId)
         {
             bool isExist = false;
@@ -94,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselCode='{Vessel.VesselCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselName='{Vessel.VesselName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselCode='{Vessel.VesselCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselName='{Vessel.VesselName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -117,7 +118,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (VesselId + 1) FROM dbo.M_Vessel WHERE (VesselId + 1) NOT IN (SELECT VesselId FROM dbo.M_Vessel)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (VesselId + 1) FROM dbo.M_Vessel WHERE (VesselId + 1) NOT IN (SELECT VesselId FROM dbo.M_Vessel)),1) AS MissId");
 
                         #region Saving Vessel
 
@@ -128,9 +129,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var VesselToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving Vessel
 
                         #region Save AuditLog
+
                         if (VesselToSave > 0)
                         {
                             //Saving Audit log
@@ -158,8 +160,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -191,6 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateVesselAsync(string RegId, Int16 CompanyId, M_Vessel Vessel, Int32 UserId)
         {
             int IsActive = Vessel.IsActive == true ? 1 : 0;
@@ -203,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Vessel.VesselId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselName='{Vessel.VesselName} AND VesselId <>{Vessel.VesselId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselName='{Vessel.VesselName} AND VesselId <>{Vessel.VesselId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -230,7 +233,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update Vessel
 
                             if (counToUpdate > 0)
                             {
@@ -287,6 +290,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteVesselAsync(string RegId, Int16 CompanyId, M_Vessel Vessel, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();

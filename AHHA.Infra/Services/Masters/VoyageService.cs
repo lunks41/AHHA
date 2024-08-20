@@ -1,12 +1,10 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices;
 using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -28,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             VoyageViewModelCount VoyageViewModelCount = new VoyageViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,$"SELECT COUNT(*) AS CountId FROM M_Voyage WHERE VoyageId<>0 AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Voyage},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Voyage WHERE VoyageId<>0 AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Voyage},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<VoyageViewModel>(RegId,$"SELECT M_Voy.VoyageId,M_Voy.VoyageNo,M_Voy.ReferenceNo,M_Ves.VesselCode,M_Ves.VesselName,M_Bar.BargeName,M_Bar.BargeCode,M_Voy.CompanyId,M_Voy.Remarks,M_Voy.IsActive,M_Voy.CreateById,M_Voy.CreateDate,M_Voy.EditById,M_Voy.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Voyage M_Voy INNER JOIN dbo.M_Vessel M_Ves ON M_Ves.VesselId = M_Voy.VesselId INNER JOIN dbo.M_Barge M_Bar ON M_Bar.BargeId = M_Voy.BargeId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Voy.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Voy.EditById WHERE (M_Voy.ReferenceNo LIKE '%{searchString}%' OR M_Voy.VoyageNo LIKE '%{searchString}%' OR M_Voy.Remarks LIKE '%{searchString}%' OR M_Ves.VesselName LIKE '%{searchString}%' OR M_Ves.VesselCode LIKE '%{searchString}%' OR M_Bar.BargeName LIKE '%{searchString}%' OR M_Bar.BargeCode LIKE '%{searchString}%') AND M_Voy.VoyageId<>0 AND M_Voy.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) ORDER BY M_Voy.VoyageNo OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<VoyageViewModel>(RegId, $"SELECT M_Voy.VoyageId,M_Voy.VoyageNo,M_Voy.ReferenceNo,M_Ves.VesselCode,M_Ves.VesselName,M_Bar.BargeName,M_Bar.BargeCode,M_Voy.CompanyId,M_Voy.Remarks,M_Voy.IsActive,M_Voy.CreateById,M_Voy.CreateDate,M_Voy.EditById,M_Voy.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Voyage M_Voy INNER JOIN dbo.M_Vessel M_Ves ON M_Ves.VesselId = M_Voy.VesselId INNER JOIN dbo.M_Barge M_Bar ON M_Bar.BargeId = M_Voy.BargeId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Voy.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Voy.EditById WHERE (M_Voy.ReferenceNo LIKE '%{searchString}%' OR M_Voy.VoyageNo LIKE '%{searchString}%' OR M_Voy.Remarks LIKE '%{searchString}%' OR M_Ves.VesselName LIKE '%{searchString}%' OR M_Ves.VesselCode LIKE '%{searchString}%' OR M_Bar.BargeName LIKE '%{searchString}%' OR M_Bar.BargeCode LIKE '%{searchString}%') AND M_Voy.VoyageId<>0 AND M_Voy.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) ORDER BY M_Voy.VoyageNo OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 VoyageViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 VoyageViewModelCount.data = result == null ? null : result.ToList();
@@ -58,11 +56,12 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<M_Voyage> GetVoyageByIdAsync(string RegId, Int16 CompanyId, Int32 VoyageId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Voyage>(RegId,$"SELECT VoyageId,VoyageNo,VoyageName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Voyage WHERE VoyageId={VoyageId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Voyage>(RegId, $"SELECT VoyageId,VoyageNo,VoyageName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Voyage WHERE VoyageId={VoyageId}");
 
                 return result;
             }
@@ -87,6 +86,7 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
+
         public async Task<SqlResponce> AddVoyageAsync(string RegId, Int16 CompanyId, M_Voyage Voyage, Int32 UserId)
         {
             bool isExist = false;
@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 1 AS IsExist FROM dbo.M_Voyage WHERE CompanyId IN (SELECT DISTINCT VoyageId FROM dbo.Fn_Adm_GetShareCompany ({Voyage.CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) AND VoyageNo='{Voyage.VoyageNo}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Voyage WHERE CompanyId IN (SELECT DISTINCT VoyageId FROM dbo.Fn_Adm_GetShareCompany ({Voyage.CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) ");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Voyage WHERE CompanyId IN (SELECT DISTINCT VoyageId FROM dbo.Fn_Adm_GetShareCompany ({Voyage.CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) AND VoyageNo='{Voyage.VoyageNo}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Voyage WHERE CompanyId IN (SELECT DISTINCT VoyageId FROM dbo.Fn_Adm_GetShareCompany ({Voyage.CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) ");
 
                     if (StrExist.Count() > 0)
                     {
@@ -118,7 +118,7 @@ namespace AHHA.Infra.Services.Masters
                     if (!isExist)
                     {
                         //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,"SELECT ISNULL((SELECT TOP 1 (VoyageId + 1) FROM dbo.M_Voyage WHERE (VoyageId + 1) NOT IN (SELECT VoyageId FROM dbo.M_Voyage)),1) AS MissId");
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (VoyageId + 1) FROM dbo.M_Voyage WHERE (VoyageId + 1) NOT IN (SELECT VoyageId FROM dbo.M_Voyage)),1) AS MissId");
 
                         #region Saving Voyage
 
@@ -129,9 +129,10 @@ namespace AHHA.Infra.Services.Masters
 
                         var VoyageToSave = _context.SaveChanges();
 
-                        #endregion
+                        #endregion Saving Voyage
 
                         #region Save AuditLog
+
                         if (VoyageToSave > 0)
                         {
                             //Saving Audit log
@@ -159,8 +160,8 @@ namespace AHHA.Infra.Services.Masters
                                 sqlResponce = new SqlResponce { Id = 1, Message = "Save Successfully" };
                             }
                         }
-                        #endregion
 
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -192,6 +193,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> UpdateVoyageAsync(string RegId, Int16 CompanyId, M_Voyage Voyage, Int32 UserId)
         {
             int IsActive = Voyage.IsActive == true ? 1 : 0;
@@ -204,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Voyage.VoyageId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,$"SELECT 2 AS IsExist FROM dbo.M_Voyage WHERE CompanyId IN (SELECT DISTINCT VoyageId FROM dbo.Fn_Adm_GetShareCompany ({Voyage.CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) AND VoyageNo='{Voyage.VoyageNo} AND VoyageId <>{Voyage.VoyageId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Voyage WHERE CompanyId IN (SELECT DISTINCT VoyageId FROM dbo.Fn_Adm_GetShareCompany ({Voyage.CompanyId},{(short)Master.Voyage},{(short)Modules.Master})) AND VoyageNo='{Voyage.VoyageNo} AND VoyageId <>{Voyage.VoyageId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -231,7 +233,7 @@ namespace AHHA.Infra.Services.Masters
 
                             var counToUpdate = _context.SaveChanges();
 
-                            #endregion
+                            #endregion Update Voyage
 
                             if (counToUpdate > 0)
                             {
@@ -288,6 +290,7 @@ namespace AHHA.Infra.Services.Masters
                 }
             }
         }
+
         public async Task<SqlResponce> DeleteVoyageAsync(string RegId, Int16 CompanyId, M_Voyage Voyage, Int32 UserId)
         {
             var sqlResponce = new SqlResponce();

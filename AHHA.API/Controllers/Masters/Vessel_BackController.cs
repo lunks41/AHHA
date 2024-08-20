@@ -30,21 +30,21 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
 
-                        var VesselBackData = await _Vessel_BackService.GetVessel_BackListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var VesselBackData = await _Vessel_BackService.GetVessel_BackListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (VesselBackData == null)
-                                return NotFound();
+                        if (VesselBackData == null)
+                            return NotFound();
 
-                            return StatusCode(StatusCodes.Status202Accepted, VesselBackData);
-                            //return Ok(cacheData);
+                        return StatusCode(StatusCodes.Status202Accepted, VesselBackData);
+                        //return Ok(cacheData);
                     }
                     else
                     {
@@ -53,7 +53,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -71,9 +71,9 @@ namespace AHHA.API.Controllers.Masters
             var Vessel_BackViewModel = new Vessel_BackViewModel();
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -83,7 +83,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            Vessel_BackViewModel = _mapper.Map<Vessel_BackViewModel>(await _Vessel_BackService.GetVessel_BackByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, Vessel_BackId, headerViewModel.UserId));
+                            Vessel_BackViewModel = _mapper.Map<Vessel_BackViewModel>(await _Vessel_BackService.GetVessel_BackByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Vessel_BackId, headerViewModel.UserId));
 
                             if (Vessel_BackViewModel == null)
                                 return NotFound();
@@ -103,7 +103,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -119,9 +118,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -147,9 +146,8 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Vessel_Back.Remarks
                             };
 
-                            var createdVessel_Back = await _Vessel_BackService.AddVessel_BackAsync(headerViewModel.RegId,headerViewModel.CompanyId, Vessel_BackEntity, headerViewModel.UserId);
+                            var createdVessel_Back = await _Vessel_BackService.AddVessel_BackAsync(headerViewModel.RegId, headerViewModel.CompanyId, Vessel_BackEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdVessel_Back);
-
                         }
                         else
                         {
@@ -181,9 +179,9 @@ namespace AHHA.API.Controllers.Masters
             var Vessel_BackViewModel = new Vessel_BackViewModel();
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -200,7 +198,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var Vessel_BackToUpdate = await _Vessel_BackService.GetVessel_BackByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, Vessel_BackId, headerViewModel.UserId);
+                                var Vessel_BackToUpdate = await _Vessel_BackService.GetVessel_BackByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Vessel_BackId, headerViewModel.UserId);
 
                                 if (Vessel_BackToUpdate == null)
                                     return NotFound($"M_Vessel_Back with Id = {Vessel_BackId} not found");
@@ -223,7 +221,7 @@ namespace AHHA.API.Controllers.Masters
                                 Remarks = Vessel_Back.Remarks
                             };
 
-                            var sqlResponce = await _Vessel_BackService.UpdateVessel_BackAsync(headerViewModel.RegId,headerViewModel.CompanyId, Vessel_BackEntity, headerViewModel.UserId);
+                            var sqlResponce = await _Vessel_BackService.UpdateVessel_BackAsync(headerViewModel.RegId, headerViewModel.CompanyId, Vessel_BackEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -255,20 +253,20 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Vessel, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var Vessel_BackToDelete = await _Vessel_BackService.GetVessel_BackByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, Vessel_BackId, headerViewModel.UserId);
+                            var Vessel_BackToDelete = await _Vessel_BackService.GetVessel_BackByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Vessel_BackId, headerViewModel.UserId);
 
                             if (Vessel_BackToDelete == null)
                                 return NotFound($"M_Vessel_Back with Id = {Vessel_BackId} not found");
 
-                            var sqlResponce = await _Vessel_BackService.DeleteVessel_BackAsync(headerViewModel.RegId,headerViewModel.CompanyId, Vessel_BackToDelete, headerViewModel.UserId);
+                            var sqlResponce = await _Vessel_BackService.DeleteVessel_BackAsync(headerViewModel.RegId, headerViewModel.CompanyId, Vessel_BackToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Vessel_Back_{Vessel_BackId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
@@ -297,5 +295,3 @@ namespace AHHA.API.Controllers.Masters
         }
     }
 }
-
-

@@ -3,7 +3,6 @@ using AHHA.Core.Models.Admin;
 using AHHA.Core.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers
 {
@@ -31,8 +30,6 @@ namespace AHHA.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginViewModel user)
         {
-            
-
             if (!ModelState.IsValid)
             {
                 return BadRequest();
@@ -70,7 +67,7 @@ namespace AHHA.API.Controllers
         //public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         //{
         //    // Check user credentials (in a real application, you'd authenticate against a database)
-        //    
+        //
 
         //    var user = _authServices.GetByUserName(model.UserName);
 

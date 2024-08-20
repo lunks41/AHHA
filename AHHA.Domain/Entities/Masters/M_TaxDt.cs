@@ -1,10 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AHHA.Core.Entities.Masters
 {
@@ -13,8 +8,10 @@ namespace AHHA.Core.Entities.Masters
     {
         [Key]
         public Int16 TaxId { get; set; }
+
         [Key]
         public Int16 CompanyId { get; set; }
+
         public decimal TaxPercentage { get; set; }
         public DateTime ValidFrom { get; set; }
         public Int32 CreateById { get; set; }

@@ -11,9 +11,6 @@ namespace AHHA.API.Controllers.Masters
         private readonly IProductService _productService;
         private readonly ILogger<ProductController> _logger;
         private readonly IMemoryCache _memoryCache;
-       
-       
-        
 
         public ProductController(ILogger<ProductController> logger, IProductService productService, IMemoryCache memoryCache)
         {
@@ -37,7 +34,7 @@ namespace AHHA.API.Controllers.Masters
         //        return StatusCode(StatusCodes.Status500InternalServerError,
         //         "Error retrieving data from the database");
         //    }
-            
+
         //}
 
         //[HttpGet("getproductbyid/{id:int}")]

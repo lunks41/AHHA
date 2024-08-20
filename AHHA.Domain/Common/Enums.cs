@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AHHA.Core.Common
+﻿namespace AHHA.Core.Common
 {
     public enum Mode
     {
@@ -75,7 +69,7 @@ namespace AHHA.Core.Common
         GroupCreditLimt_Customer = 45,
 
         //Harshad Added Tempory basis
-        PaymentType=0,
+        PaymentType = 0,
     }
 
     public enum AR
@@ -130,8 +124,7 @@ namespace AHHA.Core.Common
         UserGroup = 3,
         UserGroupRights = 4,
         DocumentNo = 5,
-        Modules=6,
-        Transaction=7
+        Modules = 6,
+        Transaction = 7
     }
-
 }

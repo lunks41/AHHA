@@ -5,7 +5,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Admin
 {
@@ -52,6 +51,5 @@ namespace AHHA.API.Controllers.Admin
                  "Error retrieving data from the database");
             }
         }
-
     }
 }

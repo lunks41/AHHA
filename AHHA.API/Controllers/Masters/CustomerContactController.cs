@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICustomerContactService _CustomerContactService;
         private readonly ILogger<CustomerContactController> _logger;
-        
-       
-       
-       
-       
-        
 
         public CustomerContactController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CustomerContactController> logger, ICustomerContactService CustomerContactService)
     : base(memoryCache, mapper, baseServices)
@@ -37,29 +30,18 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                       
-                        
-                        
-                            var cacheData = await _CustomerContactService.GetCustomerContactListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _CustomerContactService.GetCustomerContactListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                            if (cacheData == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                           
-
-                            
-                            return Ok(cacheData);
-                        
+                        return Ok(cacheData);
                     }
                     else
                     {
@@ -68,12 +50,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                   
-                        
-                    
-                        
-                    
-                        return NotFound(GenrateMessage.authenticationfailed);
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -91,12 +68,9 @@ namespace AHHA.API.Controllers.Masters
             var CustomerContactViewModel = new CustomerContactViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -106,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            CustomerContactViewModel = _mapper.Map<CustomerContactViewModel>(await _CustomerContactService.GetCustomerContactByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, ContactId, headerViewModel.UserId));
+                            CustomerContactViewModel = _mapper.Map<CustomerContactViewModel>(await _CustomerContactService.GetCustomerContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId));
 
                             if (CustomerContactViewModel == null)
                                 return NotFound(GenrateMessage.authenticationfailed);
@@ -126,7 +100,6 @@ namespace AHHA.API.Controllers.Masters
                 {
                     return NoContent();
                 }
-
             }
             catch (Exception ex)
             {
@@ -142,12 +115,9 @@ namespace AHHA.API.Controllers.Masters
         {
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -175,9 +145,8 @@ namespace AHHA.API.Controllers.Masters
                                 MobileNo = CustomerContact.MobileNo
                             };
 
-                            var createdCustomerContact = await _CustomerContactService.AddCustomerContactAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerContactEntity, headerViewModel.UserId);
+                            var createdCustomerContact = await _CustomerContactService.AddCustomerContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerContactEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCustomerContact);
-
                         }
                         else
                         {
@@ -209,12 +178,9 @@ namespace AHHA.API.Controllers.Masters
             var CustomerContactViewModel = new CustomerContactViewModel();
             try
             {
-                
-                
-
-                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -231,7 +197,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CustomerContactToUpdate = await _CustomerContactService.GetCustomerContactByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
+                                var CustomerContactToUpdate = await _CustomerContactService.GetCustomerContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                                 if (CustomerContactToUpdate == null)
                                     return NotFound($"M_CustomerContact with Id = {ContactId} not found");
@@ -256,7 +222,7 @@ namespace AHHA.API.Controllers.Masters
                                 MobileNo = CustomerContact.MobileNo
                             };
 
-                            var sqlResponce = await _CustomerContactService.UpdateCustomerContactAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerContactEntity, headerViewModel.UserId);
+                            var sqlResponce = await _CustomerContactService.UpdateCustomerContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerContactEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
@@ -288,8 +254,8 @@ namespace AHHA.API.Controllers.Masters
         //{
         //    try
         //    {
-        //        
-        //        
+        //
+        //
 
         //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
@@ -333,4 +299,3 @@ namespace AHHA.API.Controllers.Masters
         //}
     }
 }
-

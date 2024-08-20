@@ -1,7 +1,6 @@
 ﻿using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Admin
 {
@@ -41,7 +40,7 @@ namespace AHHA.API.Controllers.Admin
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError,"Internal serever error");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal serever error");
             }
         }
     }
