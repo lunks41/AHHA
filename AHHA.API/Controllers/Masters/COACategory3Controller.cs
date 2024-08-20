@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICOACategory3Service _COACategory3Service;
         private readonly ILogger<COACategory3Controller> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public COACategory3Controller(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<COACategory3Controller> logger, ICOACategory3Service COACategory3Service)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,44 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCOACategory3")]
         [Authorize]
-        public async Task<ActionResult> GetAllCOACategory3()
+        public async Task<ActionResult> GetAllCOACategory3([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<COACategoryViewModelCount>("COACategory3");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _COACategory3Service.GetCOACategory3ListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                       
+                           var cacheData = await _COACategory3Service.GetCOACategory3ListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<COACategoryViewModelCount>("COACategory3", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                        
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +83,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCOACategory3byid/{COACategoryId}")]
         [Authorize]
-        public async Task<ActionResult<COACategoryViewModel>> GetCOACategory3ById(Int16 COACategoryId)
+        public async Task<ActionResult<COACategoryViewModel>> GetCOACategory3ById(Int16 COACategoryId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var COACategoryViewModel = new COACategoryViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +103,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            COACategoryViewModel = _mapper.Map<COACategoryViewModel>(await _COACategory3Service.GetCOACategory3ByIdAsync(RegId,CompanyId, COACategoryId, UserId));
+                            COACategoryViewModel = _mapper.Map<COACategoryViewModel>(await _COACategory3Service.GetCOACategory3ByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId));
 
                             if (COACategoryViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the COACategory3 with an expiration time of 10 minutes
                                 _memoryCache.Set($"COACategory3_{COACategoryId}", COACategoryViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +116,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +135,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddCOACategory3")]
         [Authorize]
-        public async Task<ActionResult<COACategoryViewModel>> CreateCOACategory3(COACategoryViewModel COACategory3)
+        public async Task<ActionResult<COACategoryViewModel>> CreateCOACategory3(COACategoryViewModel COACategory3, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,23 +159,23 @@ namespace AHHA.API.Controllers.Masters
                                 COACategoryCode = COACategory3.COACategoryCode,
                                 COACategoryId = COACategory3.COACategoryId,
                                 COACategoryName = COACategory3.COACategoryName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = COACategory3.IsActive,
                                 Remarks = COACategory3.Remarks
                             };
 
-                            var createdCOACategory3 = await _COACategory3Service.AddCOACategory3Async(RegId,CompanyId, COACategory3Entity, UserId);
+                            var createdCOACategory3 = await _COACategory3Service.AddCOACategory3Async(headerViewModel.RegId,headerViewModel.CompanyId, COACategory3Entity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCOACategory3);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -207,17 +193,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateCOACategory3/{COACategoryId}")]
         [Authorize]
-        public async Task<ActionResult<COACategoryViewModel>> UpdateCOACategory3(Int16 COACategoryId, [FromBody] COACategoryViewModel COACategory3)
+        public async Task<ActionResult<COACategoryViewModel>> UpdateCOACategory3(Int16 COACategoryId, [FromBody] COACategoryViewModel COACategory3, [FromHeader] HeaderViewModel headerViewModel)
         {
             var COACategoryViewModel = new COACategoryViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +220,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var COACategory3ToUpdate = await _COACategory3Service.GetCOACategory3ByIdAsync(RegId,CompanyId, COACategoryId, UserId);
+                                var COACategory3ToUpdate = await _COACategory3Service.GetCOACategory3ByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId);
 
                                 if (COACategory3ToUpdate == null)
                                     return NotFound($"M_COACategory3 with Id = {COACategoryId} not found");
@@ -245,23 +231,23 @@ namespace AHHA.API.Controllers.Masters
                                 COACategoryCode = COACategory3.COACategoryCode,
                                 COACategoryId = COACategory3.COACategoryId,
                                 COACategoryName = COACategory3.COACategoryName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = COACategory3.IsActive,
                                 Remarks = COACategory3.Remarks
                             };
 
-                            var sqlResponce = await _COACategory3Service.UpdateCOACategory3Async(RegId,CompanyId, COACategory3Entity, UserId);
+                            var sqlResponce = await _COACategory3Service.UpdateCOACategory3Async(headerViewModel.RegId,headerViewModel.CompanyId, COACategory3Entity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -283,35 +269,35 @@ namespace AHHA.API.Controllers.Masters
         //{
         //    try
         //    {
-        //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-        //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+        //        
+        //        
 
-        //        if (ValidateHeaders(RegId,CompanyId, UserId))
+        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, UserId);
+        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.COACategory3, headerViewModel.UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var COACategory3ToDelete = await _COACategory3Service.GetCOACategory3ByIdAsync(RegId,CompanyId, COACategoryId, UserId);
+        //                    var COACategory3ToDelete = await _COACategory3Service.GetCOACategory3ByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId);
 
         //                    if (COACategory3ToDelete == null)
         //                        return NotFound($"M_COACategory3 with Id = {COACategoryId} not found");
 
-        //                    var sqlResponce = await _COACategory3Service.DeleteCOACategory3Async(RegId,CompanyId, COACategory3ToDelete, UserId);
+        //                    var sqlResponce = await _COACategory3Service.DeleteCOACategory3Async(headerViewModel.RegId,headerViewModel.CompanyId, COACategory3ToDelete, headerViewModel.UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"COACategory3_{COACategoryId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
         //                }
         //                else
         //                {
-        //                    return NotFound("Users do not have a access to delete");
+        //                    return NotFound(GenrateMessage.authenticationfailed);
         //                }
         //            }
         //            else
         //            {
-        //                return NotFound("Users not have a access for this screen");
+        //                return NotFound(GenrateMessage.authenticationfailed);
         //            }
         //        }
         //        else

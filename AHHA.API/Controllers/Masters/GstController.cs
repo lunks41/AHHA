@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IGstService _GstService;
         private readonly ILogger<GstController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public GstController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<GstController> logger, IGstService GstService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,49 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetGst")]
         [Authorize]
-        public async Task<ActionResult> GetAllGst()
+        public async Task<ActionResult> GetAllGst([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
+                       
+                        
+                        
                         //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
 
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<GstViewModelCount>("Gst");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
                             var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _GstService.GetGstListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                            var cacheData = await _GstService.GetGstListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
                             _memoryCache.Set<GstViewModelCount>("Gst", cacheData, expirationTime);
 
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                       
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                   
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +88,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetGstbyid/{GstId}")]
         [Authorize]
-        public async Task<ActionResult<GstViewModel>> GetGstById(Int16 GstId)
+        public async Task<ActionResult<GstViewModel>> GetGstById(Int16 GstId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var GstViewModel = new GstViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +108,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            GstViewModel = _mapper.Map<GstViewModel>(await _GstService.GetGstByIdAsync(RegId,CompanyId, GstId, UserId));
+                            GstViewModel = _mapper.Map<GstViewModel>(await _GstService.GetGstByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GstId, headerViewModel.UserId));
 
                             if (GstViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the Gst with an expiration time of 10 minutes
                                 _memoryCache.Set($"Gst_{GstId}", GstViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +121,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +140,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddGst")]
         [Authorize]
-        public async Task<ActionResult<GstViewModel>> CreateGst(GstViewModel Gst)
+        public async Task<ActionResult<GstViewModel>> CreateGst(GstViewModel Gst, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,23 +164,23 @@ namespace AHHA.API.Controllers.Masters
                                 GstCode = Gst.GstCode,
                                 GstId = Gst.GstId,
                                 GstName = Gst.GstName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Gst.IsActive,
                                 Remarks = Gst.Remarks
                             };
 
-                            var createdGst = await _GstService.AddGstAsync(RegId,CompanyId, GstEntity, UserId);
+                            var createdGst = await _GstService.AddGstAsync(headerViewModel.RegId,headerViewModel.CompanyId, GstEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdGst);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -207,17 +198,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateGst/{GstId}")]
         [Authorize]
-        public async Task<ActionResult<GstViewModel>> UpdateGst(Int16 GstId, [FromBody] GstViewModel Gst)
+        public async Task<ActionResult<GstViewModel>> UpdateGst(Int16 GstId, [FromBody] GstViewModel Gst, [FromHeader] HeaderViewModel headerViewModel)
         {
             var GstViewModel = new GstViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +225,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var GstToUpdate = await _GstService.GetGstByIdAsync(RegId,CompanyId, GstId, UserId);
+                                var GstToUpdate = await _GstService.GetGstByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GstId, headerViewModel.UserId);
 
                                 if (GstToUpdate == null)
                                     return NotFound($"M_Gst with Id = {GstId} not found");
@@ -245,23 +236,23 @@ namespace AHHA.API.Controllers.Masters
                                 GstCode = Gst.GstCode,
                                 GstId = Gst.GstId,
                                 GstName = Gst.GstName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Gst.IsActive,
                                 Remarks = Gst.Remarks
                             };
 
-                            var sqlResponce = await _GstService.UpdateGstAsync(RegId,CompanyId, GstEntity, UserId);
+                            var sqlResponce = await _GstService.UpdateGstAsync(headerViewModel.RegId,headerViewModel.CompanyId, GstEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -283,35 +274,35 @@ namespace AHHA.API.Controllers.Masters
         //{
         //    try
         //    {
-        //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-        //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+        //        
+        //        
 
-        //        if (ValidateHeaders(RegId,CompanyId, UserId))
+        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, UserId);
+        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, headerViewModel.UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var GstToDelete = await _GstService.GetGstByIdAsync(RegId,CompanyId, GstId, UserId);
+        //                    var GstToDelete = await _GstService.GetGstByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GstId, headerViewModel.UserId);
 
         //                    if (GstToDelete == null)
         //                        return NotFound($"M_Gst with Id = {GstId} not found");
 
-        //                    var sqlResponce = await _GstService.DeleteGstAsync(RegId,CompanyId, GstToDelete, UserId);
+        //                    var sqlResponce = await _GstService.DeleteGstAsync(headerViewModel.RegId,headerViewModel.CompanyId, GstToDelete, headerViewModel.UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"Gst_{GstId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
         //                }
         //                else
         //                {
-        //                    return NotFound("Users do not have a access to delete");
+        //                    return NotFound(GenrateMessage.authenticationfailed);
         //                }
         //            }
         //            else
         //            {
-        //                return NotFound("Users not have a access for this screen");
+        //                return NotFound(GenrateMessage.authenticationfailed);
         //            }
         //        }
         //        else

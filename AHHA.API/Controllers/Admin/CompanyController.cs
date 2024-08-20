@@ -35,19 +35,13 @@ namespace AHHA.API.Controllers.Admin
                 }
                 else
                 {
-                    if (headerViewModel.UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (headerViewModel.RegId.Length == 0)
-                        return NotFound("RegistrationId Not Found");
-                    else
-                        return NotFound();
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                 "Error retrieving data from the database");
+                return StatusCode(StatusCodes.Status500InternalServerError,"Internal serever error");
             }
         }
     }

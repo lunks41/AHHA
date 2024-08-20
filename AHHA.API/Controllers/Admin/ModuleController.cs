@@ -23,12 +23,6 @@ namespace AHHA.API.Controllers.Admin
             _moduleService = moduleService;
         }
 
-        //        To filter the modules based on the CompanyId and UserId:
-        //Get call
-        //http://118.189.194.191:8080/ahharestapiproject/ahha/getUsersModules/{companyid}/{userid}
-        //http://118.189.194.191:8080/ahharestapiproject/ahha/getUsersModules/1/1
-        ////http://118.189.194.191:8080/api/
-
         [HttpGet, Route("GetUsersModules")]
         [Authorize]
         public async Task<ActionResult> GetUsersModules([FromHeader] HeaderViewModel headerViewModel)

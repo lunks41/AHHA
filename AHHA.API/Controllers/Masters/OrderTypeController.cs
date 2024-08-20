@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IOrderTypeService _OrderTypeService;
         private readonly ILogger<OrderTypeController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public OrderTypeController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<OrderTypeController> logger, IOrderTypeService OrderTypeService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,43 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetOrderType")]
         [Authorize]
-        public async Task<ActionResult> GetAllOrderType()
+        public async Task<ActionResult> GetAllOrderType([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<OrderTypeViewModelCount>("OrderType");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _OrderTypeService.GetOrderTypeListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                        
+                            var cacheData = await _OrderTypeService.GetOrderTypeListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<OrderTypeViewModelCount>("OrderType", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            return Ok(cacheData);
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +82,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetOrderTypebyid/{OrderTypeId}")]
         [Authorize]
-        public async Task<ActionResult<OrderTypeViewModel>> GetOrderTypeById(Int16 OrderTypeId)
+        public async Task<ActionResult<OrderTypeViewModel>> GetOrderTypeById(Int16 OrderTypeId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var OrderTypeViewModel = new OrderTypeViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +102,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            OrderTypeViewModel = _mapper.Map<OrderTypeViewModel>(await _OrderTypeService.GetOrderTypeByIdAsync(RegId,CompanyId, OrderTypeId, UserId));
+                            OrderTypeViewModel = _mapper.Map<OrderTypeViewModel>(await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId));
 
                             if (OrderTypeViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the OrderType with an expiration time of 10 minutes
                                 _memoryCache.Set($"OrderType_{OrderTypeId}", OrderTypeViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +115,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +134,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddOrderType")]
         [Authorize]
-        public async Task<ActionResult<OrderTypeViewModel>> CreateOrderType(OrderTypeViewModel OrderType)
+        public async Task<ActionResult<OrderTypeViewModel>> CreateOrderType(OrderTypeViewModel OrderType, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,23 +158,23 @@ namespace AHHA.API.Controllers.Masters
                                 OrderTypeCode = OrderType.OrderTypeCode,
                                 OrderTypeId = OrderType.OrderTypeId,
                                 OrderTypeName = OrderType.OrderTypeName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = OrderType.IsActive,
                                 Remarks = OrderType.Remarks
                             };
 
-                            var createdOrderType = await _OrderTypeService.AddOrderTypeAsync(RegId,CompanyId, OrderTypeEntity, UserId);
+                            var createdOrderType = await _OrderTypeService.AddOrderTypeAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdOrderType);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -207,17 +192,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateOrderType/{OrderTypeId}")]
         [Authorize]
-        public async Task<ActionResult<OrderTypeViewModel>> UpdateOrderType(Int16 OrderTypeId, [FromBody] OrderTypeViewModel OrderType)
+        public async Task<ActionResult<OrderTypeViewModel>> UpdateOrderType(Int16 OrderTypeId, [FromBody] OrderTypeViewModel OrderType, [FromHeader] HeaderViewModel headerViewModel)
         {
             var OrderTypeViewModel = new OrderTypeViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +219,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var OrderTypeToUpdate = await _OrderTypeService.GetOrderTypeByIdAsync(RegId,CompanyId, OrderTypeId, UserId);
+                                var OrderTypeToUpdate = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
 
                                 if (OrderTypeToUpdate == null)
                                     return NotFound($"M_OrderType with Id = {OrderTypeId} not found");
@@ -245,23 +230,23 @@ namespace AHHA.API.Controllers.Masters
                                 OrderTypeCode = OrderType.OrderTypeCode,
                                 OrderTypeId = OrderType.OrderTypeId,
                                 OrderTypeName = OrderType.OrderTypeName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = OrderType.IsActive,
                                 Remarks = OrderType.Remarks
                             };
 
-                            var sqlResponce = await _OrderTypeService.UpdateOrderTypeAsync(RegId,CompanyId, OrderTypeEntity, UserId);
+                            var sqlResponce = await _OrderTypeService.UpdateOrderTypeAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -283,35 +268,35 @@ namespace AHHA.API.Controllers.Masters
         //{
         //    try
         //    {
-        //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-        //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+        //        
+        //        
 
-        //        if (ValidateHeaders(RegId,CompanyId, UserId))
+        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, UserId);
+        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var OrderTypeToDelete = await _OrderTypeService.GetOrderTypeByIdAsync(RegId,CompanyId, OrderTypeId, UserId);
+        //                    var OrderTypeToDelete = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
 
         //                    if (OrderTypeToDelete == null)
         //                        return NotFound($"M_OrderType with Id = {OrderTypeId} not found");
 
-        //                    var sqlResponce = await _OrderTypeService.DeleteOrderTypeAsync(RegId,CompanyId, OrderTypeToDelete, UserId);
+        //                    var sqlResponce = await _OrderTypeService.DeleteOrderTypeAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeToDelete, headerViewModel.UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"OrderType_{OrderTypeId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
         //                }
         //                else
         //                {
-        //                    return NotFound("Users do not have a access to delete");
+        //                    return NotFound(GenrateMessage.authenticationfailed);
         //                }
         //            }
         //            else
         //            {
-        //                return NotFound("Users not have a access for this screen");
+        //                return NotFound(GenrateMessage.authenticationfailed);
         //            }
         //        }
         //        else

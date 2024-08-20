@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace AHHA.API.Controllers.Masters
 {
@@ -17,12 +16,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ITaxService _TaxService;
         private readonly ILogger<TaxController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
 
         public TaxController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<TaxController> logger, ITaxService TaxService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +26,31 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetTax")]
         [Authorize]
-        public async Task<ActionResult> GetAllTax()
+        public async Task<ActionResult> GetAllTax([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
-
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
+                        var cacheData = await _TaxService.GetTaxListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<TaxViewModelCount>("Tax");
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _TaxService.GetTaxListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
-
-                            if (cacheData == null)
-                                return NotFound();
-
-                            _memoryCache.Set<TaxViewModelCount>("Tax", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                        return Ok(cacheData);
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +63,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetTaxbyid/{TaxId}")]
         [Authorize]
-        public async Task<ActionResult<TaxViewModel>> GetTaxById(Int16 TaxId)
+        public async Task<ActionResult<TaxViewModel>> GetTaxById(Int16 TaxId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var TaxViewModel = new TaxViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+
+
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +83,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            TaxViewModel = _mapper.Map<TaxViewModel>(await _TaxService.GetTaxByIdAsync(RegId,CompanyId, TaxId, UserId));
+                            TaxViewModel = _mapper.Map<TaxViewModel>(await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId));
 
                             if (TaxViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the Tax with an expiration time of 10 minutes
                                 _memoryCache.Set($"Tax_{TaxId}", TaxViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +96,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +115,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddTax")]
         [Authorize]
-        public async Task<ActionResult<TaxViewModel>> CreateTax(TaxViewModel Tax)
+        public async Task<ActionResult<TaxViewModel>> CreateTax(TaxViewModel Tax, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+
+
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,23 +139,23 @@ namespace AHHA.API.Controllers.Masters
                                 TaxCode = Tax.TaxCode,
                                 TaxId = Tax.TaxId,
                                 TaxName = Tax.TaxName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Tax.IsActive,
                                 Remarks = Tax.Remarks
                             };
 
-                            var createdTax = await _TaxService.AddTaxAsync(RegId,CompanyId, TaxEntity, UserId);
+                            var createdTax = await _TaxService.AddTaxAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdTax);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -207,17 +173,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateTax/{TaxId}")]
         [Authorize]
-        public async Task<ActionResult<TaxViewModel>> UpdateTax(Int16 TaxId, [FromBody] TaxViewModel Tax)
+        public async Task<ActionResult<TaxViewModel>> UpdateTax(Int16 TaxId, [FromBody] TaxViewModel Tax, [FromHeader] HeaderViewModel headerViewModel)
         {
             var TaxViewModel = new TaxViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+
+
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +200,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var TaxToUpdate = await _TaxService.GetTaxByIdAsync(RegId,CompanyId, TaxId, UserId);
+                                var TaxToUpdate = await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId);
 
                                 if (TaxToUpdate == null)
                                     return NotFound($"M_Tax with Id = {TaxId} not found");
@@ -245,23 +211,23 @@ namespace AHHA.API.Controllers.Masters
                                 TaxCode = Tax.TaxCode,
                                 TaxId = Tax.TaxId,
                                 TaxName = Tax.TaxName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Tax.IsActive,
                                 Remarks = Tax.Remarks
                             };
 
-                            var sqlResponce = await _TaxService.UpdateTaxAsync(RegId,CompanyId, TaxEntity, UserId);
+                            var sqlResponce = await _TaxService.UpdateTaxAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -279,39 +245,39 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{TaxId}")]
         [Authorize]
-        public async Task<ActionResult<M_Tax>> DeleteTax(Int16 TaxId)
+        public async Task<ActionResult<M_Tax>> DeleteTax(Int16 TaxId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+
+
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Tax, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var TaxToDelete = await _TaxService.GetTaxByIdAsync(RegId,CompanyId, TaxId, UserId);
+                            var TaxToDelete = await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId);
 
                             if (TaxToDelete == null)
                                 return NotFound($"M_Tax with Id = {TaxId} not found");
 
-                            var sqlResponce = await _TaxService.DeleteTaxAsync(RegId,CompanyId, TaxToDelete, UserId);
+                            var sqlResponce = await _TaxService.DeleteTaxAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Tax_{TaxId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

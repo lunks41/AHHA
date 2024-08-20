@@ -11,9 +11,9 @@ namespace AHHA.API.Controllers.Masters
         private readonly IProductService _productService;
         private readonly ILogger<ProductController> _logger;
         private readonly IMemoryCache _memoryCache;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+       
+       
+        
 
         public ProductController(ILogger<ProductController> logger, IProductService productService, IMemoryCache memoryCache)
         {
@@ -47,7 +47,7 @@ namespace AHHA.API.Controllers.Masters
         //    {
         //        var result = await _productService.GetProductByIdAsync(id);
 
-        //        if (result == null) return NotFound();
+        //        if (result == null) return NotFound(GenrateMessage.authenticationfailed);
 
         //        return result;
         //    }

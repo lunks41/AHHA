@@ -31,7 +31,7 @@ namespace AHHA.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginViewModel user)
         {
-            RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+            
 
             if (!ModelState.IsValid)
             {
@@ -70,7 +70,7 @@ namespace AHHA.API.Controllers
         //public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         //{
         //    // Check user credentials (in a real application, you'd authenticate against a database)
-        //    RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+        //    
 
         //    var user = _authServices.GetByUserName(model.UserName);
 

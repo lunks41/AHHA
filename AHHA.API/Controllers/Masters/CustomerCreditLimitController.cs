@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICustomerCreditLimitService _CustomerCreditLimitService;
         private readonly ILogger<CustomerCreditLimitController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
         public CustomerCreditLimitController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CustomerCreditLimitController> logger, ICustomerCreditLimitService CustomerCreditLimitService)
     : base(memoryCache, mapper, baseServices)
         {
@@ -32,58 +32,48 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCustomerCreditLimit")]
         [Authorize]
-        public async Task<ActionResult> GetAllCustomerCreditLimit()
+        public async Task<ActionResult> GetAllCustomerCreditLimit([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<CustomerCreditLimitViewModelCount>("CustomerCreditLimit");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _CustomerCreditLimitService.GetCustomerCreditLimitListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                        
+                       
+                            var cacheData = await _CustomerCreditLimitService.GetCustomerCreditLimitListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<CustomerCreditLimitViewModelCount>("CustomerCreditLimit", cacheData, expirationTime);
+                           
 
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                        
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                   
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -96,17 +86,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCustomerCreditLimitbyid/{CustomerId}")]
         [Authorize]
-        public async Task<ActionResult<CustomerCreditLimitViewModel>> GetCustomerCreditLimitById(Int16 CustomerId)
+        public async Task<ActionResult<CustomerCreditLimitViewModel>> GetCustomerCreditLimitById(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var CustomerCreditLimitViewModel = new CustomerCreditLimitViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -116,10 +106,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            CustomerCreditLimitViewModel = _mapper.Map<CustomerCreditLimitViewModel>(await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(RegId,CompanyId, CustomerId, UserId));
+                            CustomerCreditLimitViewModel = _mapper.Map<CustomerCreditLimitViewModel>(await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerId, headerViewModel.UserId));
 
                             if (CustomerCreditLimitViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the CustomerCreditLimit with an expiration time of 10 minutes
                                 _memoryCache.Set($"CustomerCreditLimit_{CustomerId}", CustomerCreditLimitViewModel, TimeSpan.FromMinutes(10));
@@ -129,7 +119,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -148,16 +138,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddCustomerCreditLimit")]
         [Authorize]
-        public async Task<ActionResult<CustomerCreditLimitViewModel>> CreateCustomerCreditLimit(CustomerCreditLimitViewModel CustomerCreditLimit)
+        public async Task<ActionResult<CustomerCreditLimitViewModel>> CreateCustomerCreditLimit(CustomerCreditLimitViewModel CustomerCreditLimit, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -172,23 +162,23 @@ namespace AHHA.API.Controllers.Masters
                                 EffectFrom = CustomerCreditLimit.EffectFrom,
                                 CustomerId = CustomerCreditLimit.CustomerId,
                                 EffectUntil = CustomerCreditLimit.EffectUntil,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsExpires = CustomerCreditLimit.IsExpires,
                                 CreditLimitAmt = CustomerCreditLimit.CreditLimitAmt
                             };
 
-                            var createdCustomerCreditLimit = await _CustomerCreditLimitService.AddCustomerCreditLimitAsync(RegId,CompanyId, CustomerCreditLimitEntity, UserId);
+                            var createdCustomerCreditLimit = await _CustomerCreditLimitService.AddCustomerCreditLimitAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerCreditLimitEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCustomerCreditLimit);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -206,17 +196,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateCustomerCreditLimit/{CustomerId}")]
         [Authorize]
-        public async Task<ActionResult<CustomerCreditLimitViewModel>> UpdateCustomerCreditLimit(Int16 CustomerId, [FromBody] CustomerCreditLimitViewModel CustomerCreditLimit)
+        public async Task<ActionResult<CustomerCreditLimitViewModel>> UpdateCustomerCreditLimit(Int16 CustomerId, [FromBody] CustomerCreditLimitViewModel CustomerCreditLimit, [FromHeader] HeaderViewModel headerViewModel)
         {
             var CustomerCreditLimitViewModel = new CustomerCreditLimitViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -233,7 +223,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CustomerCreditLimitToUpdate = await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(RegId,CompanyId, CustomerId, UserId);
+                                var CustomerCreditLimitToUpdate = await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
                                 if (CustomerCreditLimitToUpdate == null)
                                     return NotFound($"M_CustomerCreditLimit with Id = {CustomerId} not found");
@@ -247,21 +237,21 @@ namespace AHHA.API.Controllers.Masters
                                 EffectUntil = CustomerCreditLimit.EffectUntil,
                                 IsExpires = CustomerCreditLimit.IsExpires,
                                 CreditLimitAmt = CustomerCreditLimit.CreditLimitAmt,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now
                             };
 
-                            var sqlResponce = await _CustomerCreditLimitService.UpdateCustomerCreditLimitAsync(RegId,CompanyId, CustomerCreditLimitEntity, UserId);
+                            var sqlResponce = await _CustomerCreditLimitService.UpdateCustomerCreditLimitAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerCreditLimitEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -283,35 +273,35 @@ namespace AHHA.API.Controllers.Masters
         //{
         //    try
         //    {
-        //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-        //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+        //        
+        //        
 
-        //        if (ValidateHeaders(RegId,CompanyId, UserId))
+        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, UserId);
+        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerCreditLimit, headerViewModel.UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var CustomerCreditLimitToDelete = await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(RegId,CompanyId, CustomerId, UserId);
+        //                    var CustomerCreditLimitToDelete = await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
         //                    if (CustomerCreditLimitToDelete == null)
         //                        return NotFound($"M_CustomerCreditLimit with Id = {CustomerId} not found");
 
-        //                    var sqlResponce = await _CustomerCreditLimitService.DeleteCustomerCreditLimitAsync(RegId,CompanyId, CustomerCreditLimitToDelete, UserId);
+        //                    var sqlResponce = await _CustomerCreditLimitService.DeleteCustomerCreditLimitAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerCreditLimitToDelete, headerViewModel.UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"CustomerCreditLimit_{CustomerId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
         //                }
         //                else
         //                {
-        //                    return NotFound("Users do not have a access to delete");
+        //                    return NotFound(GenrateMessage.authenticationfailed);
         //                }
         //            }
         //            else
         //            {
-        //                return NotFound("Users not have a access for this screen");
+        //                return NotFound(GenrateMessage.authenticationfailed);
         //            }
         //        }
         //        else

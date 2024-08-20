@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ICustomerService _CustomerService;
         private readonly ILogger<CustomerController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
         public CustomerController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CustomerController> logger, ICustomerService CustomerService)
     : base(memoryCache, mapper, baseServices)
         {
@@ -32,58 +32,45 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCustomer")]
         [Authorize]
-        public async Task<ActionResult> GetAllCustomer()
+        public async Task<ActionResult> GetAllCustomer([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<CustomerViewModelCount>("Customer");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _CustomerService.GetCustomerListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                           var cacheData = await _CustomerService.GetCustomerListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<CustomerViewModelCount>("Customer", cacheData, expirationTime);
+                            
 
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                        
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -96,17 +83,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCustomerbyid/{CustomerId}")]
         [Authorize]
-        public async Task<ActionResult<CustomerViewModel>> GetCustomerById(Int16 CustomerId)
+        public async Task<ActionResult<CustomerViewModel>> GetCustomerById(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var CustomerViewModel = new CustomerViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -116,10 +103,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            CustomerViewModel = _mapper.Map<CustomerViewModel>(await _CustomerService.GetCustomerByIdAsync(RegId,CompanyId, CustomerId, UserId));
+                            CustomerViewModel = _mapper.Map<CustomerViewModel>(await _CustomerService.GetCustomerByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerId, headerViewModel.UserId));
 
                             if (CustomerViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the Customer with an expiration time of 10 minutes
                                 _memoryCache.Set($"Customer_{CustomerId}", CustomerViewModel, TimeSpan.FromMinutes(10));
@@ -129,7 +116,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -148,16 +135,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddCustomer")]
         [Authorize]
-        public async Task<ActionResult<CustomerViewModel>> CreateCustomer(CustomerViewModel Customer)
+        public async Task<ActionResult<CustomerViewModel>> CreateCustomer(CustomerViewModel Customer, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -172,23 +159,23 @@ namespace AHHA.API.Controllers.Masters
                                 CustomerCode = Customer.CustomerCode,
                                 CustomerId = Customer.CustomerId,
                                 CustomerName = Customer.CustomerName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Customer.IsActive,
                                 Remarks = Customer.Remarks
                             };
 
-                            var createdCustomer = await _CustomerService.AddCustomerAsync(RegId,CompanyId, CustomerEntity, UserId);
+                            var createdCustomer = await _CustomerService.AddCustomerAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdCustomer);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -206,17 +193,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateCustomer/{CustomerId}")]
         [Authorize]
-        public async Task<ActionResult<CustomerViewModel>> UpdateCustomer(Int16 CustomerId, [FromBody] CustomerViewModel Customer)
+        public async Task<ActionResult<CustomerViewModel>> UpdateCustomer(Int16 CustomerId, [FromBody] CustomerViewModel Customer, [FromHeader] HeaderViewModel headerViewModel)
         {
             var CustomerViewModel = new CustomerViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -233,7 +220,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var CustomerToUpdate = await _CustomerService.GetCustomerByIdAsync(RegId,CompanyId, CustomerId, UserId);
+                                var CustomerToUpdate = await _CustomerService.GetCustomerByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
                                 if (CustomerToUpdate == null)
                                     return NotFound($"M_Customer with Id = {CustomerId} not found");
@@ -244,23 +231,23 @@ namespace AHHA.API.Controllers.Masters
                                 CustomerCode = Customer.CustomerCode,
                                 CustomerId = Customer.CustomerId,
                                 CustomerName = Customer.CustomerName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Customer.IsActive,
                                 Remarks = Customer.Remarks
                             };
 
-                            var sqlResponce = await _CustomerService.UpdateCustomerAsync(RegId,CompanyId, CustomerEntity, UserId);
+                            var sqlResponce = await _CustomerService.UpdateCustomerAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -278,39 +265,39 @@ namespace AHHA.API.Controllers.Masters
 
         //[HttpDelete, Route("Delete/{CustomerId}")]
         //[Authorize]
-        //public async Task<ActionResult<M_Customer>> DeleteCustomer(Int16 CustomerId)
+        //public async Task<ActionResult<M_Customer>> DeleteCustomer(Int16 CustomerId,[FromHeader] HeaderViewModel headerViewModel)
         //{
         //    try
         //    {
-        //        CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-        //        UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+        //        
+        //        
 
-        //        if (ValidateHeaders(RegId,CompanyId, UserId))
+        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
         //        {
-        //            var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, UserId);
+        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
         //            if (userGroupRight != null)
         //            {
         //                if (userGroupRight.IsDelete)
         //                {
-        //                    var CustomerToDelete = await _CustomerService.GetCustomerByIdAsync(RegId,CompanyId, CustomerId, UserId);
+        //                    var CustomerToDelete = await _CustomerService.GetCustomerByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
         //                    if (CustomerToDelete == null)
         //                        return NotFound($"M_Customer with Id = {CustomerId} not found");
 
-        //                    var sqlResponce = await _CustomerService.DeleteCustomerAsync(RegId,CompanyId, CustomerToDelete, UserId);
+        //                    var sqlResponce = await _CustomerService.DeleteCustomerAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerToDelete, headerViewModel.UserId);
         //                    // Remove data from cache by key
         //                    _memoryCache.Remove($"Customer_{CustomerId}");
         //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
         //                }
         //                else
         //                {
-        //                    return NotFound("Users do not have a access to delete");
+        //                    return NotFound(GenrateMessage.authenticationfailed);
         //                }
         //            }
         //            else
         //            {
-        //                return NotFound("Users not have a access for this screen");
+        //                return NotFound(GenrateMessage.authenticationfailed);
         //            }
         //        }
         //        else

@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IBankService _BankService;
         private readonly ILogger<BankController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public BankController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BankController> logger, IBankService BankService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,47 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetBank")]
         [Authorize]
-        public async Task<ActionResult> GetAllBank()
+        public async Task<ActionResult> GetAllBank([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId, CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<BankViewModelCount>("Bank");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _BankService.GetBankListAsync(RegId, CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                        
+                       
+                           
+                            var cacheData = await _BankService.GetBankListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<BankViewModelCount>("Bank", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                        
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,18 +86,18 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetBankbyid/{BankId}")]
         [Authorize]
-        public async Task<ActionResult<BankViewModel>> GetBankById(Int16 BankId)
+        public async Task<ActionResult<BankViewModel>> GetBankById(Int16 BankId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var BankViewModel = new BankViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId, CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -118,10 +107,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            BankViewModel = _mapper.Map<BankViewModel>(await _BankService.GetBankByIdAsync(RegId, CompanyId, BankId, UserId));
+                            BankViewModel = _mapper.Map<BankViewModel>(await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId));
 
                             if (BankViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the Bank with an expiration time of 10 minutes
                                 _memoryCache.Set($"Bank_{BankId}", BankViewModel, TimeSpan.FromMinutes(10));
@@ -131,7 +120,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -150,17 +139,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddBank")]
         [Authorize]
-        public async Task<ActionResult<BankViewModel>> CreateBank(BankViewModel Bank)
+        public async Task<ActionResult<BankViewModel>> CreateBank(BankViewModel Bank, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId, CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -178,24 +167,24 @@ namespace AHHA.API.Controllers.Masters
                                 CurrencyId = Bank.CurrencyId,
                                 AccountNo = Bank.AccountNo,
                                 SwiftCode = Bank.SwiftCode,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Bank.IsActive,
                                 Remarks1 = Bank.Remarks1,
                                 Remarks2 = Bank.Remarks2,
                             };
 
-                            var createdBank = await _BankService.AddBankAsync(RegId, CompanyId, BankEntity, UserId);
+                            var createdBank = await _BankService.AddBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdBank);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -213,18 +202,18 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateBank/{BankId}")]
         [Authorize]
-        public async Task<ActionResult<BankViewModel>> UpdateBank(Int16 BankId, [FromBody] BankViewModel Bank)
+        public async Task<ActionResult<BankViewModel>> UpdateBank(Int16 BankId, [FromBody] BankViewModel Bank, [FromHeader] HeaderViewModel headerViewModel)
         {
             var BankViewModel = new BankViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId, CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -241,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var BankToUpdate = await _BankService.GetBankByIdAsync(RegId, CompanyId, BankId, UserId);
+                                var BankToUpdate = await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId);
 
                                 if (BankToUpdate == null)
                                     return NotFound($"M_Bank with Id = {BankId} not found");
@@ -259,21 +248,21 @@ namespace AHHA.API.Controllers.Masters
                                 IsActive = Bank.IsActive,
                                 Remarks1 = Bank.Remarks1,
                                 Remarks2 = Bank.Remarks2,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                             };
 
-                            var sqlResponce = await _BankService.UpdateBankAsync(RegId, CompanyId, BankEntity, UserId);
+                            var sqlResponce = await _BankService.UpdateBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -291,40 +280,40 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{BankId}")]
         [Authorize]
-        public async Task<ActionResult<M_Bank>> DeleteBank(Int16 BankId)
+        public async Task<ActionResult<M_Bank>> DeleteBank(Int16 BankId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId, CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId, CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Bank, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var BankToDelete = await _BankService.GetBankByIdAsync(RegId, CompanyId, BankId, UserId);
+                            var BankToDelete = await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId);
 
                             if (BankToDelete == null)
                                 return NotFound($"M_Bank with Id = {BankId} not found");
 
-                            var sqlResponce = await _BankService.DeleteBankAsync(RegId, CompanyId, BankToDelete, UserId);
+                            var sqlResponce = await _BankService.DeleteBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Bank_{BankId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

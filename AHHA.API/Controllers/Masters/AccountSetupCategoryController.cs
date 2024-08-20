@@ -37,7 +37,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                            var AccountSetupCategoryData = await _AccountSetupCategoryService.GetAccountSetupCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var AccountSetupCategoryData = await _AccountSetupCategoryService.GetAccountSetupCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                             if (AccountSetupCategoryData == null)
                                 return NotFound();
@@ -77,6 +79,8 @@ namespace AHHA.API.Controllers.Masters
                 if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
                     var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+                    
+                    _logger.LogInformation("Check the ValidateScrren");
 
                     if (userGroupRight != null)
                     {
@@ -239,7 +243,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{AccSetupCategoryId}")]
+        [HttpDelete, Route("DeleteAccountSetupCategory/{AccSetupCategoryId}")]
         [Authorize]
         public async Task<ActionResult<M_AccountSetupCategory>> DeleteAccountSetupCategory(Int16 AccSetupCategoryId, [FromHeader] HeaderViewModel headerViewModel)
         {

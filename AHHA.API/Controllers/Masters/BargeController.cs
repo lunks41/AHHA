@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IBargeService _BargeService;
         private readonly ILogger<BargeController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public BargeController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BargeController> logger, IBargeService BargeService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,47 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetBarge")]
         [Authorize]
-        public async Task<ActionResult> GetAllBarge()
+        public async Task<ActionResult> GetAllBarge([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<BargeViewModelCount>("Barge");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _BargeService.GetBargeListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                      
+                            var cacheData = await _BargeService.GetBargeListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<BargeViewModelCount>("Barge", cacheData, expirationTime);
+                          
 
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                        
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +86,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetBargebyid/{BargeId}")]
         [Authorize]
-        public async Task<ActionResult<BargeViewModel>> GetBargeById(Int16 BargeId)
+        public async Task<ActionResult<BargeViewModel>> GetBargeById(Int16 BargeId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var BargeViewModel = new BargeViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +106,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            BargeViewModel = _mapper.Map<BargeViewModel>(await _BargeService.GetBargeByIdAsync(RegId,CompanyId, BargeId, UserId));
+                            BargeViewModel = _mapper.Map<BargeViewModel>(await _BargeService.GetBargeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeId, headerViewModel.UserId));
 
                             if (BargeViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the Barge with an expiration time of 10 minutes
                                 _memoryCache.Set($"Barge_{BargeId}", BargeViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +119,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +138,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddBarge")]
         [Authorize]
-        public async Task<ActionResult<BargeViewModel>> CreateBarge(BargeViewModel Barge)
+        public async Task<ActionResult<BargeViewModel>> CreateBarge(BargeViewModel Barge, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -179,23 +168,23 @@ namespace AHHA.API.Controllers.Masters
                                 LicenseNo = Barge.LicenseNo,
                                 BargeIType = Barge.BargeIType,
                                 Flag = Barge.Flag,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Barge.IsActive,
                                 Remarks = Barge.Remarks
                             };
 
-                            var createdBarge = await _BargeService.AddBargeAsync(RegId,CompanyId, BargeEntity, UserId);
+                            var createdBarge = await _BargeService.AddBargeAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdBarge);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -213,17 +202,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateBarge/{BargeId}")]
         [Authorize]
-        public async Task<ActionResult<BargeViewModel>> UpdateBarge(Int16 BargeId, [FromBody] BargeViewModel Barge)
+        public async Task<ActionResult<BargeViewModel>> UpdateBarge(Int16 BargeId, [FromBody] BargeViewModel Barge, [FromHeader] HeaderViewModel headerViewModel)
         {
             var BargeViewModel = new BargeViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -240,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var BargeToUpdate = await _BargeService.GetBargeByIdAsync(RegId,CompanyId, BargeId, UserId);
+                                var BargeToUpdate = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeId, headerViewModel.UserId);
 
                                 if (BargeToUpdate == null)
                                     return NotFound($"M_Barge with Id = {BargeId} not found");
@@ -257,23 +246,23 @@ namespace AHHA.API.Controllers.Masters
                                 LicenseNo = Barge.LicenseNo,
                                 BargeIType = Barge.BargeIType,
                                 Flag = Barge.Flag,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Barge.IsActive,
                                 Remarks = Barge.Remarks
                             };
 
-                            var sqlResponce = await _BargeService.UpdateBargeAsync(RegId,CompanyId, BargeEntity, UserId);
+                            var sqlResponce = await _BargeService.UpdateBargeAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -291,39 +280,39 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{BargeId}")]
         [Authorize]
-        public async Task<ActionResult<M_Barge>> DeleteBarge(Int16 BargeId)
+        public async Task<ActionResult<M_Barge>> DeleteBarge(Int16 BargeId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Barge, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var BargeToDelete = await _BargeService.GetBargeByIdAsync(RegId,CompanyId, BargeId, UserId);
+                            var BargeToDelete = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeId, headerViewModel.UserId);
 
                             if (BargeToDelete == null)
                                 return NotFound($"M_Barge with Id = {BargeId} not found");
 
-                            var sqlResponce = await _BargeService.DeleteBargeAsync(RegId,CompanyId, BargeToDelete, UserId);
+                            var sqlResponce = await _BargeService.DeleteBargeAsync(headerViewModel.RegId,headerViewModel.CompanyId, BargeToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Barge_{BargeId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ISubCategoryService _SubCategoryService;
         private readonly ILogger<SubCategoryController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public SubCategoryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SubCategoryController> logger, ISubCategoryService SubCategoryService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,45 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSubCategory")]
         [Authorize]
-        public async Task<ActionResult> GetAllSubCategory()
+        public async Task<ActionResult> GetAllSubCategory([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<SubCategoryViewModelCount>("SubCategory");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _SubCategoryService.GetSubCategoryListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                        
+                       
+                            var cacheData = await _SubCategoryService.GetSubCategoryListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<SubCategoryViewModelCount>("SubCategory", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                           return Ok(cacheData);
+                       
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                   
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +84,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSubCategorybyid/{SubCategoryId}")]
         [Authorize]
-        public async Task<ActionResult<SubCategoryViewModel>> GetSubCategoryById(Int16 SubCategoryId)
+        public async Task<ActionResult<SubCategoryViewModel>> GetSubCategoryById(Int16 SubCategoryId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var SubCategoryViewModel = new SubCategoryViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +104,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            SubCategoryViewModel = _mapper.Map<SubCategoryViewModel>(await _SubCategoryService.GetSubCategoryByIdAsync(RegId,CompanyId, SubCategoryId, UserId));
+                            SubCategoryViewModel = _mapper.Map<SubCategoryViewModel>(await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId));
 
                             if (SubCategoryViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the SubCategory with an expiration time of 10 minutes
                                 _memoryCache.Set($"SubCategory_{SubCategoryId}", SubCategoryViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +136,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddSubCategory")]
         [Authorize]
-        public async Task<ActionResult<SubCategoryViewModel>> CreateSubCategory(SubCategoryViewModel SubCategory)
+        public async Task<ActionResult<SubCategoryViewModel>> CreateSubCategory(SubCategoryViewModel SubCategory, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,23 +160,23 @@ namespace AHHA.API.Controllers.Masters
                                 SubCategoryCode = SubCategory.SubCategoryCode,
                                 SubCategoryId = SubCategory.SubCategoryId,
                                 SubCategoryName = SubCategory.SubCategoryName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = SubCategory.IsActive,
                                 Remarks = SubCategory.Remarks
                             };
 
-                            var createdSubCategory = await _SubCategoryService.AddSubCategoryAsync(RegId,CompanyId, SubCategoryEntity, UserId);
+                            var createdSubCategory = await _SubCategoryService.AddSubCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdSubCategory);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -207,17 +194,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateSubCategory/{SubCategoryId}")]
         [Authorize]
-        public async Task<ActionResult<SubCategoryViewModel>> UpdateSubCategory(Int16 SubCategoryId, [FromBody] SubCategoryViewModel SubCategory)
+        public async Task<ActionResult<SubCategoryViewModel>> UpdateSubCategory(Int16 SubCategoryId, [FromBody] SubCategoryViewModel SubCategory, [FromHeader] HeaderViewModel headerViewModel)
         {
             var SubCategoryViewModel = new SubCategoryViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +221,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var SubCategoryToUpdate = await _SubCategoryService.GetSubCategoryByIdAsync(RegId,CompanyId, SubCategoryId, UserId);
+                                var SubCategoryToUpdate = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
 
                                 if (SubCategoryToUpdate == null)
                                     return NotFound($"M_SubCategory with Id = {SubCategoryId} not found");
@@ -245,23 +232,23 @@ namespace AHHA.API.Controllers.Masters
                                 SubCategoryCode = SubCategory.SubCategoryCode,
                                 SubCategoryId = SubCategory.SubCategoryId,
                                 SubCategoryName = SubCategory.SubCategoryName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = SubCategory.IsActive,
                                 Remarks = SubCategory.Remarks
                             };
 
-                            var sqlResponce = await _SubCategoryService.UpdateSubCategoryAsync(RegId,CompanyId, SubCategoryEntity, UserId);
+                            var sqlResponce = await _SubCategoryService.UpdateSubCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -279,39 +266,39 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{SubCategoryId}")]
         [Authorize]
-        public async Task<ActionResult<M_SubCategory>> DeleteSubCategory(Int16 SubCategoryId)
+        public async Task<ActionResult<M_SubCategory>> DeleteSubCategory(Int16 SubCategoryId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SubCategory, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var SubCategoryToDelete = await _SubCategoryService.GetSubCategoryByIdAsync(RegId,CompanyId, SubCategoryId, UserId);
+                            var SubCategoryToDelete = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
 
                             if (SubCategoryToDelete == null)
                                 return NotFound($"M_SubCategory with Id = {SubCategoryId} not found");
 
-                            var sqlResponce = await _SubCategoryService.DeleteSubCategoryAsync(RegId,CompanyId, SubCategoryToDelete, UserId);
+                            var sqlResponce = await _SubCategoryService.DeleteSubCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, SubCategoryToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"SubCategory_{SubCategoryId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

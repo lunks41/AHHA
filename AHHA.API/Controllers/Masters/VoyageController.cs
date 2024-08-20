@@ -17,12 +17,6 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IVoyageService _VoyageService;
         private readonly ILogger<VoyageController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
 
         public VoyageController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<VoyageController> logger, IVoyageService VoyageService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +27,36 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetVoyage")]
         [Authorize]
-        public async Task<ActionResult> GetAllVoyage()
+        public async Task<ActionResult> GetAllVoyage([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
-
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
                         //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
 
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<VoyageViewModelCount>("Voyage");
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
 
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                        var voyageData = await _VoyageService.GetVoyageListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+
+                        if (voyageData == null)
+                            return NotFound();
+
+                        return StatusCode(StatusCodes.Status202Accepted, voyageData);
                         //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _VoyageService.GetVoyageListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
-
-                            if (cacheData == null)
-                                return NotFound();
-
-                            _memoryCache.Set<VoyageViewModelCount>("Voyage", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +69,15 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetVoyagebyid/{VoyageId}")]
         [Authorize]
-        public async Task<ActionResult<VoyageViewModel>> GetVoyageById(Int16 VoyageId)
+        public async Task<ActionResult<VoyageViewModel>> GetVoyageById(Int16 VoyageId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var VoyageViewModel = new VoyageViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,7 +87,7 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            VoyageViewModel = _mapper.Map<VoyageViewModel>(await _VoyageService.GetVoyageByIdAsync(RegId,CompanyId, VoyageId, UserId));
+                            VoyageViewModel = _mapper.Map<VoyageViewModel>(await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId));
 
                             if (VoyageViewModel == null)
                                 return NotFound();
@@ -130,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +119,13 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddVoyage")]
         [Authorize]
-        public async Task<ActionResult<VoyageViewModel>> CreateVoyage(VoyageViewModel Voyage)
+        public async Task<ActionResult<VoyageViewModel>> CreateVoyage(VoyageViewModel Voyage, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -175,23 +142,23 @@ namespace AHHA.API.Controllers.Masters
                                 ReferenceNo = Voyage.ReferenceNo,
                                 VesselId = Voyage.VesselId,
                                 BargeId = Voyage.BargeId,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Voyage.IsActive,
                                 Remarks = Voyage.Remarks
                             };
 
-                            var createdVoyage = await _VoyageService.AddVoyageAsync(RegId,CompanyId, VoyageEntity, UserId);
+                            var createdVoyage = await _VoyageService.AddVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdVoyage);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -209,17 +176,14 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateVoyage/{VoyageId}")]
         [Authorize]
-        public async Task<ActionResult<VoyageViewModel>> UpdateVoyage(Int16 VoyageId, [FromBody] VoyageViewModel Voyage)
+        public async Task<ActionResult<VoyageViewModel>> UpdateVoyage(Int16 VoyageId, [FromBody] VoyageViewModel Voyage, [FromHeader] HeaderViewModel headerViewModel)
         {
             var VoyageViewModel = new VoyageViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -236,7 +200,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var VoyageToUpdate = await _VoyageService.GetVoyageByIdAsync(RegId,CompanyId, VoyageId, UserId);
+                                var VoyageToUpdate = await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId);
 
                                 if (VoyageToUpdate == null)
                                     return NotFound($"M_Voyage with Id = {VoyageId} not found");
@@ -250,23 +214,23 @@ namespace AHHA.API.Controllers.Masters
                                 ReferenceNo = Voyage.ReferenceNo,
                                 VesselId = Voyage.VesselId,
                                 BargeId = Voyage.BargeId,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Voyage.IsActive,
                                 Remarks = Voyage.Remarks
                             };
 
-                            var sqlResponce = await _VoyageService.UpdateVoyageAsync(RegId,CompanyId, VoyageEntity, UserId);
+                            var sqlResponce = await _VoyageService.UpdateVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -282,41 +246,38 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{VoyageId}")]
+        [HttpDelete, Route("DeleteVoyage/{VoyageId}")]
         [Authorize]
-        public async Task<ActionResult<M_Voyage>> DeleteVoyage(Int16 VoyageId)
+        public async Task<ActionResult<M_Voyage>> DeleteVoyage(Int16 VoyageId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Voyage, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var VoyageToDelete = await _VoyageService.GetVoyageByIdAsync(RegId,CompanyId, VoyageId, UserId);
+                            var VoyageToDelete = await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId);
 
                             if (VoyageToDelete == null)
                                 return NotFound($"M_Voyage with Id = {VoyageId} not found");
 
-                            var sqlResponce = await _VoyageService.DeleteVoyageAsync(RegId,CompanyId, VoyageToDelete, UserId);
+                            var sqlResponce = await _VoyageService.DeleteVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Voyage_{VoyageId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

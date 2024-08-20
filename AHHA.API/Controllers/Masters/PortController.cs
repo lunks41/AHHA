@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IPortService _PortService;
         private readonly ILogger<PortController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public PortController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<PortController> logger, IPortService PortService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,48 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetPort")]
         [Authorize]
-        public async Task<ActionResult> GetAllPort()
+        public async Task<ActionResult> GetAllPort([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Port, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<PortViewModelCount>("Port");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _PortService.GetPortListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                        
+                      
+                            var cacheData = await _PortService.GetPortListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<PortViewModelCount>("Port", cacheData, expirationTime);
+                           
 
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                        
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                   
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +87,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetPortbyid/{PortId}")]
         [Authorize]
-        public async Task<ActionResult<PortViewModel>> GetPortById(Int16 PortId)
+        public async Task<ActionResult<PortViewModel>> GetPortById(Int16 PortId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var PortViewModel = new PortViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Port, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +107,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            PortViewModel = _mapper.Map<PortViewModel>(await _PortService.GetPortByIdAsync(RegId,CompanyId, PortId, UserId));
+                            PortViewModel = _mapper.Map<PortViewModel>(await _PortService.GetPortByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortId, headerViewModel.UserId));
 
                             if (PortViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the Port with an expiration time of 10 minutes
                                 _memoryCache.Set($"Port_{PortId}", PortViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +120,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +139,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddPort")]
         [Authorize]
-        public async Task<ActionResult<PortViewModel>> CreatePort(PortViewModel Port)
+        public async Task<ActionResult<PortViewModel>> CreatePort(PortViewModel Port, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Port, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,23 +163,23 @@ namespace AHHA.API.Controllers.Masters
                                 PortCode = Port.PortCode,
                                 PortId = Port.PortId,
                                 PortName = Port.PortName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Port.IsActive,
                                 Remarks = Port.Remarks
                             };
 
-                            var createdPort = await _PortService.AddPortAsync(RegId,CompanyId, PortEntity, UserId);
+                            var createdPort = await _PortService.AddPortAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdPort);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -207,17 +197,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdatePort/{PortId}")]
         [Authorize]
-        public async Task<ActionResult<PortViewModel>> UpdatePort(Int16 PortId, [FromBody] PortViewModel Port)
+        public async Task<ActionResult<PortViewModel>> UpdatePort(Int16 PortId, [FromBody] PortViewModel Port, [FromHeader] HeaderViewModel headerViewModel)
         {
             var PortViewModel = new PortViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Port, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +224,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var PortToUpdate = await _PortService.GetPortByIdAsync(RegId,CompanyId, PortId, UserId);
+                                var PortToUpdate = await _PortService.GetPortByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortId, headerViewModel.UserId);
 
                                 if (PortToUpdate == null)
                                     return NotFound($"M_Port with Id = {PortId} not found");
@@ -245,23 +235,23 @@ namespace AHHA.API.Controllers.Masters
                                 PortCode = Port.PortCode,
                                 PortId = Port.PortId,
                                 PortName = Port.PortName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Port.IsActive,
                                 Remarks = Port.Remarks
                             };
 
-                            var sqlResponce = await _PortService.UpdatePortAsync(RegId,CompanyId, PortEntity, UserId);
+                            var sqlResponce = await _PortService.UpdatePortAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -279,39 +269,39 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{PortId}")]
         [Authorize]
-        public async Task<ActionResult<M_Port>> DeletePort(Int16 PortId)
+        public async Task<ActionResult<M_Port>> DeletePort(Int16 PortId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Port, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var PortToDelete = await _PortService.GetPortByIdAsync(RegId,CompanyId, PortId, UserId);
+                            var PortToDelete = await _PortService.GetPortByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortId, headerViewModel.UserId);
 
                             if (PortToDelete == null)
                                 return NotFound($"M_Port with Id = {PortId} not found");
 
-                            var sqlResponce = await _PortService.DeletePortAsync(RegId,CompanyId, PortToDelete, UserId);
+                            var sqlResponce = await _PortService.DeletePortAsync(headerViewModel.RegId,headerViewModel.CompanyId, PortToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Port_{PortId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

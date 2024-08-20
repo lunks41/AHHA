@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ISupplierAddressService _SupplierAddressService;
         private readonly ILogger<SupplierAddressController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public SupplierAddressController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierAddressController> logger, ISupplierAddressService SupplierAddressService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,48 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSupplierAddress")]
         [Authorize]
-        public async Task<ActionResult> GetAllSupplierAddress()
+        public async Task<ActionResult> GetAllSupplierAddress([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<SupplierAddressViewModelCount>("SupplierAddress");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                        
+                       
+                            var cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<SupplierAddressViewModelCount>("SupplierAddress", cacheData, expirationTime);
+                           
 
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                       
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +87,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSupplierAddressbyid/{SupplierAddressId}")]
         [Authorize]
-        public async Task<ActionResult<SupplierAddressViewModel>> GetSupplierAddressById(Int16 SupplierAddressId)
+        public async Task<ActionResult<SupplierAddressViewModel>> GetSupplierAddressById(Int16 SupplierAddressId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var SupplierAddressViewModel = new SupplierAddressViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +107,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            SupplierAddressViewModel = _mapper.Map<SupplierAddressViewModel>(await _SupplierAddressService.GetSupplierAddressByIdAsync(RegId,CompanyId, SupplierAddressId, UserId));
+                            SupplierAddressViewModel = _mapper.Map<SupplierAddressViewModel>(await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId));
 
                             if (SupplierAddressViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the SupplierAddress with an expiration time of 10 minutes
                                 _memoryCache.Set($"SupplierAddress_{SupplierAddressId}", SupplierAddressViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +120,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +139,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddSupplierAddress")]
         [Authorize]
-        public async Task<ActionResult<SupplierAddressViewModel>> CreateSupplierAddress(SupplierAddressViewModel SupplierAddress)
+        public async Task<ActionResult<SupplierAddressViewModel>> CreateSupplierAddress(SupplierAddressViewModel SupplierAddress,[FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -185,22 +175,22 @@ namespace AHHA.API.Controllers.Masters
                                 IsDeliveryAdd = SupplierAddress.IsDeliveryAdd,
                                 IsFinAdd = SupplierAddress.IsFinAdd,
                                 IsSalesAdd = SupplierAddress.IsSalesAdd,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = SupplierAddress.IsActive,
                             };
 
-                            var createdSupplierAddress = await _SupplierAddressService.AddSupplierAddressAsync(RegId,CompanyId, SupplierAddressEntity, UserId);
+                            var createdSupplierAddress = await _SupplierAddressService.AddSupplierAddressAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdSupplierAddress);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -218,17 +208,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateSupplierAddress/{SupplierAddressId}")]
         [Authorize]
-        public async Task<ActionResult<SupplierAddressViewModel>> UpdateSupplierAddress(Int16 SupplierAddressId, [FromBody] SupplierAddressViewModel SupplierAddress)
+        public async Task<ActionResult<SupplierAddressViewModel>> UpdateSupplierAddress(Int16 SupplierAddressId, [FromBody] SupplierAddressViewModel SupplierAddress, [FromHeader] HeaderViewModel headerViewModel)
         {
             var SupplierAddressViewModel = new SupplierAddressViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -245,7 +235,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(RegId,CompanyId, SupplierAddressId, UserId);
+                                var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
 
                                 if (SupplierAddressToUpdate == null)
                                     return NotFound($"M_SupplierAddress with Id = {SupplierAddressId} not found");
@@ -269,21 +259,21 @@ namespace AHHA.API.Controllers.Masters
                                 IsDeliveryAdd = SupplierAddress.IsDeliveryAdd,
                                 IsFinAdd = SupplierAddress.IsFinAdd,
                                 IsSalesAdd = SupplierAddress.IsSalesAdd,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = SupplierAddress.IsActive,
                             };
 
-                            var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(RegId,CompanyId, SupplierAddressEntity, UserId);
+                            var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -301,39 +291,39 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{SupplierAddressId}")]
         [Authorize]
-        public async Task<ActionResult<M_SupplierAddress>> DeleteSupplierAddress(Int16 SupplierAddressId)
+        public async Task<ActionResult<M_SupplierAddress>> DeleteSupplierAddress(Int16 SupplierAddressId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(RegId,CompanyId, SupplierAddressId, UserId);
+                            var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
 
                             if (SupplierAddressToDelete == null)
                                 return NotFound($"M_SupplierAddress with Id = {SupplierAddressId} not found");
 
-                            var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(RegId,CompanyId, SupplierAddressToDelete, UserId);
+                            var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(headerViewModel.RegId,headerViewModel.CompanyId, SupplierAddressToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"SupplierAddress_{SupplierAddressId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

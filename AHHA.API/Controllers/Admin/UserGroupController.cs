@@ -7,5 +7,10 @@ namespace AHHA.API.Controllers.Admin
     [ApiController]
     public class UserGroupController : ControllerBase
     {
+        //Getlist
+        //Get
+        //Create
+        //Update
+        //Delete
     }
 }

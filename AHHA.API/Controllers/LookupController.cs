@@ -15,9 +15,6 @@ namespace AHHA.API.Controllers
     {
         private readonly ILookupService _LookupService;
         private readonly ILogger<LookupController> _logger;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
 
         public LookupController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<LookupController> logger, ILookupService LookupService)
     : base(memoryCache, mapper, baseServices)
@@ -25,6 +22,8 @@ namespace AHHA.API.Controllers
             _logger = logger;
             _LookupService = LookupService;
         }
+
+        //create the lookup for all masters 
 
         [HttpGet, Route("GetCountryLookup")]
         [Authorize]
@@ -34,6 +33,9 @@ namespace AHHA.API.Controllers
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
+                    //enable the cache from appsetting...
+                    //cache use into only lookup
+
                     var cacheData = await _LookupService.GetCountryLooupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
                     return StatusCode(StatusCodes.Status202Accepted, cacheData);
@@ -41,12 +43,66 @@ namespace AHHA.API.Controllers
                 }
                 else
                 {
-                    if (headerViewModel.UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (headerViewModel.CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetVesselLookup")]
+        [Authorize]
+        public async Task<ActionResult> VesselLookup([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    //enable the cache from appsetting...
+                    //cache use into only lookup
+
+                    var cacheData = await _LookupService.GetVesselLooupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                    return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    //return Ok(cacheData);
+                }
+                else
+                {
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetBargeLookup")]
+        [Authorize]
+        public async Task<ActionResult> BargeLookup([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    //enable the cache from appsetting...
+                    //cache use into only lookup
+
+                    var cacheData = await _LookupService.GetBargeLooupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                    return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    //return Ok(cacheData);
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)

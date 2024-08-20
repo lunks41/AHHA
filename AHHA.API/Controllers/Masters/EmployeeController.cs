@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IEmployeeService _EmployeeService;
         private readonly ILogger<EmployeeController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public EmployeeController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<EmployeeController> logger, IEmployeeService EmployeeService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,46 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetEmployee")]
         [Authorize]
-        public async Task<ActionResult> GetAllEmployee()
+        public async Task<ActionResult> GetAllEmployee([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<EmployeeViewModelCount>("Employee");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _EmployeeService.GetEmployeeListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                        
+                       
+                            var cacheData = await _EmployeeService.GetEmployeeListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<EmployeeViewModelCount>("Employee", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                        
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                        
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +85,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetEmployeebyid/{EmployeeId}")]
         [Authorize]
-        public async Task<ActionResult<EmployeeViewModel>> GetEmployeeById(Int16 EmployeeId)
+        public async Task<ActionResult<EmployeeViewModel>> GetEmployeeById(Int16 EmployeeId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var EmployeeViewModel = new EmployeeViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +105,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            EmployeeViewModel = _mapper.Map<EmployeeViewModel>(await _EmployeeService.GetEmployeeByIdAsync(RegId,CompanyId, EmployeeId, UserId));
+                            EmployeeViewModel = _mapper.Map<EmployeeViewModel>(await _EmployeeService.GetEmployeeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, EmployeeId, headerViewModel.UserId));
 
                             if (EmployeeViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the Employee with an expiration time of 10 minutes
                                 _memoryCache.Set($"Employee_{EmployeeId}", EmployeeViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +118,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +137,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddEmployee")]
         [Authorize]
-        public async Task<ActionResult<EmployeeViewModel>> CreateEmployee(EmployeeViewModel Employee)
+        public async Task<ActionResult<EmployeeViewModel>> CreateEmployee(EmployeeViewModel Employee, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,23 +161,23 @@ namespace AHHA.API.Controllers.Masters
                                 EmployeeCode = Employee.EmployeeCode,
                                 EmployeeId = Employee.EmployeeId,
                                 EmployeeName = Employee.EmployeeName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Employee.IsActive,
                                 Remarks = Employee.Remarks
                             };
 
-                            var createdEmployee = await _EmployeeService.AddEmployeeAsync(RegId,CompanyId, EmployeeEntity, UserId);
+                            var createdEmployee = await _EmployeeService.AddEmployeeAsync(headerViewModel.RegId,headerViewModel.CompanyId, EmployeeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdEmployee);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -207,17 +195,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateEmployee/{EmployeeId}")]
         [Authorize]
-        public async Task<ActionResult<EmployeeViewModel>> UpdateEmployee(Int16 EmployeeId, [FromBody] EmployeeViewModel Employee)
+        public async Task<ActionResult<EmployeeViewModel>> UpdateEmployee(Int16 EmployeeId, [FromBody] EmployeeViewModel Employee, [FromHeader] HeaderViewModel headerViewModel)
         {
             var EmployeeViewModel = new EmployeeViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +222,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var EmployeeToUpdate = await _EmployeeService.GetEmployeeByIdAsync(RegId,CompanyId, EmployeeId, UserId);
+                                var EmployeeToUpdate = await _EmployeeService.GetEmployeeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, EmployeeId, headerViewModel.UserId);
 
                                 if (EmployeeToUpdate == null)
                                     return NotFound($"M_Employee with Id = {EmployeeId} not found");
@@ -245,23 +233,23 @@ namespace AHHA.API.Controllers.Masters
                                 EmployeeCode = Employee.EmployeeCode,
                                 EmployeeId = Employee.EmployeeId,
                                 EmployeeName = Employee.EmployeeName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Employee.IsActive,
                                 Remarks = Employee.Remarks
                             };
 
-                            var sqlResponce = await _EmployeeService.UpdateEmployeeAsync(RegId,CompanyId, EmployeeEntity, UserId);
+                            var sqlResponce = await _EmployeeService.UpdateEmployeeAsync(headerViewModel.RegId,headerViewModel.CompanyId, EmployeeEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -279,39 +267,39 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{EmployeeId}")]
         [Authorize]
-        public async Task<ActionResult<M_Employee>> DeleteEmployee(Int16 EmployeeId)
+        public async Task<ActionResult<M_Employee>> DeleteEmployee(Int16 EmployeeId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Employee, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var EmployeeToDelete = await _EmployeeService.GetEmployeeByIdAsync(RegId,CompanyId, EmployeeId, UserId);
+                            var EmployeeToDelete = await _EmployeeService.GetEmployeeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, EmployeeId, headerViewModel.UserId);
 
                             if (EmployeeToDelete == null)
                                 return NotFound($"M_Employee with Id = {EmployeeId} not found");
 
-                            var sqlResponce = await _EmployeeService.DeleteEmployeeAsync(RegId,CompanyId, EmployeeToDelete, UserId);
+                            var sqlResponce = await _EmployeeService.DeleteEmployeeAsync(headerViewModel.RegId,headerViewModel.CompanyId, EmployeeToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Employee_{EmployeeId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

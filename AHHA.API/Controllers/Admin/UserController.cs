@@ -17,6 +17,13 @@ namespace AHHA.API.Controllers.Admin
     [ApiController]
     public class UserController : BaseController
     {
+        //Getlist
+        //Get
+        //Create
+        //Update
+        //resetpassword
+        //Delete
+
 
         private readonly IUserService _countryService;
         private readonly ILogger<UserController> _logger;

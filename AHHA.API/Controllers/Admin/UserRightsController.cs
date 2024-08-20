@@ -7,5 +7,7 @@ namespace AHHA.API.Controllers.Admin
     [ApiController]
     public class UserRightsController : ControllerBase
     {
+        //create
+        //update
     }
 }

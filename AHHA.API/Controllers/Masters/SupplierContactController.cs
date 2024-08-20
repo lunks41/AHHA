@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly ISupplierContactService _SupplierContactService;
         private readonly ILogger<SupplierContactController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+
+
+
+
+
+
 
         public SupplierContactController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierContactController> logger, ISupplierContactService SupplierContactService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,31 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSupplierContact")]
         [Authorize]
-        public async Task<ActionResult> GetAllSupplierContact()
+        public async Task<ActionResult> GetAllSupplierContact([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
-
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
+                        var voyageData = await _SupplierContactService.GetSupplierContactListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<SupplierContactViewModelCount>("SupplierContact");
+                        if (voyageData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _SupplierContactService.GetSupplierContactListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
-
-                            if (cacheData == null)
-                                return NotFound();
-
-                            _memoryCache.Set<SupplierContactViewModelCount>("SupplierContact", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                        return StatusCode(StatusCodes.Status202Accepted, voyageData);
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +70,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSupplierContactbyid/{ContactId}")]
         [Authorize]
-        public async Task<ActionResult<SupplierContactViewModel>> GetSupplierContactById(Int16 ContactId)
+        public async Task<ActionResult<SupplierContactViewModel>> GetSupplierContactById(Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var SupplierContactViewModel = new SupplierContactViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+
+
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +90,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            SupplierContactViewModel = _mapper.Map<SupplierContactViewModel>(await _SupplierContactService.GetSupplierContactByIdAsync(RegId,CompanyId, ContactId, UserId));
+                            SupplierContactViewModel = _mapper.Map<SupplierContactViewModel>(await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId));
 
                             if (SupplierContactViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the SupplierContact with an expiration time of 10 minutes
                                 _memoryCache.Set($"SupplierContact_{ContactId}", SupplierContactViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +103,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +122,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddSupplierContact")]
         [Authorize]
-        public async Task<ActionResult<SupplierContactViewModel>> CreateSupplierContact(SupplierContactViewModel SupplierContact)
+        public async Task<ActionResult<SupplierContactViewModel>> CreateSupplierContact(SupplierContactViewModel SupplierContact, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+
+
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -182,22 +155,22 @@ namespace AHHA.API.Controllers.Masters
                                 IsDefault = SupplierContact.IsDefault,
                                 IsFinance = SupplierContact.IsFinance,
                                 IsSales = SupplierContact.IsSales,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = SupplierContact.IsActive
                             };
 
-                            var createdSupplierContact = await _SupplierContactService.AddSupplierContactAsync(RegId,CompanyId, SupplierContactEntity, UserId);
+                            var createdSupplierContact = await _SupplierContactService.AddSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdSupplierContact);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -215,17 +188,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateSupplierContact/{ContactId}")]
         [Authorize]
-        public async Task<ActionResult<SupplierContactViewModel>> UpdateSupplierContact(Int16 ContactId, [FromBody] SupplierContactViewModel SupplierContact)
+        public async Task<ActionResult<SupplierContactViewModel>> UpdateSupplierContact(Int16 ContactId, [FromBody] SupplierContactViewModel SupplierContact, [FromHeader] HeaderViewModel headerViewModel)
         {
             var SupplierContactViewModel = new SupplierContactViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+
+
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -242,7 +215,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var SupplierContactToUpdate = await _SupplierContactService.GetSupplierContactByIdAsync(RegId,CompanyId, ContactId, UserId);
+                                var SupplierContactToUpdate = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                                 if (SupplierContactToUpdate == null)
                                     return NotFound($"M_SupplierContact with Id = {ContactId} not found");
@@ -263,21 +236,21 @@ namespace AHHA.API.Controllers.Masters
                                 IsDefault = SupplierContact.IsDefault,
                                 IsFinance = SupplierContact.IsFinance,
                                 IsSales = SupplierContact.IsSales,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = SupplierContact.IsActive
                             };
 
-                            var sqlResponce = await _SupplierContactService.UpdateSupplierContactAsync(RegId,CompanyId, SupplierContactEntity, UserId);
+                            var sqlResponce = await _SupplierContactService.UpdateSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -295,39 +268,39 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{ContactId}")]
         [Authorize]
-        public async Task<ActionResult<M_SupplierContact>> DeleteSupplierContact(Int16 ContactId)
+        public async Task<ActionResult<M_SupplierContact>> DeleteSupplierContact(Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+
+
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var SupplierContactToDelete = await _SupplierContactService.GetSupplierContactByIdAsync(RegId,CompanyId, ContactId, UserId);
+                            var SupplierContactToDelete = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                             if (SupplierContactToDelete == null)
                                 return NotFound($"M_SupplierContact with Id = {ContactId} not found");
 
-                            var sqlResponce = await _SupplierContactService.DeleteSupplierContactAsync(RegId,CompanyId, SupplierContactToDelete, UserId);
+                            var sqlResponce = await _SupplierContactService.DeleteSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"SupplierContact_{ContactId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

@@ -17,12 +17,12 @@ namespace AHHA.API.Controllers.Masters
     {
         private readonly IDesignationService _DesignationService;
         private readonly ILogger<DesignationController> _logger;
-        private Int16 CompanyId = 0;
-        private Int32 UserId = 0;
-        private string RegId = string.Empty;
-        private Int16 pageSize = 10;
-        private Int16 pageNumber = 1;
-        private string searchString = string.Empty;
+        
+       
+       
+       
+       
+        
 
         public DesignationController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<DesignationController> logger, IDesignationService DesignationService)
     : base(memoryCache, mapper, baseServices)
@@ -33,58 +33,45 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetDesignation")]
         [Authorize]
-        public async Task<ActionResult> GetAllDesignation()
+        public async Task<ActionResult> GetAllDesignation([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
-                RegId = Request.Headers.TryGetValue("regId", out StringValues regIdValue).ToString().Trim();
+                
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        pageSize = (Request.Headers.TryGetValue("pageSize", out StringValues pageSizeValue)) == true ? Convert.ToInt16(pageSizeValue[0]) : pageSize;
-                        pageNumber = (Request.Headers.TryGetValue("pageNumber", out StringValues pageNumberValue)) == true ? Convert.ToInt16(pageNumberValue[0]) : pageNumber;
-                        searchString = (Request.Headers.TryGetValue("searchString", out StringValues searchStringValue)) == true ? searchStringValue.ToString() : searchString;
-                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
-
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<DesignationViewModelCount>("Designation");
-
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _DesignationService.GetDesignationListAsync(RegId,CompanyId, pageSize, pageNumber, searchString.Trim(), UserId);
+                       
+                        
+                        
+                        
+                            var cacheData = await _DesignationService.GetDesignationListAsync(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
 
                             if (cacheData == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
 
-                            _memoryCache.Set<DesignationViewModelCount>("Designation", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                            
+                            return Ok(cacheData);
+                        
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                   
+                        
+                    
+                    
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -97,17 +84,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetDesignationbyid/{DesignationId}")]
         [Authorize]
-        public async Task<ActionResult<DesignationViewModel>> GetDesignationById(Int16 DesignationId)
+        public async Task<ActionResult<DesignationViewModel>> GetDesignationById(Int16 DesignationId, [FromHeader] HeaderViewModel headerViewModel)
         {
             var DesignationViewModel = new DesignationViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -117,10 +104,10 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            DesignationViewModel = _mapper.Map<DesignationViewModel>(await _DesignationService.GetDesignationByIdAsync(RegId,CompanyId, DesignationId, UserId));
+                            DesignationViewModel = _mapper.Map<DesignationViewModel>(await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, DesignationId, headerViewModel.UserId));
 
                             if (DesignationViewModel == null)
-                                return NotFound();
+                                return NotFound(GenrateMessage.authenticationfailed);
                             else
                                 // Cache the Designation with an expiration time of 10 minutes
                                 _memoryCache.Set($"Designation_{DesignationId}", DesignationViewModel, TimeSpan.FromMinutes(10));
@@ -130,7 +117,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -149,16 +136,16 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddDesignation")]
         [Authorize]
-        public async Task<ActionResult<DesignationViewModel>> CreateDesignation(DesignationViewModel Designation)
+        public async Task<ActionResult<DesignationViewModel>> CreateDesignation(DesignationViewModel Designation, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -173,23 +160,23 @@ namespace AHHA.API.Controllers.Masters
                                 DesignationCode = Designation.DesignationCode,
                                 DesignationId = Designation.DesignationId,
                                 DesignationName = Designation.DesignationName,
-                                CreateById = UserId,
+                                CreateById = headerViewModel.UserId,
                                 IsActive = Designation.IsActive,
                                 Remarks = Designation.Remarks
                             };
 
-                            var createdDesignation = await _DesignationService.AddDesignationAsync(RegId,CompanyId, DesignationEntity, UserId);
+                            var createdDesignation = await _DesignationService.AddDesignationAsync(headerViewModel.RegId,headerViewModel.CompanyId, DesignationEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdDesignation);
 
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -207,17 +194,17 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateDesignation/{DesignationId}")]
         [Authorize]
-        public async Task<ActionResult<DesignationViewModel>> UpdateDesignation(Int16 DesignationId, [FromBody] DesignationViewModel Designation)
+        public async Task<ActionResult<DesignationViewModel>> UpdateDesignation(Int16 DesignationId, [FromBody] DesignationViewModel Designation, [FromHeader] HeaderViewModel headerViewModel)
         {
             var DesignationViewModel = new DesignationViewModel();
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
@@ -234,7 +221,7 @@ namespace AHHA.API.Controllers.Masters
                             }
                             else
                             {
-                                var DesignationToUpdate = await _DesignationService.GetDesignationByIdAsync(RegId,CompanyId, DesignationId, UserId);
+                                var DesignationToUpdate = await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, DesignationId, headerViewModel.UserId);
 
                                 if (DesignationToUpdate == null)
                                     return NotFound($"M_Designation with Id = {DesignationId} not found");
@@ -245,23 +232,23 @@ namespace AHHA.API.Controllers.Masters
                                 DesignationCode = Designation.DesignationCode,
                                 DesignationId = Designation.DesignationId,
                                 DesignationName = Designation.DesignationName,
-                                EditById = UserId,
+                                EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Designation.IsActive,
                                 Remarks = Designation.Remarks
                             };
 
-                            var sqlResponce = await _DesignationService.UpdateDesignationAsync(RegId,CompanyId, DesignationEntity, UserId);
+                            var sqlResponce = await _DesignationService.UpdateDesignationAsync(headerViewModel.RegId,headerViewModel.CompanyId, DesignationEntity, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -279,39 +266,39 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpDelete, Route("Delete/{DesignationId}")]
         [Authorize]
-        public async Task<ActionResult<M_Designation>> DeleteDesignation(Int16 DesignationId)
+        public async Task<ActionResult<M_Designation>> DeleteDesignation(Int16 DesignationId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                CompanyId = Convert.ToInt16(Request.Headers.TryGetValue("companyId", out StringValues headerValue));
-                UserId = Convert.ToInt32(Request.Headers.TryGetValue("userId", out StringValues userIdValue));
+                
+                
 
-                if (ValidateHeaders(RegId,CompanyId, UserId))
+                if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(RegId,CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Designation, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var DesignationToDelete = await _DesignationService.GetDesignationByIdAsync(RegId,CompanyId, DesignationId, UserId);
+                            var DesignationToDelete = await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, DesignationId, headerViewModel.UserId);
 
                             if (DesignationToDelete == null)
                                 return NotFound($"M_Designation with Id = {DesignationId} not found");
 
-                            var sqlResponce = await _DesignationService.DeleteDesignationAsync(RegId,CompanyId, DesignationToDelete, UserId);
+                            var sqlResponce = await _DesignationService.DeleteDesignationAsync(headerViewModel.RegId,headerViewModel.CompanyId, DesignationToDelete, headerViewModel.UserId);
                             // Remove data from cache by key
                             _memoryCache.Remove($"Designation_{DesignationId}");
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

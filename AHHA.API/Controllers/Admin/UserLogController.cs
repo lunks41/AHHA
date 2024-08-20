@@ -7,5 +7,7 @@ namespace AHHA.API.Controllers.Admin
     [ApiController]
     public class UserLogController : ControllerBase
     {
+        //getlist  --userid
+        //create  --userid  (Backend function)
     }
 }

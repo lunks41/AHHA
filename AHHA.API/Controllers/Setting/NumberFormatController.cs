@@ -7,5 +7,9 @@ namespace AHHA.API.Controllers.Setting
     [ApiController]
     public class NumberFormatController : ControllerBase
     {
+        //Getlist
+        //Get
+        //Upsert
+        
     }
 }
