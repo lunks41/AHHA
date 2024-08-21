@@ -77,7 +77,6 @@ namespace AHHA.Infra.Data
         public DbSet<M_Uom> M_Uom { get; set; }
         public DbSet<M_UomDt> M_UomDt { get; set; }
         public DbSet<M_Vessel> M_Vessel { get; set; }
-        public DbSet<M_Vessel_Back> M_Vessel_Back { get; set; }
         public DbSet<M_Voyage> M_Voyage { get; set; }
 
         #endregion DbSet Section - Masters

@@ -22,7 +22,6 @@ public static class InfraServices
         IConfiguration configuration)
     {
         serviceCollection.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-        serviceCollection.AddAutoMapper(Assembly.GetExecutingAssembly());
 
         #region Services
 
@@ -64,7 +63,6 @@ public static class InfraServices
         serviceCollection.AddScoped<ISupplierService, SupplierService>();
         //serviceCollection.AddScoped<IUomService, uom>();
         serviceCollection.AddScoped<IVesselService, VesselService>();
-        serviceCollection.AddScoped<IVessel_BackService, Vessel_BackService>();
         serviceCollection.AddScoped<IVoyageService, VoyageService>();
 
         #endregion Master Services

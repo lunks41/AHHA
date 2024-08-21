@@ -95,24 +95,14 @@ namespace AHHA.Infra.Repository
 
         private IDbConnection CreateConnection(string RegId)
         {
-            DBGetConnection dBGetConnection = new DBGetConnection();
-            try
-            {
-                var ConnectionStringName = dBGetConnection.GetconnectionDB(RegId);
+            DBGetConnection? dBGetConnection = new DBGetConnection();
 
-                IDbConnection db = new SqlConnection(_configuration.GetConnectionString(ConnectionStringName));
-                if (db.State == ConnectionState.Closed)
-                    db.Open();
-                return db;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                dBGetConnection = null;
-            }
+            var ConnectionStringName = dBGetConnection.GetconnectionDB(RegId);
+
+            IDbConnection db = new SqlConnection(_configuration.GetConnectionString(ConnectionStringName));
+            if (db.State == ConnectionState.Closed)
+                db.Open();
+            return db;
         }
 
         #endregion Private Methods

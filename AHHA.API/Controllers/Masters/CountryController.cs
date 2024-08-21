@@ -36,25 +36,27 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        //Get the data from cache memory
-                        var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
+                        ////Get the data from cache memory
+                        //var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
 
-                        if (cacheData != null)
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                        //if (cacheData != null)
+                        //    return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                        ////return Ok(cacheData);
+                        //else
+                        //{
+                        //var expirationTime = DateTimeOffset.Now.AddSeconds(30);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var CountryData = await _countryService.GetCountryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (CountryData == null)
+                            return NotFound();
+
+                        //_memoryCache.Set<CountryViewModelCount>("country", cacheData, expirationTime);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CountryData);
                         //return Ok(cacheData);
-                        else
-                        {
-                            var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                            cacheData = await _countryService.GetCountryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
-
-                            if (cacheData == null)
-                                return NotFound();
-
-                            _memoryCache.Set<CountryViewModelCount>("country", cacheData, expirationTime);
-
-                            return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                            //return Ok(cacheData);
-                        }
+                        //}
                     }
                     else
                     {
@@ -74,6 +76,7 @@ namespace AHHA.API.Controllers.Masters
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
+
                 return StatusCode(StatusCodes.Status500InternalServerError,
                  "Error retrieving data from the database");
             }
@@ -92,20 +95,20 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
-                        {
-                            countryViewModel = cachedProduct;
-                        }
-                        else
-                        {
-                            countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId));
+                        //if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
+                        //{
+                        //    countryViewModel = cachedProduct;
+                        //}
+                        //else
+                        //{
+                        countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId));
 
-                            if (countryViewModel == null)
-                                return NotFound();
-                            else
-                                // Cache the country with an expiration time of 10 minutes
-                                _memoryCache.Set($"Country_{CountryId}", countryViewModel, TimeSpan.FromMinutes(10));
-                        }
+                        if (countryViewModel == null)
+                            return NotFound();
+                        //else
+                        //    // Cache the country with an expiration time of 10 minutes
+                        //    _memoryCache.Set($"Country_{CountryId}", countryViewModel, TimeSpan.FromMinutes(10));
+                        //}
                         return StatusCode(StatusCodes.Status202Accepted, countryViewModel);
                         //return Ok(countryViewModel);
                     }

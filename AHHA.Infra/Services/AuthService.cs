@@ -29,16 +29,10 @@ namespace AHHA.Infra.Services
             return BC.Verify(userName.ToLower().Trim() + password.Trim(), UserPassword);
         }
 
-        public AdmUser GetByUserName(string userName)
-        {
-            //return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault();
-            return _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault(c => c.IsActive == true);
-        }
+        public AdmUser GetByUserName(string userName) =>
+            _context.AdmUser.Where(c => c.UserCode == userName).FirstOrDefault(c => c.IsActive == true);
 
-        public AdmUser GetByRefreshToken(string RefreshToken)
-        {
-            return _context.AdmUser.Where(c => c.RefreshToken == RefreshToken).FirstOrDefault();
-        }
+        public AdmUser GetByRefreshToken(string RefreshToken) => _context.AdmUser.Where(c => c.RefreshToken == RefreshToken).FirstOrDefault();
 
         public async Task<dynamic> Login(LoginViewModel user)
         {
@@ -79,7 +73,7 @@ namespace AHHA.Infra.Services
 
             if (identityUser is null || identityUser.RefreshToken == null || identityUser.RefreshTokenExpiry < DateTime.Now)
             {
-                return new RefreshResponse { token = "token not vaild" };
+                return new RefreshResponse { token = null };//in contoller i'm sending the status
             }
 
             var token = GenerateTokenString(identityUser.UserName, identityUser.UserId.ToString());

@@ -1,6 +1,8 @@
 ﻿using AHHA.API.Mapping;
 using AHHA.Infra.Data;
 using AHHA.Infra.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace AHHA.API.Extensions
 {
@@ -11,6 +13,7 @@ namespace AHHA.API.Extensions
             services.AddInfraServices(configuration); //From Infra Layar
             services.AddHealthChecks().Services.AddDbContext<ApplicationDbContext>();
             services.AddAutoMapper(typeof(MappingProfile));
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             return services;
         }
