@@ -34,29 +34,26 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var portRegionData = await _portRegionService.GetPortRegionListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, "", headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var portRegionData = await _portRegionService.GetPortRegionListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         return Ok(portRegionData);
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
                 {
-                    if (headerViewModel.UserId == 0)
-                        return NotFound("UserId Not Found");
-                    else if (headerViewModel.CompanyId == 0)
-                        return NotFound("CompanyId Not Found");
-                    else
-                        return NotFound();
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
 
@@ -91,7 +88,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -140,12 +137,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -208,12 +205,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -254,12 +251,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

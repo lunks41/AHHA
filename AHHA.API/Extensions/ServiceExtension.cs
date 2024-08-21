@@ -1,7 +1,6 @@
 ﻿using AHHA.API.Mapping;
 using AHHA.Infra.Data;
 using AHHA.Infra.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace AHHA.API.Extensions
