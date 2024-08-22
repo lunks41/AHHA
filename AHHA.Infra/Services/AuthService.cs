@@ -139,7 +139,7 @@ namespace AHHA.Infra.Services
                 issuer: _configuration["JWT:ValidIssuer"],
                 audience: _configuration["JWT:ValidAudience"],
                 claims: claims,
-                expires: DateTime.Now.AddSeconds(60),
+                expires: DateTime.Now.AddMinutes(Convert.ToInt16(_configuration["JWT:DurationInMinutes"])),
                 signingCredentials: signingCred
                 );
 
