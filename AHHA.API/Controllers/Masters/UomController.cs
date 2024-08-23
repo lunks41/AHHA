@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetUom")]
         [Authorize]
-        public async Task<ActionResult> GetAllUom([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetUom([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {

@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCOACategory2")]
         [Authorize]
-        public async Task<ActionResult> GetAllCOACategory2([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetCOACategory2([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _COACategory2Service.GetCOACategory2ListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _COACategory2Service.GetCOACategory2ListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -232,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        //[HttpDelete, Route("Delete/{COACategoryId}")]
+        //[HttpDelete, Route("DeleteCOACategory2/{COACategoryId}")]
         //[Authorize]
         //public async Task<ActionResult<COACategoryViewModel>> DeleteCOACategory2(Int16 COACategoryId)
         //{

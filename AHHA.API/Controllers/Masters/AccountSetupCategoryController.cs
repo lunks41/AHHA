@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetAccountSetupCategory")]
         [Authorize]
-        public async Task<ActionResult> GetAllAccountSetupCategory([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetAccountSetupCategory([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -102,7 +102,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -150,12 +150,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -219,12 +219,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -266,12 +266,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

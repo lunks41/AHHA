@@ -24,7 +24,7 @@ namespace AHHA.API.Controllers.Masters
         }
 
         [HttpGet, Route("getPortRegion")]
-        public async Task<ActionResult> GetAllPortRegion([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetPortRegion([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {

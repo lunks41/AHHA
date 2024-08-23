@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetVessel")]
         [Authorize]
-        public async Task<ActionResult> GetAllVessel([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetVessel([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {

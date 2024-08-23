@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetPort")]
         [Authorize]
-        public async Task<ActionResult> GetAllPort([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetPort([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _PortService.GetPortListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _PortService.GetPortListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -232,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{PortId}")]
+        [HttpDelete, Route("DeletePort/{PortId}")]
         [Authorize]
         public async Task<ActionResult<M_Port>> DeletePort(Int16 PortId, [FromHeader] HeaderViewModel headerViewModel)
         {

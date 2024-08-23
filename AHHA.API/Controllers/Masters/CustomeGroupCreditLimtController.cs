@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCustomeGroupCreditLimt")]
         [Authorize]
-        public async Task<ActionResult> GetAllCustomeGroupCreditLimt([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetCustomeGroupCreditLimt([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _CustomeGroupCreditLimtService.GetCustomeGroupCreditLimtListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _CustomeGroupCreditLimtService.GetCustomeGroupCreditLimtListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -233,54 +235,51 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        //[HttpDelete, Route("Delete/{GroupCreditLimitId}")]
-        //[Authorize]
-        //public async Task<ActionResult<M_CustomeGroupCreditLimt>> DeleteCustomeGroupCreditLimt(Int16 GroupCreditLimitId)
-        //{
-        //    try
-        //    {
-        //
-        //
+        [HttpDelete, Route("DeleteCustomeGroupCreditLimt/{GroupCreditLimitId}")]
+        [Authorize]
+        public async Task<ActionResult<M_CustomeGroupCreditLimt>> DeleteCustomeGroupCreditLimt(Int16 GroupCreditLimitId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerGroupCreditLimt, headerViewModel.UserId);
 
-        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
-        //        {
-        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerGroupCreditLimt, headerViewModel.UserId);
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CustomeGroupCreditLimtToDelete = await _CustomeGroupCreditLimtService.GetCustomeGroupCreditLimtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
 
-        //            if (userGroupRight != null)
-        //            {
-        //                if (userGroupRight.IsDelete)
-        //                {
-        //                    var CustomeGroupCreditLimtToDelete = await _CustomeGroupCreditLimtService.GetCustomeGroupCreditLimtByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
+                            if (CustomeGroupCreditLimtToDelete == null)
+                                return NotFound($"M_CustomeGroupCreditLimt with Id = {GroupCreditLimitId} not found");
 
-        //                    if (CustomeGroupCreditLimtToDelete == null)
-        //                        return NotFound($"M_CustomeGroupCreditLimt with Id = {GroupCreditLimitId} not found");
-
-        //                    var sqlResponce = await _CustomeGroupCreditLimtService.DeleteCustomeGroupCreditLimtAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomeGroupCreditLimtToDelete, headerViewModel.UserId);
-        //                    // Remove data from cache by key
-        //                    _memoryCache.Remove($"CustomeGroupCreditLimt_{GroupCreditLimitId}");
-        //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-        //                }
-        //                else
-        //                {
-        //                    return NotFound(GenrateMessage.authenticationfailed);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                return NotFound(GenrateMessage.authenticationfailed);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            return NoContent();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex.Message);
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error deleting data");
-        //    }
-        //}
+                            var sqlResponce = await _CustomeGroupCreditLimtService.DeleteCustomeGroupCreditLimtAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomeGroupCreditLimtToDelete, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"CustomeGroupCreditLimt_{GroupCreditLimitId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
     }
 }

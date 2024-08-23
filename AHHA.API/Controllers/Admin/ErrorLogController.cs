@@ -45,7 +45,7 @@ namespace AHHA.API.Controllers.Admin
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

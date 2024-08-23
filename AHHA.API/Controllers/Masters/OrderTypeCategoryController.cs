@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetOrderTypeCategory")]
         [Authorize]
-        public async Task<ActionResult> GetAllOrderTypeCategory([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetOrderTypeCategory([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _OrderTypeCategoryService.GetOrderTypeCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _OrderTypeCategoryService.GetOrderTypeCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -232,54 +234,51 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        //[HttpDelete, Route("Delete/{OrderTypeCategoryId}")]
-        //[Authorize]
-        //public async Task<ActionResult<M_OrderTypeCategory>> DeleteOrderTypeCategory(Int16 OrderTypeCategoryId)
-        //{
-        //    try
-        //    {
-        //
-        //
+        [HttpDelete, Route("DeleteOrderTypeCategory/{OrderTypeCategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<M_OrderTypeCategory>> DeleteOrderTypeCategory(Int16 OrderTypeCategoryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderTypeCategory, headerViewModel.UserId);
 
-        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
-        //        {
-        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderTypeCategory, headerViewModel.UserId);
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var OrderTypeCategoryToDelete = await _OrderTypeCategoryService.GetOrderTypeCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryId, headerViewModel.UserId);
 
-        //            if (userGroupRight != null)
-        //            {
-        //                if (userGroupRight.IsDelete)
-        //                {
-        //                    var OrderTypeCategoryToDelete = await _OrderTypeCategoryService.GetOrderTypeCategoryByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeCategoryId, headerViewModel.UserId);
+                            if (OrderTypeCategoryToDelete == null)
+                                return NotFound($"M_OrderTypeCategory with Id = {OrderTypeCategoryId} not found");
 
-        //                    if (OrderTypeCategoryToDelete == null)
-        //                        return NotFound($"M_OrderTypeCategory with Id = {OrderTypeCategoryId} not found");
-
-        //                    var sqlResponce = await _OrderTypeCategoryService.DeleteOrderTypeCategoryAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeCategoryToDelete, headerViewModel.UserId);
-        //                    // Remove data from cache by key
-        //                    _memoryCache.Remove($"OrderTypeCategory_{OrderTypeCategoryId}");
-        //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-        //                }
-        //                else
-        //                {
-        //                    return NotFound(GenrateMessage.authenticationfailed);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                return NotFound(GenrateMessage.authenticationfailed);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            return NoContent();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex.Message);
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error deleting data");
-        //    }
-        //}
+                            var sqlResponce = await _OrderTypeCategoryService.DeleteOrderTypeCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryToDelete, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"OrderTypeCategory_{OrderTypeCategoryId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
     }
 }

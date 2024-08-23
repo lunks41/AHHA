@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetOrderType")]
         [Authorize]
-        public async Task<ActionResult> GetAllOrderType([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetOrderType([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _OrderTypeService.GetOrderTypeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _OrderTypeService.GetOrderTypeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -232,54 +234,51 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        //[HttpDelete, Route("Delete/{OrderTypeId}")]
-        //[Authorize]
-        //public async Task<ActionResult<M_OrderType>> DeleteOrderType(Int16 OrderTypeId)
-        //{
-        //    try
-        //    {
-        //
-        //
+        [HttpDelete, Route("DeleteOrderType/{OrderTypeId}")]
+        [Authorize]
+        public async Task<ActionResult<M_OrderType>> DeleteOrderType(Int16 OrderTypeId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
 
-        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
-        //        {
-        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.OrderType, headerViewModel.UserId);
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var OrderTypeToDelete = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
 
-        //            if (userGroupRight != null)
-        //            {
-        //                if (userGroupRight.IsDelete)
-        //                {
-        //                    var OrderTypeToDelete = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
+                            if (OrderTypeToDelete == null)
+                                return NotFound($"M_OrderType with Id = {OrderTypeId} not found");
 
-        //                    if (OrderTypeToDelete == null)
-        //                        return NotFound($"M_OrderType with Id = {OrderTypeId} not found");
-
-        //                    var sqlResponce = await _OrderTypeService.DeleteOrderTypeAsync(headerViewModel.RegId,headerViewModel.CompanyId, OrderTypeToDelete, headerViewModel.UserId);
-        //                    // Remove data from cache by key
-        //                    _memoryCache.Remove($"OrderType_{OrderTypeId}");
-        //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-        //                }
-        //                else
-        //                {
-        //                    return NotFound(GenrateMessage.authenticationfailed);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                return NotFound(GenrateMessage.authenticationfailed);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            return NoContent();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex.Message);
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error deleting data");
-        //    }
-        //}
+                            var sqlResponce = await _OrderTypeService.DeleteOrderTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeToDelete, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"OrderType_{OrderTypeId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
     }
 }

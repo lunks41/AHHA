@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetBarge")]
         [Authorize]
-        public async Task<ActionResult> GetAllBarge([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetBarge([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _BargeService.GetBargeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _BargeService.GetBargeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -244,7 +246,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{BargeId}")]
+        [HttpDelete, Route("DeleteBarge/{BargeId}")]
         [Authorize]
         public async Task<ActionResult<M_Barge>> DeleteBarge(Int16 BargeId, [FromHeader] HeaderViewModel headerViewModel)
         {

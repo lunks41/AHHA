@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSupplierAddress")]
         [Authorize]
-        public async Task<ActionResult> GetAllSupplierAddress([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetSupplierAddress([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -254,7 +256,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{SupplierAddressId}")]
+        [HttpDelete, Route("DeleteSupplierAddress/{SupplierAddressId}")]
         [Authorize]
         public async Task<ActionResult<M_SupplierAddress>> DeleteSupplierAddress(Int16 SupplierAddressId, [FromHeader] HeaderViewModel headerViewModel)
         {

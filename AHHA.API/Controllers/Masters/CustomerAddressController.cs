@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCustomerAddress")]
         [Authorize]
-        public async Task<ActionResult> GetAllCustomerAddress([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetCustomerAddress([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _CustomerAddressService.GetCustomerAddressListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _CustomerAddressService.GetCustomerAddressListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -254,54 +256,51 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        //[HttpDelete, Route("Delete/{AddressId}")]
-        //[Authorize]
-        //public async Task<ActionResult<M_CustomerAddress>> DeleteCustomerAddress(Int16 AddressId)
-        //{
-        //    try
-        //    {
-        //
-        //
+        [HttpDelete, Route("DeleteCustomerAddress/{AddressId}")]
+        [Authorize]
+        public async Task<ActionResult<M_CustomerAddress>> DeleteCustomerAddress(Int16 AddressId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
 
-        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
-        //        {
-        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CustomerAddressToDelete = await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AddressId, headerViewModel.UserId);
 
-        //            if (userGroupRight != null)
-        //            {
-        //                if (userGroupRight.IsDelete)
-        //                {
-        //                    var CustomerAddressToDelete = await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, AddressId, headerViewModel.UserId);
+                            if (CustomerAddressToDelete == null)
+                                return NotFound($"M_CustomerAddress with Id = {AddressId} not found");
 
-        //                    if (CustomerAddressToDelete == null)
-        //                        return NotFound($"M_CustomerAddress with Id = {AddressId} not found");
-
-        //                    var sqlResponce = await _CustomerAddressService.DeleteCustomerAddressAsync(headerViewModel.RegId,headerViewModel.CompanyId, CustomerAddressToDelete, headerViewModel.UserId);
-        //                    // Remove data from cache by key
-        //                    _memoryCache.Remove($"CustomerAddress_{AddressId}");
-        //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-        //                }
-        //                else
-        //                {
-        //                    return NotFound(GenrateMessage.authenticationfailed);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                return NotFound(GenrateMessage.authenticationfailed);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            return NoContent();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex.Message);
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error deleting data");
-        //    }
-        //}
+                            var sqlResponce = await _CustomerAddressService.DeleteCustomerAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerAddressToDelete, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"CustomerAddress_{AddressId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
     }
 }

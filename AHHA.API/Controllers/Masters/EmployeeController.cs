@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetEmployee")]
         [Authorize]
-        public async Task<ActionResult> GetAllEmployee([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetEmployee([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,8 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _EmployeeService.GetEmployeeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+                        var cacheData = await _EmployeeService.GetEmployeeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -232,7 +233,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{EmployeeId}")]
+        [HttpDelete, Route("DeleteEmployee/{EmployeeId}")]
         [Authorize]
         public async Task<ActionResult<M_Employee>> DeleteEmployee(Int16 EmployeeId, [FromHeader] HeaderViewModel headerViewModel)
         {

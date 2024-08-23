@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetAccountSetup")]
         [Authorize]
-        public async Task<ActionResult> GetAllAccountSetup([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetAccountSetup([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _AccountSetupService.GetAccountSetupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _AccountSetupService.GetAccountSetupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -234,7 +236,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{AccSetupId}")]
+        [HttpDelete, Route("DeleteAccountSetup/{AccSetupId}")]
         [Authorize]
         public async Task<ActionResult<M_AccountSetup>> DeleteAccountSetup(Int16 AccSetupId, [FromHeader] HeaderViewModel headerViewModel)
         {

@@ -1,4 +1,11 @@
-﻿using AHHA.Application.IServices.Masters;
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -6,117 +13,375 @@ namespace AHHA.API.Controllers.Masters
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductController : ControllerBase
+    public class ProductController : BaseController
     {
         private readonly IProductService _productService;
         private readonly ILogger<ProductController> _logger;
-        private readonly IMemoryCache _memoryCache;
 
-        public ProductController(ILogger<ProductController> logger, IProductService productService, IMemoryCache memoryCache)
+        public ProductController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ProductController> logger, IProductService productService) : base(memoryCache, mapper, baseServices)
         {
             _logger = logger;
             _productService = productService;
-            _memoryCache = memoryCache;
         }
 
-        //[HttpGet("getallproduct")]
-        ////[Route("getallproduct/{eid}/{WorksType}")]
-        //public async Task<ActionResult> GetAllProducts()
-        //{
-        //    try
-        //    {
-        //        var products = await _productService.GetProductListAsync();
+        [HttpGet, Route("GetProduct")]
+        [Authorize]
+        public async Task<ActionResult> GetProduct([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Product, headerViewModel.UserId);
 
-        //        return Ok(products);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //         "Error retrieving data from the database");
-        //    }
+                    if (userGroupRight != null)
+                    {
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
 
-        //}
+                        var cacheData = await _productService.GetProductListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
-        //[HttpGet("getproductbyid/{id:int}")]
-        //public async Task<ActionResult<M_Product>> GetProductById(int id)
-        //{
-        //    try
-        //    {
-        //        var result = await _productService.GetProductByIdAsync(id);
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
 
-        //        if (result == null) return NotFound(GenrateMessage.authenticationfailed);
+                        return Ok(cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
 
-        //        return result;
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error retrieving data from the database");
-        //    }
-        //}
+        [HttpGet, Route("GetProductbyid/{ProductId}")]
+        [Authorize]
+        public async Task<ActionResult<ProductViewModel>> GetProductById(Int16 ProductId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            var ProductViewModel = new ProductViewModel();
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Product, headerViewModel.UserId);
 
-        //[HttpPost("addproduct")]
-        //public async Task<ActionResult<M_Product>> CreateProduct(M_Product product)
-        //{
-        //    try
-        //    {
-        //        if (product == null)
-        //            return BadRequest();
+                    if (userGroupRight != null)
+                    {
+                        if (_memoryCache.TryGetValue($"Product_{ProductId}", out ProductViewModel? cachedProduct))
+                        {
+                            ProductViewModel = cachedProduct;
+                        }
+                        else
+                        {
+                            ProductViewModel = _mapper.Map<ProductViewModel>(await _productService.GetProductByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductId, headerViewModel.UserId));
 
-        //        var createdProduct = await _productService.AddProductAsync(product);
+                            if (ProductViewModel == null)
+                                return NotFound(GenrateMessage.authenticationfailed);
+                            else
+                                // Cache the Product with an expiration time of 10 minutes
+                                _memoryCache.Set($"Product_{ProductId}", ProductViewModel, TimeSpan.FromMinutes(10));
+                        }
+                        return StatusCode(StatusCodes.Status202Accepted, ProductViewModel);
+                        //return Ok(ProductViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
 
-        //        return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.ProductId }, createdProduct);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error creating new product record");
-        //    }
-        //}
+        [HttpPost, Route("AddProduct")]
+        [Authorize]
+        public async Task<ActionResult<ProductViewModel>> CreateProduct(ProductViewModel Product, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Product, headerViewModel.UserId);
 
-        //[HttpPut("updateproduct/{id:int}")]
-        //public async Task<ActionResult<M_Product>> UpdateProduct(int id,[FromBody] M_Product product)
-        //{
-        //    try
-        //    {
-        //        if (id != product.ProductId)
-        //            return BadRequest("M_Product ID mismatch");
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (Product == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "M_Product ID mismatch");
 
-        //        var productToUpdate = await _productService.GetProductByIdAsync(id);
+                            var ProductEntity = new M_Product
+                            {
+                                CompanyId = Product.CompanyId,
+                                ProductCode = Product.ProductCode,
+                                ProductId = Product.ProductId,
+                                ProductName = Product.ProductName,
+                                CreateById = headerViewModel.UserId,
+                                IsActive = Product.IsActive,
+                                Remarks = Product.Remarks
+                            };
 
-        //        if (productToUpdate == null)
-        //            return NotFound($"M_Product with Id = {id} not found");
+                            var createdProduct = await _productService.AddProductAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdProduct);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Product record");
+            }
+        }
 
-        //        await _productService.UpdateProductAsync(product);
-        //        return NoContent();
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error updating data");
-        //    }
-        //}
+        [HttpPut, Route("UpdateProduct/{ProductId}")]
+        [Authorize]
+        public async Task<ActionResult<ProductViewModel>> UpdateProduct(Int16 ProductId, [FromBody] ProductViewModel Product, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            var ProductViewModel = new ProductViewModel();
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Product, headerViewModel.UserId);
 
-        //[HttpDelete("deleteproduct/{id:int}")]
-        //public async Task<ActionResult<M_Product>> DeleteProduct(int id)
-        //{
-        //    try
-        //    {
-        //        var productToDelete = await _productService.GetProductByIdAsync(id);
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (ProductId != Product.ProductId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "M_Product ID mismatch");
+                            //return BadRequest("M_Product ID mismatch");
 
-        //        if (productToDelete == null)
-        //        {
-        //            return NotFound($"M_Product with Id = {id} not found");
-        //        }
+                            // Attempt to retrieve the Product from the cache
+                            if (_memoryCache.TryGetValue($"Product_{ProductId}", out ProductViewModel? cachedProduct))
+                            {
+                                ProductViewModel = cachedProduct;
+                            }
+                            else
+                            {
+                                var ProductToUpdate = await _productService.GetProductByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductId, headerViewModel.UserId);
 
-        //        await _productService.DeleteProductAsync(id);
-        //        return NoContent();
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error deleting data");
-        //    }
-        //}
+                                if (ProductToUpdate == null)
+                                    return NotFound($"M_Product with Id = {ProductId} not found");
+                            }
+
+                            var ProductEntity = new M_Product
+                            {
+                                ProductCode = Product.ProductCode,
+                                ProductId = Product.ProductId,
+                                ProductName = Product.ProductName,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                                IsActive = Product.IsActive,
+                                Remarks = Product.Remarks
+                            };
+
+                            var sqlResponce = await _productService.UpdateProductAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteProduct/{ProductId}")]
+        [Authorize]
+        public async Task<ActionResult<M_Product>> DeleteProduct(Int16 ProductId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Product, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var ProductToDelete = await _productService.GetProductByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductId, headerViewModel.UserId);
+
+                            if (ProductToDelete == null)
+                                return NotFound($"M_Product with Id = {ProductId} not found");
+
+                            var sqlResponce = await _productService.DeleteProductAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductToDelete, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"Product_{ProductId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
     }
 }
+
+#region COMMENTS CODE
+
+//[HttpGet("Getproduct")]
+////[Route("Getproduct/{eid}/{WorksType}")]
+//public async Task<ActionResult> GetProducts()
+//{
+//    try
+//    {
+//        var products = await _productService.GetProductListAsync();
+
+//        return Ok(products);
+//    }
+//    catch (Exception)
+//    {
+//        return StatusCode(StatusCodes.Status500InternalServerError,
+//         "Error retrieving data from the database");
+//    }
+
+//}
+
+//[HttpGet("getproductbyid/{id:int}")]
+//public async Task<ActionResult<M_Product>> GetProductById(int id)
+//{
+//    try
+//    {
+//        var result = await _productService.GetProductByIdAsync(id);
+
+//        if (result == null) return NotFound(GenrateMessage.authenticationfailed);
+
+//        return result;
+//    }
+//    catch (Exception)
+//    {
+//        return StatusCode(StatusCodes.Status500InternalServerError,
+//            "Error retrieving data from the database");
+//    }
+//}
+
+//[HttpPost("addproduct")]
+//public async Task<ActionResult<M_Product>> CreateProduct(M_Product product)
+//{
+//    try
+//    {
+//        if (product == null)
+//            return BadRequest();
+
+//        var createdProduct = await _productService.AddProductAsync(product);
+
+//        return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.ProductId }, createdProduct);
+//    }
+//    catch (Exception)
+//    {
+//        return StatusCode(StatusCodes.Status500InternalServerError,
+//            "Error creating new product record");
+//    }
+//}
+
+//[HttpPut("updateproduct/{id:int}")]
+//public async Task<ActionResult<M_Product>> UpdateProduct(int id,[FromBody] M_Product product)
+//{
+//    try
+//    {
+//        if (id != product.ProductId)
+//            return BadRequest("M_Product ID mismatch");
+
+//        var productToUpdate = await _productService.GetProductByIdAsync(id);
+
+//        if (productToUpdate == null)
+//            return NotFound($"M_Product with Id = {id} not found");
+
+//        await _productService.UpdateProductAsync(product);
+//        return NoContent();
+//    }
+//    catch (Exception)
+//    {
+//        return StatusCode(StatusCodes.Status500InternalServerError,
+//            "Error updating data");
+//    }
+//}
+
+//[HttpDelete("deleteproduct/{id:int}")]
+//public async Task<ActionResult<M_Product>> DeleteProduct(int id)
+//{
+//    try
+//    {
+//        var productToDelete = await _productService.GetProductByIdAsync(id);
+
+//        if (productToDelete == null)
+//        {
+//            return NotFound($"M_Product with Id = {id} not found");
+//        }
+
+//        await _productService.DeleteProductAsync(id);
+//        return NoContent();
+//    }
+//    catch (Exception)
+//    {
+//        return StatusCode(StatusCodes.Status500InternalServerError,
+//            "Error deleting data");
+//    }
+
+#endregion COMMENTS CODE

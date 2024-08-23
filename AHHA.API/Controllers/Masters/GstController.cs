@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetGst")]
         [Authorize]
-        public async Task<ActionResult> GetAllGst([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetGst([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,15 +36,14 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
                         //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
 
-                        var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                        var cacheData = await _GstService.GetGstListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        var cacheData = await _GstService.GetGstListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
-
-                        _memoryCache.Set<GstViewModelCount>("Gst", cacheData, expirationTime);
 
                         return Ok(cacheData);
                     }
@@ -237,54 +236,51 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        //[HttpDelete, Route("Delete/{GstId}")]
-        //[Authorize]
-        //public async Task<ActionResult<M_Gst>> DeleteGst(Int16 GstId)
-        //{
-        //    try
-        //    {
-        //
-        //
+        [HttpDelete, Route("DeleteGst/{GstId}")]
+        [Authorize]
+        public async Task<ActionResult<M_Gst>> DeleteGst(Int16 GstId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, headerViewModel.UserId);
 
-        //        if (ValidateHeaders(headerViewModel.RegId,headerViewModel.CompanyId, headerViewModel.UserId))
-        //        {
-        //            var userGroupRight = ValidateScreen(headerViewModel.RegId,headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Gst, headerViewModel.UserId);
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var GstToDelete = await _GstService.GetGstByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstId, headerViewModel.UserId);
 
-        //            if (userGroupRight != null)
-        //            {
-        //                if (userGroupRight.IsDelete)
-        //                {
-        //                    var GstToDelete = await _GstService.GetGstByIdAsync(headerViewModel.RegId,headerViewModel.CompanyId, GstId, headerViewModel.UserId);
+                            if (GstToDelete == null)
+                                return NotFound($"M_Gst with Id = {GstId} not found");
 
-        //                    if (GstToDelete == null)
-        //                        return NotFound($"M_Gst with Id = {GstId} not found");
-
-        //                    var sqlResponce = await _GstService.DeleteGstAsync(headerViewModel.RegId,headerViewModel.CompanyId, GstToDelete, headerViewModel.UserId);
-        //                    // Remove data from cache by key
-        //                    _memoryCache.Remove($"Gst_{GstId}");
-        //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-        //                }
-        //                else
-        //                {
-        //                    return NotFound(GenrateMessage.authenticationfailed);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                return NotFound(GenrateMessage.authenticationfailed);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            return NoContent();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex.Message);
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error deleting data");
-        //    }
-        //}
+                            var sqlResponce = await _GstService.DeleteGstAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstToDelete, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"Gst_{GstId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
     }
 }

@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetCountry")]
         [Authorize]
-        public async Task<ActionResult> GetAllCountry([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetCountry([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -99,7 +99,7 @@ namespace AHHA.API.Controllers.Masters
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -148,12 +148,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -208,12 +208,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{CountryId}")]
+        [HttpDelete, Route("DeleteCountry/{CountryId}")]
         [Authorize]
         public async Task<ActionResult<M_Country>> DeleteCountry(int CountryId, [FromHeader] HeaderViewModel headerViewModel)
         {
@@ -255,12 +255,12 @@ namespace AHHA.API.Controllers.Masters
                         }
                         else
                         {
-                            return NotFound("Users do not have a access to delete");
+                            return NotFound(GenrateMessage.authenticationfailed);
                         }
                     }
                     else
                     {
-                        return NotFound("Users not have a access for this screen");
+                        return NotFound(GenrateMessage.authenticationfailed);
                     }
                 }
                 else

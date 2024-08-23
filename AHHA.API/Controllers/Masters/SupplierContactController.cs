@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSupplierContact")]
         [Authorize]
-        public async Task<ActionResult> GetAllSupplierContact([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetSupplierContact([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var voyageData = await _SupplierContactService.GetSupplierContactListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var voyageData = await _SupplierContactService.GetSupplierContactListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (voyageData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -248,7 +250,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{ContactId}")]
+        [HttpDelete, Route("DeleteSupplierContact/{ContactId}")]
         [Authorize]
         public async Task<ActionResult<M_SupplierContact>> DeleteSupplierContact(Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
         {

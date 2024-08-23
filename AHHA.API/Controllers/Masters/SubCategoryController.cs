@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetSubCategory")]
         [Authorize]
-        public async Task<ActionResult> GetAllSubCategory([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetSubCategory([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,7 +36,9 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _SubCategoryService.GetSubCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _SubCategoryService.GetSubCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
                             return NotFound(GenrateMessage.authenticationfailed);
@@ -232,7 +234,7 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpDelete, Route("Delete/{SubCategoryId}")]
+        [HttpDelete, Route("DeleteSubCategory/{SubCategoryId}")]
         [Authorize]
         public async Task<ActionResult<M_SubCategory>> DeleteSubCategory(Int16 SubCategoryId, [FromHeader] HeaderViewModel headerViewModel)
         {

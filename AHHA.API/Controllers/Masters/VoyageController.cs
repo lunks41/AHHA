@@ -26,7 +26,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpGet, Route("GetVoyage")]
         [Authorize]
-        public async Task<ActionResult> GetAllVoyage([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetVoyage([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
