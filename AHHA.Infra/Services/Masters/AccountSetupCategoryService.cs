@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             AccountSetupCategoryViewModelCount AccountSetupCategoryViewModelCount = new AccountSetupCategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountSetupCategory");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountSetupCategory M_AccSetCa  WHERE M_AccSetCa.AccSetupCategoryId<>0 AND  ( M_AccSetCa.AccSetupCategoryName LIKE '%{searchString}%' OR M_AccSetCa.AccSetupCategoryCode LIKE '%{searchString}%' OR M_AccSetCa.Remarks LIKE '%{searchString}%')");
 
-                var result = await _repository.GetQueryAsync<AccountSetupCategoryViewModel>(RegId, $"SELECT M_AccSetCa.AccSetupCategoryId,M_AccSetCa.AccSetupCategoryCode,M_AccSetCa.AccSetupCategoryName,M_AccSetCa.Remarks,M_AccSetCa.IsActive,M_AccSetCa.CreateById,M_AccSetCa.CreateDate,M_AccSetCa.EditById,M_AccSetCa.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountSetupCategory M_AccSetCa LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_AccSetCa.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_AccSetCa.EditById WHERE M_AccSetCa.AccSetupCategoryId<>0 AND  ( M_AccSetCa.AccSetupCategoryName LIKE '%{searchString}%' OR M_AccSetCa.AccSetupCategoryCode LIKE '%{searchString}%' OR M_AccSetCa.Remarks LIKE '%{searchString}%') ORDER BY M_AccSetCa.AccSetupCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<AccountSetupCategoryViewModel>(RegId, $"SELECT M_AccSetCa.AccSetupCategoryId,M_AccSetCa.AccSetupCategoryCode,M_AccSetCa.AccSetupCategoryName,M_AccSetCa.Remarks,M_AccSetCa.IsActive,M_AccSetCa.CreateById,M_AccSetCa.CreateDate,M_AccSetCa.EditById,M_AccSetCa.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_AccountSetupCategory M_AccSetCa LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_AccSetCa.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_AccSetCa.EditById WHERE M_AccSetCa.AccSetupCategoryId<>0 AND  ( M_AccSetCa.AccSetupCategoryName LIKE '%{searchString}%' OR M_AccSetCa.AccSetupCategoryCode LIKE '%{searchString}%' OR M_AccSetCa.Remarks LIKE '%{searchString}%') ORDER BY M_AccSetCa.AccSetupCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 AccountSetupCategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 AccountSetupCategoryViewModelCount.data = result == null ? null : result.ToList();
@@ -40,8 +40,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.AccountSetupCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountSetupCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_AccountSetupCategory",
@@ -70,8 +70,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.AccountSetupCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountSetupCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_AccountSetupCategory",
@@ -139,8 +139,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.AccountSetupCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.AccountSetupCategory,
                                 DocumentId = AccountSetupCategory.AccSetupCategoryId,
                                 DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
                                 TblName = "M_AccountSetupCategory",
@@ -177,8 +177,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.AccountSetupCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.AccountSetupCategory,
                         DocumentId = 0,
                         DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
                         TblName = "M_AccountSetupCategory",
@@ -239,8 +239,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.AccountSetupCategory,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.AccountSetupCategory,
                                     DocumentId = AccountSetupCategory.AccSetupCategoryId,
                                     DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
                                     TblName = "M_AccountSetupCategory",
@@ -271,8 +271,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.AccountSetupCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.AccountSetupCategory,
                         DocumentId = AccountSetupCategory.AccSetupCategoryId,
                         DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
                         TblName = "M_AccountSetupCategory",
@@ -304,8 +304,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.AccountSetupCategory,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.AccountSetupCategory,
                             DocumentId = AccountSetupCategory.AccSetupCategoryId,
                             DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
                             TblName = "M_AccountSetupCategory",
@@ -332,8 +332,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.AccountSetupCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountSetupCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_AccountSetupCategory",

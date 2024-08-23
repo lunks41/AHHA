@@ -40,8 +40,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.ChartOfAccount,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.ChartOfAccount,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_ChartOfAccount",
@@ -70,8 +70,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.ChartOfAccount,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.ChartOfAccount,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_ChartOfAccount",
@@ -139,8 +139,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.ChartOfAccount,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.ChartOfAccount,
                                 DocumentId = ChartOfAccount.GLId,
                                 DocumentNo = ChartOfAccount.GLCode,
                                 TblName = "M_ChartOfAccount",
@@ -177,8 +177,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.ChartOfAccount,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.ChartOfAccount,
                         DocumentId = 0,
                         DocumentNo = ChartOfAccount.GLCode,
                         TblName = "M_ChartOfAccount",
@@ -240,8 +240,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.ChartOfAccount,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.ChartOfAccount,
                                     DocumentId = ChartOfAccount.GLId,
                                     DocumentNo = ChartOfAccount.GLCode,
                                     TblName = "M_ChartOfAccount",
@@ -272,8 +272,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.ChartOfAccount,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.ChartOfAccount,
                         DocumentId = ChartOfAccount.GLId,
                         DocumentNo = ChartOfAccount.GLCode,
                         TblName = "M_ChartOfAccount",
@@ -305,8 +305,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.ChartOfAccount,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.ChartOfAccount,
                             DocumentId = ChartOfAccount.GLId,
                             DocumentNo = ChartOfAccount.GLCode,
                             TblName = "M_ChartOfAccount",
@@ -333,8 +333,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.ChartOfAccount,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.ChartOfAccount,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_ChartOfAccount",

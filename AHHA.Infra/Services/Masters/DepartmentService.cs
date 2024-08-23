@@ -23,25 +23,27 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<DepartmentViewModelCount> GetDepartmentListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            DepartmentViewModelCount DepartmentViewModelCount = new DepartmentViewModelCount();
+            DepartmentViewModelCount departmentViewModelCount = new DepartmentViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Department WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Department M_Dep WHERE (M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%' OR M_Dep.Remarks LIKE '%{searchString}%') AND M_Dep.DepartmentId<>0 AND M_Dep.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<DepartmentViewModel>(RegId, $"SELECT M_Cou.DepartmentId,M_Cou.DepartmentCode,M_Cou.DepartmentName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Department M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.DepartmentName LIKE '%{searchString}%' OR M_Cou.DepartmentCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.DepartmentId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master})) ORDER BY M_Cou.DepartmentName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<DepartmentViewModel>(RegId, $"SELECT M_Dep.DepartmentId,M_Dep.DepartmentCode,M_Dep.DepartmentName,M_Dep.CompanyId,M_Dep.Remarks,M_Dep.IsActive,M_Dep.CreateById,M_Dep.CreateDate,M_Dep.EditById,M_Dep.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Department M_Dep LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Dep.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Dep.EditById WHERE (M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%' OR M_Dep.Remarks LIKE '%{searchString}%') AND M_Dep.DepartmentId<>0 AND M_Dep.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master})) ORDER BY M_Dep.DepartmentName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                DepartmentViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                DepartmentViewModelCount.data = result == null ? null : result.ToList();
+                departmentViewModelCount.responseCode = 200;
+                departmentViewModelCount.responseMessage = "Success";
+                departmentViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                departmentViewModelCount.data = result == null ? null : result.ToList();
 
-                return DepartmentViewModelCount;
+                return departmentViewModelCount;
             }
             catch (Exception ex)
             {
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Department,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Department,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Department",
@@ -70,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Department,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Department,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Department",
@@ -139,8 +141,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Department,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Department,
                                 DocumentId = Department.DepartmentId,
                                 DocumentNo = Department.DepartmentCode,
                                 TblName = "M_Department",
@@ -177,8 +179,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Department,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Department,
                         DocumentId = 0,
                         DocumentNo = Department.DepartmentCode,
                         TblName = "M_Department",
@@ -240,8 +242,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Department,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.Department,
                                     DocumentId = Department.DepartmentId,
                                     DocumentNo = Department.DepartmentCode,
                                     TblName = "M_Department",
@@ -272,8 +274,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Department,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Department,
                         DocumentId = Department.DepartmentId,
                         DocumentNo = Department.DepartmentCode,
                         TblName = "M_Department",
@@ -305,8 +307,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.Department,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.Department,
                             DocumentId = Department.DepartmentId,
                             DocumentNo = Department.DepartmentCode,
                             TblName = "M_Department",
@@ -333,8 +335,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Department,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Department,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Department",

@@ -23,25 +23,27 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<CustomerViewModelCount> GetCustomerListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            CustomerViewModelCount CustomerViewModelCount = new CustomerViewModelCount();
+            CustomerViewModelCount customerViewModelCount = new CustomerViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Customer WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Customer M_Cou INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = M_Cou.CreditTermId INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Cou.CurrencyId WHERE (M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cou.CustomerRegNo LIKE '%{searchString}%' OR M_Cou.CustomerOtherName LIKE '%{searchString}%' OR M_Cou.CustomerShortName LIKE '%{searchString}%' OR M_Cou.CustomerName LIKE '%{searchString}%' OR M_Cou.CustomerCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CustomerId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<CustomerViewModel>(RegId, $"SELECT M_Cou.CustomerId,M_Cou.CustomerCode,M_Cou.CustomerName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Customer M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CustomerName LIKE '%{searchString}%' OR M_Cou.CustomerCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CustomerId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) ORDER BY M_Cou.CustomerName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CustomerViewModel>(RegId, $"SELECT M_Cou.CustomerId,M_Cou.CustomerCode,M_Cou.CustomerName,M_Cou.CustomerOtherName,M_Cou.CustomerShortName,M_Cou.IsCustomer,M_Cou.IsVendor,M_Cou.IsTrader,M_Cou.IsSupplier,M_Cou.CustomerRegNo,M_Cur.CurrencyCode,M_Cur.CurrencyName,M_Crd.CreditTermCode,M_Crd.CreditTermName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Customer M_Cou INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = M_Cou.CreditTermId INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Cou.CurrencyId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cou.CustomerRegNo LIKE '%{searchString}%' OR M_Cou.CustomerOtherName LIKE '%{searchString}%' OR M_Cou.CustomerShortName LIKE '%{searchString}%' OR M_Cou.CustomerName LIKE '%{searchString}%' OR M_Cou.CustomerCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CustomerId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) ORDER BY M_Cou.CustomerName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                CustomerViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                CustomerViewModelCount.data = result == null ? null : result.ToList();
+                customerViewModelCount.responseCode = 200;
+                customerViewModelCount.responseMessage = "success";
+                customerViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                customerViewModelCount.data = result == null ? null : result.ToList();
 
-                return CustomerViewModelCount;
+                return customerViewModelCount;
             }
             catch (Exception ex)
             {
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Customer,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Customer,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Customer",
@@ -70,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Customer,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Customer,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Customer",
@@ -139,8 +141,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Customer,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Customer,
                                 DocumentId = Customer.CustomerId,
                                 DocumentNo = Customer.CustomerCode,
                                 TblName = "M_Customer",
@@ -177,8 +179,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Customer,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Customer,
                         DocumentId = 0,
                         DocumentNo = Customer.CustomerCode,
                         TblName = "M_Customer",
@@ -240,8 +242,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Customer,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.Customer,
                                     DocumentId = Customer.CustomerId,
                                     DocumentNo = Customer.CustomerCode,
                                     TblName = "M_Customer",
@@ -272,8 +274,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Customer,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Customer,
                         DocumentId = Customer.CustomerId,
                         DocumentNo = Customer.CustomerCode,
                         TblName = "M_Customer",
@@ -305,8 +307,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.Customer,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.Customer,
                             DocumentId = Customer.CustomerId,
                             DocumentNo = Customer.CustomerCode,
                             TblName = "M_Customer",
@@ -333,8 +335,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Customer,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Customer,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Customer",

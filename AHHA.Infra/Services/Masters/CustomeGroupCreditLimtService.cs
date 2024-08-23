@@ -40,8 +40,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.CustomerGroupCreditLimt,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.CustomerGroupCreditLimt,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_CustomeGroupCreditLimt",
@@ -70,8 +70,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.CustomerGroupCreditLimt,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.CustomerGroupCreditLimt,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_CustomeGroupCreditLimt",
@@ -139,8 +139,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.CustomerGroupCreditLimt,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.CustomerGroupCreditLimt,
                                 DocumentId = CustomeGroupCreditLimt.GroupCreditLimitId,
                                 DocumentNo = CustomeGroupCreditLimt.GroupCreditLimitCode,
                                 TblName = "M_CustomeGroupCreditLimt",
@@ -177,8 +177,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.CustomerGroupCreditLimt,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.CustomerGroupCreditLimt,
                         DocumentId = 0,
                         DocumentNo = CustomeGroupCreditLimt.GroupCreditLimitCode,
                         TblName = "M_CustomeGroupCreditLimt",
@@ -240,8 +240,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.CustomerGroupCreditLimt,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.CustomerGroupCreditLimt,
                                     DocumentId = CustomeGroupCreditLimt.GroupCreditLimitId,
                                     DocumentNo = CustomeGroupCreditLimt.GroupCreditLimitCode,
                                     TblName = "M_CustomeGroupCreditLimt",
@@ -272,8 +272,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.CustomerGroupCreditLimt,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.CustomerGroupCreditLimt,
                         DocumentId = CustomeGroupCreditLimt.GroupCreditLimitId,
                         DocumentNo = CustomeGroupCreditLimt.GroupCreditLimitCode,
                         TblName = "M_CustomeGroupCreditLimt",
@@ -305,8 +305,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.CustomerGroupCreditLimt,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.CustomerGroupCreditLimt,
                             DocumentId = CustomeGroupCreditLimt.GroupCreditLimitId,
                             DocumentNo = CustomeGroupCreditLimt.GroupCreditLimitCode,
                             TblName = "M_CustomeGroupCreditLimt",
@@ -333,8 +333,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.CustomerGroupCreditLimt,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.CustomerGroupCreditLimt,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_CustomeGroupCreditLimt",

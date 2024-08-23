@@ -40,8 +40,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Customer,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Customer,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_CustomerContact",
@@ -70,8 +70,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Customer,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Customer,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_CustomerContact",
@@ -139,8 +139,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Customer,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Customer,
                                 DocumentId = CustomerContact.CustomerId,
                                 DocumentNo = CustomerContact.OtherName,
                                 TblName = "M_CustomerContact",
@@ -177,8 +177,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Customer,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Customer,
                         DocumentId = 0,
                         DocumentNo = CustomerContact.OtherName,
                         TblName = "M_CustomerContact",
@@ -239,8 +239,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Customer,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.Customer,
                                     DocumentId = CustomerContact.CustomerId,
                                     DocumentNo = CustomerContact.OtherName,
                                     TblName = "M_CustomerContact",
@@ -271,8 +271,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Customer,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Customer,
                         DocumentId = CustomerContact.CustomerId,
                         DocumentNo = CustomerContact.OtherName,
                         TblName = "M_CustomerContact",
@@ -304,8 +304,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.Customer,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.Customer,
                             DocumentId = CustomerContact.CustomerId,
                             DocumentNo = CustomerContact.OtherName,
                             TblName = "M_CustomerContact",
@@ -332,8 +332,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Customer,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Customer,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_CustomerContact",

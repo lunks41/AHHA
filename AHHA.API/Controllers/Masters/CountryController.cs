@@ -65,12 +65,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                    if (headerViewModel.UserId == 0)
-                        return NotFound("headerViewModel.UserId Not Found");
-                    else if (headerViewModel.CompanyId == 0)
-                        return NotFound("headerViewModel.CompanyId Not Found");
-                    else
-                        return NotFound();
+                    return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)
@@ -95,22 +90,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        //if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
-                        //{
-                        //    countryViewModel = cachedProduct;
-                        //}
-                        //else
-                        //{
                         countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId));
 
                         if (countryViewModel == null)
                             return NotFound();
-                        //else
-                        //    // Cache the country with an expiration time of 10 minutes
-                        //    _memoryCache.Set($"Country_{CountryId}", countryViewModel, TimeSpan.FromMinutes(10));
-                        //}
+
                         return StatusCode(StatusCodes.Status202Accepted, countryViewModel);
-                        //return Ok(countryViewModel);
                     }
                     else
                     {
@@ -201,20 +186,11 @@ namespace AHHA.API.Controllers.Masters
                         {
                             if (CountryId != country.CountryId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "M_Country ID mismatch");
-                            //return BadRequest("M_Country ID mismatch");
 
-                            // Attempt to retrieve the country from the cache
-                            if (_memoryCache.TryGetValue($"country_{CountryId}", out CountryViewModel? cachedProduct))
-                            {
-                                countryViewModel = cachedProduct;
-                            }
-                            else
-                            {
-                                var CountryToUpdate = await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
+                            var CountryToUpdate = await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
 
-                                if (CountryToUpdate == null)
-                                    return NotFound($"M_Country with Id = {CountryId} not found");
-                            }
+                            if (CountryToUpdate == null)
+                                return NotFound($"M_Country with Id = {CountryId} not found");
 
                             var countryEntity = new M_Country
                             {

@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             DesignationViewModelCount DesignationViewModelCount = new DesignationViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Designation WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Designation M_Des WHERE (M_Des.DesignationName LIKE '%{searchString}%' OR M_Des.DesignationCode LIKE '%{searchString}%' OR M_Des.Remarks LIKE '%{searchString}%') AND M_Des.DesignationId<>0 AND M_Des.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<DesignationViewModel>(RegId, $"SELECT M_Cou.DesignationId,M_Cou.DesignationCode,M_Cou.DesignationName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Designation M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.DesignationName LIKE '%{searchString}%' OR M_Cou.DesignationCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.DesignationId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master})) ORDER BY M_Cou.DesignationName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<DesignationViewModel>(RegId, $"SELECT M_Des.DesignationId,M_Des.DesignationCode,M_Des.DesignationName,M_Des.CompanyId,M_Des.Remarks,M_Des.IsActive,M_Des.CreateById,M_Des.CreateDate,M_Des.EditById,M_Des.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Designation M_Des LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Des.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Des.EditById WHERE (M_Des.DesignationName LIKE '%{searchString}%' OR M_Des.DesignationCode LIKE '%{searchString}%' OR M_Des.Remarks LIKE '%{searchString}%') AND M_Des.DesignationId<>0 AND M_Des.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master})) ORDER BY M_Des.DesignationName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 DesignationViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 DesignationViewModelCount.data = result == null ? null : result.ToList();
@@ -40,8 +40,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Designation,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Designation,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Designation",
@@ -70,8 +70,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Designation,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Designation,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Designation",
@@ -139,8 +139,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Designation,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Designation,
                                 DocumentId = Designation.DesignationId,
                                 DocumentNo = Designation.DesignationCode,
                                 TblName = "M_Designation",
@@ -177,8 +177,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Designation,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Designation,
                         DocumentId = 0,
                         DocumentNo = Designation.DesignationCode,
                         TblName = "M_Designation",
@@ -240,8 +240,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Designation,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.Designation,
                                     DocumentId = Designation.DesignationId,
                                     DocumentNo = Designation.DesignationCode,
                                     TblName = "M_Designation",
@@ -272,8 +272,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Designation,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Designation,
                         DocumentId = Designation.DesignationId,
                         DocumentNo = Designation.DesignationCode,
                         TblName = "M_Designation",
@@ -305,8 +305,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.Designation,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.Designation,
                             DocumentId = Designation.DesignationId,
                             DocumentNo = Designation.DesignationCode,
                             TblName = "M_Designation",
@@ -333,8 +333,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Designation,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Designation,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Designation",

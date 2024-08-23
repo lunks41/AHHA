@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             SupplierViewModelCount SupplierViewModelCount = new SupplierViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Supplier WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Supplier},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Supplier M_Sup INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = M_Sup.CreditTermId INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Sup.CurrencyId  WHERE (M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Sup.SupplierRegNo LIKE '%{searchString}%' OR M_Sup.SupplierOtherName LIKE '%{searchString}%' OR M_Sup.SupplierShortName LIKE '%{searchString}%' OR M_Sup.SupplierName LIKE '%{searchString}%' OR M_Sup.SupplierCode LIKE '%{searchString}%' OR M_Sup.Remarks LIKE '%{searchString}%') AND M_Sup.SupplierId<>0 AND M_Sup.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Supplier},{(short)Modules.Master}))");
 
-                var result = await _repository.GetQueryAsync<SupplierViewModel>(RegId, $"SELECT M_Cou.SupplierId,M_Cou.SupplierCode,M_Cou.SupplierName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Supplier M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SupplierName LIKE '%{searchString}%' OR M_Cou.SupplierCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.SupplierId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Supplier},{(short)Modules.Master})) ORDER BY M_Cou.SupplierName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<SupplierViewModel>(RegId, $"SSELECT M_Sup.SupplierId,M_Sup.SupplierCode,M_Sup.SupplierName,M_Sup.SupplierOtherName,M_Sup.SupplierShortName,M_Sup.IsCustomer,M_Sup.IsVendor,M_Sup.IsTrader,M_Sup.IsSupplier,M_Sup.SupplierRegNo,M_Cur.CurrencyCode,M_Cur.CurrencyName,M_Crd.CreditTermCode,M_Crd.CreditTermName,M_Sup.CompanyId,M_Sup.Remarks,M_Sup.IsActive,M_Sup.CreateById,M_Sup.CreateDate,M_Sup.EditById,M_Sup.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Supplier M_Sup INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = M_Sup.CreditTermId INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Sup.CurrencyId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Sup.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Sup.EditById WHERE (M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Sup.SupplierRegNo LIKE '%{searchString}%' OR M_Sup.SupplierOtherName LIKE '%{searchString}%' OR M_Sup.SupplierShortName LIKE '%{searchString}%' OR M_Sup.SupplierName LIKE '%{searchString}%' OR M_Sup.SupplierCode LIKE '%{searchString}%' OR M_Sup.Remarks LIKE '%{searchString}%') AND M_Sup.SupplierId<>0 AND M_Sup.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Supplier},{(short)Modules.Master})) ORDER BY M_Sup.SupplierName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY\"");
 
                 SupplierViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 SupplierViewModelCount.data = result == null ? null : result.ToList();
@@ -40,8 +40,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Supplier,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Supplier,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Supplier",
@@ -70,8 +70,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Supplier,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Supplier,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Supplier",
@@ -139,8 +139,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Supplier,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Supplier,
                                 DocumentId = Supplier.SupplierId,
                                 DocumentNo = Supplier.SupplierCode,
                                 TblName = "M_Supplier",
@@ -177,8 +177,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Supplier,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Supplier,
                         DocumentId = 0,
                         DocumentNo = Supplier.SupplierCode,
                         TblName = "M_Supplier",
@@ -240,8 +240,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Supplier,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.Supplier,
                                     DocumentId = Supplier.SupplierId,
                                     DocumentNo = Supplier.SupplierCode,
                                     TblName = "M_Supplier",
@@ -272,8 +272,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Supplier,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Supplier,
                         DocumentId = Supplier.SupplierId,
                         DocumentNo = Supplier.SupplierCode,
                         TblName = "M_Supplier",
@@ -305,8 +305,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.Supplier,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.Supplier,
                             DocumentId = Supplier.SupplierId,
                             DocumentNo = Supplier.SupplierCode,
                             TblName = "M_Supplier",
@@ -333,8 +333,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Supplier,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Supplier,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Supplier",

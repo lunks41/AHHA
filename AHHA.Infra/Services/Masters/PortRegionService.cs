@@ -28,7 +28,7 @@ namespace AHHA.Infra.Services.Masters
             PortRegionViewModelCount PortRegionViewModelCount = new PortRegionViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_PortRegion WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.PortRegion},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.M_PortRegion M_PortRg INNER JOIN  dbo.M_Country M_Cou ON M_Cou.CountryId = M_PortRg.CountryId WHERE M_PortRg.PortRegionId<>0 AND  ( M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%' OR M_PortRg.PortRegionName LIKE '%{searchString}%' OR M_PortRg.PortRegionCode LIKE '%{searchString}%' OR M_PortRg.Remarks LIKE '%{searchString}%') AND  M_PortRg.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)Master.PortRegion},{(short)Modules.Master}))");
 
                 var result = await _repository.GetQueryAsync<PortRegionViewModel>(RegId, $"SELECT M_PortRg.PortRegionId,M_PortRg.PortRegionCode,M_PortRg.PortRegionName,M_PortRg.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_PortRg.CompanyId,M_PortRg.Remarks,M_PortRg.IsActive,M_PortRg.CreateById,M_PortRg.CreateDate,M_PortRg.EditById,M_PortRg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_PortRegion M_PortRg INNER JOIN  dbo.M_Country M_Cou ON M_Cou.CountryId = M_PortRg.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_PortRg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_PortRg.EditById WHERE M_PortRg.PortRegionId<>0 AND  ( M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%' OR M_PortRg.PortRegionName LIKE '%{searchString}%' OR M_PortRg.PortRegionCode LIKE '%{searchString}%' OR M_PortRg.Remarks LIKE '%{searchString}%') AND  M_PortRg.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)Master.PortRegion},{(short)Modules.Master})) ORDER BY M_PortRg.PortRegionName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
@@ -44,8 +44,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.PortRegion,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.PortRegion,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_PortRegion",
@@ -74,8 +74,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.PortRegion,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.PortRegion,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_PortRegion",
@@ -143,13 +143,13 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.PortRegion,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.PortRegion,
                                 DocumentId = PortRegion.PortRegionId,
                                 DocumentNo = PortRegion.PortRegionCode,
                                 TblName = "M_PortRegion",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Port Region Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -181,8 +181,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.PortRegion,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.PortRegion,
                         DocumentId = 0,
                         DocumentNo = PortRegion.PortRegionCode,
                         TblName = "M_PortRegion",
@@ -245,8 +245,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.PortRegion,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.PortRegion,
                                     DocumentId = PortRegion.PortRegionId,
                                     DocumentNo = PortRegion.PortRegionCode,
                                     TblName = "M_PortRegion",
@@ -277,8 +277,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.PortRegion,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.PortRegion,
                         DocumentId = PortRegion.PortRegionId,
                         DocumentNo = PortRegion.PortRegionCode,
                         TblName = "M_PortRegion",
@@ -310,8 +310,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.PortRegion,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.PortRegion,
                             DocumentId = PortRegion.PortRegionId,
                             DocumentNo = PortRegion.PortRegionCode,
                             TblName = "M_PortRegion",
@@ -338,8 +338,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.PortRegion,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.PortRegion,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_PortRegion",

@@ -7,7 +7,6 @@ namespace AHHA.Core.Entities.Masters
     {
         [Key]
         public Int16 DesignationId { get; set; }
-
         public Int16 CompanyId { get; set; }
         public string DesignationCode { get; set; }
         public string DesignationName { get; set; }
@@ -17,7 +16,6 @@ namespace AHHA.Core.Entities.Masters
 
         [NotMapped]
         public DateTime CreateDate { get; set; }
-
         public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }
     }

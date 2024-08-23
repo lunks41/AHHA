@@ -40,8 +40,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.COACategory2,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.COACategory2,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_COACategory2",
@@ -70,8 +70,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.COACategory2,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.COACategory2,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_COACategory2",
@@ -139,8 +139,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.COACategory2,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.COACategory2,
                                 DocumentId = COACategory2.COACategoryId,
                                 DocumentNo = COACategory2.COACategoryCode,
                                 TblName = "M_COACategory2",
@@ -177,8 +177,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.COACategory2,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.COACategory2,
                         DocumentId = 0,
                         DocumentNo = COACategory2.COACategoryCode,
                         TblName = "M_COACategory2",
@@ -240,8 +240,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.COACategory2,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.COACategory2,
                                     DocumentId = COACategory2.COACategoryId,
                                     DocumentNo = COACategory2.COACategoryCode,
                                     TblName = "M_COACategory2",
@@ -272,8 +272,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.COACategory2,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.COACategory2,
                         DocumentId = COACategory2.COACategoryId,
                         DocumentNo = COACategory2.COACategoryCode,
                         TblName = "M_COACategory2",
@@ -305,8 +305,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.COACategory2,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.COACategory2,
                             DocumentId = COACategory2.COACategoryId,
                             DocumentNo = COACategory2.COACategoryCode,
                             TblName = "M_COACategory2",
@@ -333,8 +333,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.COACategory2,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.COACategory2,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_COACategory2",

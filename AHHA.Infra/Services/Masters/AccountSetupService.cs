@@ -41,8 +41,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.AccountSetup,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountSetup,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_AccountSetup",
@@ -71,8 +71,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.AccountSetup,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountSetup,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_AccountSetup",
@@ -140,8 +140,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.AccountSetup,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.AccountSetup,
                                 DocumentId = AccountSetup.AccSetupId,
                                 DocumentNo = AccountSetup.AccSetupCode,
                                 TblName = "M_AccountSetup",
@@ -178,8 +178,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.AccountSetup,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.AccountSetup,
                         DocumentId = 0,
                         DocumentNo = AccountSetup.AccSetupCode,
                         TblName = "M_AccountSetup",
@@ -241,8 +241,8 @@ namespace AHHA.Infra.Services.Masters
                                 var auditLog = new AdmAuditLog
                                 {
                                     CompanyId = CompanyId,
-                                    ModuleId = (short)Master.AccountSetup,
-                                    TransactionId = (short)Modules.Master,
+                                    ModuleId = (short)Modules.Master,
+                                    TransactionId = (short)Master.AccountSetup,
                                     DocumentId = AccountSetup.AccSetupId,
                                     DocumentNo = AccountSetup.AccSetupCode,
                                     TblName = "M_AccountSetup",
@@ -273,8 +273,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.AccountSetup,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.AccountSetup,
                         DocumentId = AccountSetup.AccSetupId,
                         DocumentNo = AccountSetup.AccSetupCode,
                         TblName = "M_AccountSetup",
@@ -306,8 +306,8 @@ namespace AHHA.Infra.Services.Masters
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)Master.AccountSetup,
-                            TransactionId = (short)Modules.Master,
+                            ModuleId = (short)Modules.Master,
+                            TransactionId = (short)Master.AccountSetup,
                             DocumentId = AccountSetup.AccSetupId,
                             DocumentNo = AccountSetup.AccSetupCode,
                             TblName = "M_AccountSetup",
@@ -334,8 +334,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.AccountSetup,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountSetup,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_AccountSetup",
