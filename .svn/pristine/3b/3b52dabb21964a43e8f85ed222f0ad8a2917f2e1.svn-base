@@ -1,0 +1,12 @@
+[
+  {
+    "RegId": "Astar@123",
+    "CompanyName": "AHHA",
+    "ConnectionStringName": "DbConnection"
+  },
+  {
+    "RegId": "2",
+    "CompanyName": "AHHALIVE",
+    "ConnectionStringName": "LiveDBConnection"
+  }
+]

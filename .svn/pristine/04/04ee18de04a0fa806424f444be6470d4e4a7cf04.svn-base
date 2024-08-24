@@ -1,0 +1,285 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class CustomerGroupCreditLimitController : BaseController
+    {
+        private readonly ICustomerGroupCreditLimitService _CustomerGroupCreditLimitService;
+        private readonly ILogger<CustomerGroupCreditLimitController> _logger;
+
+        public CustomerGroupCreditLimitController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CustomerGroupCreditLimitController> logger, ICustomerGroupCreditLimitService CustomerGroupCreditLimitService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CustomerGroupCreditLimitService = CustomerGroupCreditLimitService;
+        }
+
+        [HttpGet, Route("GetCustomerGroupCreditLimit")]
+        [Authorize]
+        public async Task<ActionResult> GetCustomerGroupCreditLimit([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerGroupCreditLimit, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+
+                        var cacheData = await _CustomerGroupCreditLimitService.GetCustomerGroupCreditLimitListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return Ok(cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCustomerGroupCreditLimitbyid/{GroupCreditLimitId}")]
+        [Authorize]
+        public async Task<ActionResult<CustomerGroupCreditLimitViewModel>> GetCustomerGroupCreditLimitById(Int16 GroupCreditLimitId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            var CustomerGroupCreditLimitViewModel = new CustomerGroupCreditLimitViewModel();
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerGroupCreditLimit, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (_memoryCache.TryGetValue($"CustomerGroupCreditLimit_{GroupCreditLimitId}", out CustomerGroupCreditLimitViewModel? cachedProduct))
+                        {
+                            CustomerGroupCreditLimitViewModel = cachedProduct;
+                        }
+                        else
+                        {
+                            CustomerGroupCreditLimitViewModel = _mapper.Map<CustomerGroupCreditLimitViewModel>(await _CustomerGroupCreditLimitService.GetCustomerGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId));
+
+                            if (CustomerGroupCreditLimitViewModel == null)
+                                return NotFound(GenrateMessage.authenticationfailed);
+                            else
+                                // Cache the CustomerGroupCreditLimit with an expiration time of 10 minutes
+                                _memoryCache.Set($"CustomerGroupCreditLimit_{GroupCreditLimitId}", CustomerGroupCreditLimitViewModel, TimeSpan.FromMinutes(10));
+                        }
+                        return StatusCode(StatusCodes.Status202Accepted, CustomerGroupCreditLimitViewModel);
+                        //return Ok(CustomerGroupCreditLimitViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddCustomerGroupCreditLimit")]
+        [Authorize]
+        public async Task<ActionResult<CustomerGroupCreditLimitViewModel>> CreateCustomerGroupCreditLimit(CustomerGroupCreditLimitViewModel CustomerGroupCreditLimit, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerGroupCreditLimit, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (CustomerGroupCreditLimit == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerGroupCreditLimit ID mismatch");
+
+                            var CustomerGroupCreditLimitEntity = new M_CustomerGroupCreditLimit
+                            {
+                                CompanyId = CustomerGroupCreditLimit.CompanyId,
+                                GroupCreditLimitCode = CustomerGroupCreditLimit.GroupCreditLimitCode,
+                                GroupCreditLimitId = CustomerGroupCreditLimit.GroupCreditLimitId,
+                                GroupCreditLimitName = CustomerGroupCreditLimit.GroupCreditLimitName,
+                                CreateById = headerViewModel.UserId,
+                                IsActive = CustomerGroupCreditLimit.IsActive,
+                                Remarks = CustomerGroupCreditLimit.Remarks
+                            };
+
+                            var createdCustomerGroupCreditLimit = await _CustomerGroupCreditLimitService.AddCustomerGroupCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerGroupCreditLimitEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdCustomerGroupCreditLimit);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new CustomerGroupCreditLimit record");
+            }
+        }
+
+        [HttpPut, Route("UpdateCustomerGroupCreditLimit/{GroupCreditLimitId}")]
+        [Authorize]
+        public async Task<ActionResult<CustomerGroupCreditLimitViewModel>> UpdateCustomerGroupCreditLimit(Int16 GroupCreditLimitId, [FromBody] CustomerGroupCreditLimitViewModel CustomerGroupCreditLimit, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            var CustomerGroupCreditLimitViewModel = new CustomerGroupCreditLimitViewModel();
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerGroupCreditLimit, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (GroupCreditLimitId != CustomerGroupCreditLimit.GroupCreditLimitId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerGroupCreditLimit ID mismatch");
+                            //return BadRequest("M_CustomerGroupCreditLimit ID mismatch");
+
+                            // Attempt to retrieve the CustomerGroupCreditLimit from the cache
+                            if (_memoryCache.TryGetValue($"CustomerGroupCreditLimit_{GroupCreditLimitId}", out CustomerGroupCreditLimitViewModel? cachedProduct))
+                            {
+                                CustomerGroupCreditLimitViewModel = cachedProduct;
+                            }
+                            else
+                            {
+                                var CustomerGroupCreditLimitToUpdate = await _CustomerGroupCreditLimitService.GetCustomerGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
+
+                                if (CustomerGroupCreditLimitToUpdate == null)
+                                    return NotFound($"M_CustomerGroupCreditLimit with Id = {GroupCreditLimitId} not found");
+                            }
+
+                            var CustomerGroupCreditLimitEntity = new M_CustomerGroupCreditLimit
+                            {
+                                CompanyId = CustomerGroupCreditLimit.CompanyId,
+                                GroupCreditLimitCode = CustomerGroupCreditLimit.GroupCreditLimitCode,
+                                GroupCreditLimitId = CustomerGroupCreditLimit.GroupCreditLimitId,
+                                GroupCreditLimitName = CustomerGroupCreditLimit.GroupCreditLimitName,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                                IsActive = CustomerGroupCreditLimit.IsActive,
+                                Remarks = CustomerGroupCreditLimit.Remarks
+                            };
+
+                            var sqlResponce = await _CustomerGroupCreditLimitService.UpdateCustomerGroupCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerGroupCreditLimitEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCustomerGroupCreditLimit/{GroupCreditLimitId}")]
+        [Authorize]
+        public async Task<ActionResult<M_CustomerGroupCreditLimit>> DeleteCustomerGroupCreditLimit(Int16 GroupCreditLimitId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.CustomerGroupCreditLimit, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CustomerGroupCreditLimitToDelete = await _CustomerGroupCreditLimitService.GetCustomerGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
+
+                            if (CustomerGroupCreditLimitToDelete == null)
+                                return NotFound($"M_CustomerGroupCreditLimit with Id = {GroupCreditLimitId} not found");
+
+                            var sqlResponce = await _CustomerGroupCreditLimitService.DeleteCustomerGroupCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerGroupCreditLimitToDelete, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"CustomerGroupCreditLimit_{GroupCreditLimitId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

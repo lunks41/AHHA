@@ -1,0 +1,921 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class MasterLookupService : IMasterLookupService
+    {
+        private readonly IRepository<dynamic> _repository;
+        private ApplicationDbContext _context;
+
+        public MasterLookupService(IRepository<dynamic> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<IEnumerable<AccountSetupCategoryLookupModel>> GetAccountSetupCategoryLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<AccountSetupCategoryLookupModel>(RegId, $"select AccSetupCategoryId,AccSetupCategoryCode,AccSetupCategoryName from M_AccountSetupCategory where AccSetupCategoryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetupCategory})) order by AccSetupCategoryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountSetupCategory,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_AccountSetupCategory",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<AccountSetupLookupModel>> GetAccountSetupLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<AccountSetupLookupModel>(RegId, $"select AccSetupId,AccSetupCode,AccSetupName from M_AccountSetup where AccSetupId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetup})) order by AccSetupName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountSetup,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_AccountSetup",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<BankLookupModel>> GetBankLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<BankLookupModel>(RegId, $"select BankId,BankCode,BankName from M_Bank where BankId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Bank})) order by BankName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Bank,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_AccountSetup",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<CategoryLookupModel>> GetCategoryLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<CategoryLookupModel>(RegId, $"select CategoryId,CategoryCode,CategoryName from M_Category where CategoryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Category})) order by CategoryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Category,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Category",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<ChartOfAccountLookupModel>> GetChartOfAccountLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<ChartOfAccountLookupModel>(RegId, $"select GLId,GLCode,GLName from M_ChartOfAccount where GLId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.ChartOfAccount})) order by GLName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.ChartOfAccount,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_ChartOfAccount",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<COACategoryLookupModel>> GetCOACategory1LookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<COACategoryLookupModel>(RegId, $"select COACategoryId,COACategoryCode,COACategoryName from M_COACategory1 where COACategoryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) order by COACategoryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.COACategory1,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_COACategory1",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<COACategoryLookupModel>> GetCOACategory2LookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<COACategoryLookupModel>(RegId, $"select COACategoryId,COACategoryCode,COACategoryName from M_COACategory2 where COACategoryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory2})) order by COACategoryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.COACategory2,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_COACategory2",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<COACategoryLookupModel>> GetCOACategory3LookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<COACategoryLookupModel>(RegId, $"select COACategoryId,COACategoryCode,COACategoryName from M_COACategory3 where COACategoryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory3})) order by COACategoryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.COACategory3,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_COACategory3",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<CountryLookupModel>> GetCountryLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<CountryLookupModel>(RegId, $"SELECT CountryId,CountryCode,CountryName FROM M_Country WHERE CountryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Country})) order by CountryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Country,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Country",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<CustomerGroupCreditLimitLookupModel>> GetCustomerGroupCreditLimitLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<CustomerGroupCreditLimitLookupModel>(RegId, $"select GroupCreditLimitId,GroupCreditLimitCode,GroupCreditLimitName from M_CustomerGroupCreditLimit WHERE GroupCreditLimitId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.CustomerGroupCreditLimit})) order by GroupCreditLimitName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.CustomerGroupCreditLimit,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_CustomerGroupCreditLimit",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<CustomerLookupModel>> GetCustomerLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<CustomerLookupModel>(RegId, $"select CustomerId,CustomerCode,CustomerName from M_Customer WHERE CustomerId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) order by CustomerName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Customer,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Customer",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<DepartmentLookupModel>> GetDepartmentLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<DepartmentLookupModel>(RegId, $"select DepartmentId,DepartmentCode,DepartmentName from M_Department WHERE DepartmentId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Department})) order by DepartmentName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Department,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Department",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<DesignationLookupModel>> GetDesignationLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<DesignationLookupModel>(RegId, $"select DesignationId,DesignationCode,DesignationName from M_Designation WHERE DesignationId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Designation})) order by DesignationName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Designation,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Designation",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<EmployeeLookupModel>> GetEmployeeLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<EmployeeLookupModel>(RegId, $"select EmployeeId,EmployeeCode,EmployeeName from M_Employee WHERE EmployeeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Employee})) order by EmployeeName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Employee,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Employee",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<GroupCreditLimitLookupModel>> GetGroupCreditLimitLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<GroupCreditLimitLookupModel>(RegId, $"select GroupCreditLimitId,GroupCreditLimitCode,GroupCreditLimitName from M_GroupCreditLimit WHERE GroupCreditLimitId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GroupCreditLimit})) order by GroupCreditLimitName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.GroupCreditLimit,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_GroupCreditLimit",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<GstLookupModel>> GetGstLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<GstLookupModel>(RegId, $"select GstId,GstCode,GstName from M_Gst WHERE GstId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Gst})) order by GstName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Gst,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Gst",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<GstCategoryLookupModel>> GetGstCategoryLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<GstCategoryLookupModel>(RegId, $"select GstCategoryId,GstCategoryCode,GstCategoryName from M_GstCategory WHERE GstCategoryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GstCategory})) order by GstCategoryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.GstCategory,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_GstCategory",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<OrderTypeCategoryLookupModel>> GetOrderTypeCategoryLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<OrderTypeCategoryLookupModel>(RegId, $"select OrderTypeCategoryId,OrderTypeCategoryCode,OrderTypeCategoryName from M_OrderTypeCategory WHERE OrderTypeCategoryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderTypeCategory})) order by OrderTypeCategoryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.OrderTypeCategory,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_OrderTypeCategory",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<OrderTypeLookupModel>> GetOrderTypeLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<OrderTypeLookupModel>(RegId, $"select OrderTypeId,OrderTypeCode,OrderTypeName from M_OrderType WHERE OrderTypeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderType})) order by OrderTypeName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.OrderType,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_OrderType",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<PaymentTypeLookupModel>> GetPaymentTypeLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<PaymentTypeLookupModel>(RegId, $"select PaymentTypeId,PaymentTypeCode,PaymentTypeName from M_PaymentType WHERE PaymentTypeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.PaymentType})) order by PaymentTypeName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.PaymentType,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_PaymentType",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<PortLookupModel>> GetPortLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<PortLookupModel>(RegId, $"select PortId,PortCode,PortName from M_Port WHERE PortId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Port})) order by PortName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Port,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Port",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<PortRegionLookupModel>> GetPortRegionLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<PortRegionLookupModel>(RegId, $"select PortRegionId,PortRegionCode,PortRegionName from M_PortRegion WHERE PortRegionId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.PortRegion})) order by PortRegionName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.PortRegion,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_PortRegion",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<ProductLookupModel>> GetProductLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<ProductLookupModel>(RegId, $"select ProductId,ProductCode,ProductName from M_Product WHERE ProductId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product})) order by ProductName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Product,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Product",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<SubCategoryLookupModel>> GetSubCategoryLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<SubCategoryLookupModel>(RegId, $"select SubCategoryId,SubCategoryCode,SubCategoryName from M_SubCategory WHERE SubCategoryId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) order by SubCategoryName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.SubCategory,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_SubCategory",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<SupplierLookupModel>> GetSupplierLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<SupplierLookupModel>(RegId, $"select SupplierId,SupplierCode,SupplierName from M_Supplier WHERE SupplierId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) order by SupplierName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Supplier,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Supplier",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<UomLookupModel>> GetUomLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<UomLookupModel>(RegId, $"select UomId,UomCode,UomName from M_Uom WHERE UomId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Uom})) order by UomName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Uom,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Uom",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<VoyageLookupModel>> GetVoyageLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<VoyageLookupModel>(RegId, $"select VoyageId,VoyageNo,ReferenceNo from M_Voyage WHERE VoyageId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Voyage})) order by VoyageNo");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Voyage,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Voyage",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<VesselLookupModel>> GetVesselLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<VesselLookupModel>(RegId, $"SELECT VesselId,VesselCode,VesselName FROM M_Vessel WHERE VesselId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Vessel})) order by VesselName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Vessel,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Vessel",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<BargeLookupModel>> GetBargeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<BargeLookupModel>(RegId, $"SELECT BargeId,BargeCode,BargeName FROM M_Barge WHERE BargeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge})) order by BargeName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Barge,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Barge",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        //public async Task<IEnumerable<BargeLookupModel>> GetBargeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        //{
+        //    try
+        //    {
+        //        var result = await _repository.GetQueryAsync<BargeLookupModel>(RegId, $"SELECT BargeId,BargeCode,BargeName FROM M_Barge WHERE BargeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Barge},{(short)Modules.Master})) order by BargeName");
+
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        var errorLog = new AdmErrorLog
+        //        {
+        //            CompanyId = CompanyId,
+        //            ModuleId = (short)Modules.Master,
+        //            TransactionId = (short)Master.Barge,
+        //            DocumentId = 0,
+        //            DocumentNo = "",
+        //            TblName = "M_Barge",
+        //            ModeId = (short)Mode.Lookup,
+        //            Remarks = ex.Message + ex.InnerException,
+        //            CreateById = UserId
+        //        };
+
+        //        _context.Add(errorLog);
+        //        _context.SaveChanges();
+
+        //        throw new Exception(ex.ToString());
+        //    }
+        //}
+    }
+}

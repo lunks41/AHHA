@@ -1,0 +1,25 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+
+namespace AHHA.Application.IServices.Masters
+{
+    public interface IProductService
+    {
+        public Task<ProductViewModelCount> GetProductListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId);
+
+        public Task<M_Product> GetProductByIdAsync(string RegId, Int16 CompanyId, Int16 ProductId, Int32 UserId);
+
+        public Task<SqlResponce> AddProductAsync(string RegId, Int16 CompanyId, M_Product M_Product, Int32 UserId);
+
+        public Task<SqlResponce> UpdateProductAsync(string RegId, Int16 CompanyId, M_Product M_Product, Int32 UserId);
+
+        public Task<SqlResponce> DeleteProductAsync(string RegId, Int16 CompanyId, M_Product M_Product, Int32 UserId);
+
+        //public Task<IEnumerable<M_Product>> GetProductListAsync();
+        //public Task<M_Product> GetProductByIdAsync(int Id);
+        //public Task<M_Product> AddProductAsync(M_Product product);
+        //public Task<M_Product> UpdateProductAsync(M_Product product);
+        //public Task DeleteProductAsync(int Id);
+    }
+}
