@@ -1,4 +1,6 @@
-﻿namespace AHHA.Core.Entities.Accounts.AP
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AHHA.Core.Entities.Accounts.AP
 {
     public class ApAdjustmentHd
     {
@@ -56,6 +58,7 @@
         public long ArInvoiceId { get; set; }
         public string ArInvoiceNo { get; set; }
         public Int32 CreateById { get; set; }
+        [NotMapped]
         public DateTime CreateDate { get; set; }
         public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }

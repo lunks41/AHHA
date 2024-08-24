@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitCode='{CustomeGroupCreditLimt.GroupCreditLimitCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitName='{CustomeGroupCreditLimt.GroupCreditLimitName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitCode='{CustomeGroupCreditLimt.GroupCreditLimitCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitName='{CustomeGroupCreditLimt.GroupCreditLimitName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (CustomeGroupCreditLimt.GroupCreditLimitId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT GroupCreditLimitId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitName='{CustomeGroupCreditLimt.GroupCreditLimitName} AND GroupCreditLimitId <>{CustomeGroupCreditLimt.GroupCreditLimitId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomeGroupCreditLimt WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CustomeGroupCreditLimt.CompanyId},{(short)Master.CustomerGroupCreditLimt},{(short)Modules.Master})) AND GroupCreditLimitName='{CustomeGroupCreditLimt.GroupCreditLimitName} AND GroupCreditLimitId <>{CustomeGroupCreditLimt.GroupCreditLimitId}'");
 
                         if (StrExist.Count() > 0)
                         {

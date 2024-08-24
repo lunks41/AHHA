@@ -36,7 +36,7 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+                        
 
                         var AccountSetupCategoryData = await _AccountSetupCategoryService.GetAccountSetupCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
@@ -52,12 +52,7 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                    if (headerViewModel.UserId == 0)
-                        return NotFound("headerViewModel.UserId Not Found");
-                    else if (headerViewModel.CompanyId == 0)
-                        return NotFound("headerViewModel.CompanyId Not Found");
-                    else
-                        return NotFound();
+                        return NotFound(GenrateMessage.authenticationfailed);
                 }
             }
             catch (Exception ex)

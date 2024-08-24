@@ -45,7 +45,7 @@ namespace AHHA.API.Controllers.Masters
                         //else
                         //{
                         //var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+                        
 
                         var CountryData = await _countryService.GetCountryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 

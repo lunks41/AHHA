@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryCode='{AccountSetupCategory.AccSetupCategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetupCategory})) AND AccSetupCategoryCode='{AccountSetupCategory.AccSetupCategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetupCategory})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (AccountSetupCategory.AccSetupCategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT AccSetupCategoryId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName} AND AccSetupCategoryId <>{AccountSetupCategory.AccSetupCategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName} AND AccSetupCategoryId <>{AccountSetupCategory.AccSetupCategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {

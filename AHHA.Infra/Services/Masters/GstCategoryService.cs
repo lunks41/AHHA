@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_GstCategory WHERE CompanyId IN (SELECT DISTINCT GstCategoryId FROM dbo.Fn_Adm_GetShareCompany ({GstCategory.CompanyId},{(short)Master.GstCategory},{(short)Modules.Master})) AND GstCategoryCode='{GstCategory.GstCategoryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_GstCategory WHERE CompanyId IN (SELECT DISTINCT GstCategoryId FROM dbo.Fn_Adm_GetShareCompany ({GstCategory.CompanyId},{(short)Master.GstCategory},{(short)Modules.Master})) AND GstCategoryName='{GstCategory.GstCategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_GstCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({GstCategory.CompanyId},{(short)Master.GstCategory},{(short)Modules.Master})) AND GstCategoryCode='{GstCategory.GstCategoryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_GstCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({GstCategory.CompanyId},{(short)Master.GstCategory},{(short)Modules.Master})) AND GstCategoryName='{GstCategory.GstCategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (GstCategory.GstCategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_GstCategory WHERE CompanyId IN (SELECT DISTINCT GstCategoryId FROM dbo.Fn_Adm_GetShareCompany ({GstCategory.CompanyId},{(short)Master.GstCategory},{(short)Modules.Master})) AND GstCategoryName='{GstCategory.GstCategoryName} AND GstCategoryId <>{GstCategory.GstCategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_GstCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({GstCategory.CompanyId},{(short)Master.GstCategory},{(short)Modules.Master})) AND GstCategoryName='{GstCategory.GstCategoryName} AND GstCategoryId <>{GstCategory.GstCategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {

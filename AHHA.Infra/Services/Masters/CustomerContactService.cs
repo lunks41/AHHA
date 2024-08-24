@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND OtherName='{CustomerContact.OtherName}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND OtherName='{CustomerContact.OtherName}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (CustomerContact.CustomerId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CustomerId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName} AND CustomerId <>{CustomerContact.CustomerId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName} AND CustomerId <>{CustomerContact.CustomerId}'");
 
                         if (StrExist.Count() > 0)
                         {

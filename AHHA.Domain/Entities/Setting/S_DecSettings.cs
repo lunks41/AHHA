@@ -1,4 +1,6 @@
-﻿namespace AHHA.Core.Entities.Setting
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AHHA.Core.Entities.Setting
 {
     public class S_DecSettings
     {
@@ -10,6 +12,8 @@
         public Int16 ExhRateDec { get; set; }
         public string DateFormat { get; set; }
         public Int32 CreateById { get; set; }
+
+        [NotMapped]
         public DateTime CreateDate { get; set; }
         public Int32 EditById { get; set; }
         public DateTime EditDate { get; set; }

@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT GstId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstCode='{Gst.GstCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT GstId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstName='{Gst.GstName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstCode='{Gst.GstCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstName='{Gst.GstName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Gst.GstId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT GstId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstName='{Gst.GstName} AND GstId <>{Gst.GstId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstName='{Gst.GstName} AND GstId <>{Gst.GstId}'");
 
                         if (StrExist.Count() > 0)
                         {

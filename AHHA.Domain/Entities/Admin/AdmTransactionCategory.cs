@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AHHA.Core.Entities.Admin
 {
@@ -13,6 +14,7 @@ namespace AHHA.Core.Entities.Admin
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
         public string CreateBy { get; set; }
+        [NotMapped]
         public DateTime CreateDate { get; set; }
         public string EditBy { get; set; }
         public DateTime EditDate { get; set; }

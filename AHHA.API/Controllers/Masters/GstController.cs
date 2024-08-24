@@ -36,7 +36,7 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+                        
 
                         //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
 

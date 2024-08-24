@@ -97,7 +97,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentCode='{Department.DepartmentCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentCode='{Department.DepartmentCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -208,7 +208,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Department.DepartmentId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT DepartmentId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName} AND DepartmentId <>{Department.DepartmentId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName} AND DepartmentId <>{Department.DepartmentId}'");
 
                         if (StrExist.Count() > 0)
                         {

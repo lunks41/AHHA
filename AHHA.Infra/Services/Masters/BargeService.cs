@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             BargeViewModelCount BargeViewModelCount = new BargeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Barge WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Barge},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Barge WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge}))");
 
-                var result = await _repository.GetQueryAsync<BargeViewModel>(RegId, $"SELECT M_Cou.BargeId,M_Cou.BargeCode,M_Cou.BargeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Barge M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.BargeName LIKE '%{searchString}%' OR M_Cou.BargeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.BargeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Barge},{(short)Modules.Master})) ORDER BY M_Cou.BargeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<BargeViewModel>(RegId, $"SELECT M_Cou.BargeId,M_Cou.BargeCode,M_Cou.BargeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Barge M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.BargeName LIKE '%{searchString}%' OR M_Cou.BargeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.BargeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge})) ORDER BY M_Cou.BargeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 BargeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 BargeViewModelCount.data = result == null ? null : result.ToList();
@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Barge WHERE CompanyId IN (SELECT DISTINCT BargeId FROM dbo.Fn_Adm_GetShareCompany ({Barge.CompanyId},{(short)Master.Barge},{(short)Modules.Master})) AND BargeCode='{Barge.BargeId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Barge WHERE CompanyId IN (SELECT DISTINCT BargeId FROM dbo.Fn_Adm_GetShareCompany ({Barge.CompanyId},{(short)Master.Barge},{(short)Modules.Master})) AND BargeName='{Barge.BargeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Barge WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Barge.CompanyId},{(short)Master.Barge},{(short)Modules.Master})) AND BargeCode='{Barge.BargeId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Barge WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Barge.CompanyId},{(short)Master.Barge},{(short)Modules.Master})) AND BargeName='{Barge.BargeName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -145,7 +145,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Barge.BargeCode,
                                 TblName = "M_Barge",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Barge Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Barge.BargeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Barge WHERE CompanyId IN (SELECT DISTINCT BargeId FROM dbo.Fn_Adm_GetShareCompany ({Barge.CompanyId},{(short)Master.Barge},{(short)Modules.Master})) AND BargeName='{Barge.BargeName} AND BargeId <>{Barge.BargeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Barge WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Barge.CompanyId},{(short)Master.Barge},{(short)Modules.Master})) AND BargeName='{Barge.BargeName} AND BargeId <>{Barge.BargeId}'");
 
                         if (StrExist.Count() > 0)
                         {

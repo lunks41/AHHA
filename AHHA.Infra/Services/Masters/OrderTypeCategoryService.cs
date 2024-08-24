@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_OrderTypeCategory WHERE CompanyId IN (SELECT DISTINCT OrderTypeCategoryId FROM dbo.Fn_Adm_GetShareCompany ({OrderTypeCategory.CompanyId},{(short)Master.OrderTypeCategory},{(short)Modules.Master})) AND OrderTypeCategoryCode='{OrderTypeCategory.OrderTypeCategoryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_OrderTypeCategory WHERE CompanyId IN (SELECT DISTINCT OrderTypeCategoryId FROM dbo.Fn_Adm_GetShareCompany ({OrderTypeCategory.CompanyId},{(short)Master.OrderTypeCategory},{(short)Modules.Master})) AND OrderTypeCategoryName='{OrderTypeCategory.OrderTypeCategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_OrderTypeCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderTypeCategory.CompanyId},{(short)Master.OrderTypeCategory},{(short)Modules.Master})) AND OrderTypeCategoryCode='{OrderTypeCategory.OrderTypeCategoryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_OrderTypeCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderTypeCategory.CompanyId},{(short)Master.OrderTypeCategory},{(short)Modules.Master})) AND OrderTypeCategoryName='{OrderTypeCategory.OrderTypeCategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (OrderTypeCategory.OrderTypeCategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_OrderTypeCategory WHERE CompanyId IN (SELECT DISTINCT OrderTypeCategoryId FROM dbo.Fn_Adm_GetShareCompany ({OrderTypeCategory.CompanyId},{(short)Master.OrderTypeCategory},{(short)Modules.Master})) AND OrderTypeCategoryName='{OrderTypeCategory.OrderTypeCategoryName} AND OrderTypeCategoryId <>{OrderTypeCategory.OrderTypeCategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_OrderTypeCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderTypeCategory.CompanyId},{(short)Master.OrderTypeCategory},{(short)Modules.Master})) AND OrderTypeCategoryName='{OrderTypeCategory.OrderTypeCategoryName} AND OrderTypeCategoryId <>{OrderTypeCategory.OrderTypeCategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {

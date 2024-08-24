@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeCode='{Employee.EmployeeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeName='{Employee.EmployeeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeCode='{Employee.EmployeeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeName='{Employee.EmployeeName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Employee.EmployeeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT EmployeeId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeName='{Employee.EmployeeName} AND EmployeeId <>{Employee.EmployeeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Employee WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Employee.CompanyId},{(short)Master.Employee},{(short)Modules.Master})) AND EmployeeName='{Employee.EmployeeName} AND EmployeeId <>{Employee.EmployeeId}'");
 
                         if (StrExist.Count() > 0)
                         {

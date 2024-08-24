@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationCode='{Designation.DesignationCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationCode='{Designation.DesignationCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Designation.DesignationId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT DesignationId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName} AND DesignationId <>{Designation.DesignationId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName} AND DesignationId <>{Designation.DesignationId}'");
 
                         if (StrExist.Count() > 0)
                         {

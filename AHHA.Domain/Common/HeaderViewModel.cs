@@ -4,6 +4,8 @@ namespace AHHA.Core.Common
 {
     public class HeaderViewModel
     {
+        private string? _searchStr;
+
         [FromHeader]
         public string RegId { get; set; }
 
@@ -20,7 +22,8 @@ namespace AHHA.Core.Common
         public Int16 pageNumber { get; set; }
 
         [FromHeader]
-        public string searchString { get; set; }
+        public string searchString
+        { get { return _searchStr == null ? string.Empty : _searchStr.Trim(); } set { _searchStr = value; } }
 
         [FromHeader]
         public Int16 ModuleId { get; set; }

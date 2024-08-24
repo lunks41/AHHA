@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT GLId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLCode='{ChartOfAccount.GLCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT GLId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLName='{ChartOfAccount.GLName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLCode='{ChartOfAccount.GLCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLName='{ChartOfAccount.GLName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (ChartOfAccount.GLId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT GLId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLName='{ChartOfAccount.GLName} AND GLId <>{ChartOfAccount.GLId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLName='{ChartOfAccount.GLName} AND GLId <>{ChartOfAccount.GLId}'");
 
                         if (StrExist.Count() > 0)
                         {

@@ -27,9 +27,9 @@ namespace AHHA.Infra.Services.Masters
             AccountSetupViewModelCount AccountSetupViewModelCount = new AccountSetupViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountSetup WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountSetup WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetup}))");
 
-                var result = await _repository.GetQueryAsync<AccountSetupViewModel>(RegId, $"SELECT M_ACC.AccSetupId,M_ACC.AccSetupCode,M_ACC.AccSetupName,M_ACC.CompanyId,M_ACC.AccSetupCategoryId,M_Accsc.AccSetupCategoryCode,M_Accsc.AccSetupCategoryName,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountSetup M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById INNER JOIN dbo.M_AccountSetupCategory M_Accsc ON M_Accsc.AccSetupCategoryId = M_ACC.AccSetupCategoryId  WHERE (M_ACC.AccSetupName LIKE '%{searchString}%' OR M_ACC.AccSetupCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccSetupCategoryName LIKE '%{searchString}%' OR M_Accsc.AccSetupCategoryCode LIKE '%{searchString}%') AND M_ACC.AccSetupId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) ORDER BY M_ACC.AccSetupName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<AccountSetupViewModel>(RegId, $"SELECT M_ACC.AccSetupId,M_ACC.AccSetupCode,M_ACC.AccSetupName,M_ACC.CompanyId,M_ACC.AccSetupCategoryId,M_Accsc.AccSetupCategoryCode,M_Accsc.AccSetupCategoryName,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountSetup M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById INNER JOIN dbo.M_AccountSetupCategory M_Accsc ON M_Accsc.AccSetupCategoryId = M_ACC.AccSetupCategoryId  WHERE (M_ACC.AccSetupName LIKE '%{searchString}%' OR M_ACC.AccSetupCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccSetupCategoryName LIKE '%{searchString}%' OR M_Accsc.AccSetupCategoryCode LIKE '%{searchString}%') AND M_ACC.AccSetupId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetup})) ORDER BY M_ACC.AccSetupName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 AccountSetupViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 AccountSetupViewModelCount.data = result == null ? null : result.ToList();
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupCode='{AccountSetup.AccSetupId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupName='{AccountSetup.AccSetupName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetup})) AND AccountSetupCode='{AccountSetup.AccSetupId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetup})) AND AccountSetupName='{AccountSetup.AccSetupName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -146,7 +146,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = AccountSetup.AccSetupCode,
                                 TblName = "M_AccountSetup",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "AccountSetup Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -207,7 +207,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (AccountSetup.AccSetupId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT AccountSetupId FROM dbo.Fn_Adm_GetShareCompany ({AccountSetup.CompanyId},{(short)Master.AccountSetup},{(short)Modules.Master})) AND AccountSetupName='{AccountSetup.AccSetupName} AND AccountSetupId <>{AccountSetup.AccSetupId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountSetup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetup})) AND AccountSetupName='{AccountSetup.AccSetupName} AND AccountSetupId <>{AccountSetup.AccSetupId}'");
 
                         if (StrExist.Count() > 0)
                         {

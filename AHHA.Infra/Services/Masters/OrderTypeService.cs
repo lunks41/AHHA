@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeCode='{OrderType.OrderTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeCode='{OrderType.OrderTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (OrderType.OrderTypeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT OrderTypeId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName} AND OrderTypeId <>{OrderType.OrderTypeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName} AND OrderTypeId <>{OrderType.OrderTypeId}'");
 
                         if (StrExist.Count() > 0)
                         {

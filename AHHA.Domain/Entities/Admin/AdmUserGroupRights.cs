@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AHHA.Core.Entities.Admin
 {
@@ -22,6 +23,7 @@ namespace AHHA.Core.Entities.Admin
         public bool IsExport { get; set; }
         public bool IsPrint { get; set; }
         public Int32 CreateById { get; set; }
+        [NotMapped]
         public DateTime CreateDate { get; set; }
     }
 }

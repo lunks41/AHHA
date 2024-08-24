@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryCode='{Category.CategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryCode='{Category.CategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Category.CategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CategoryId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName} AND CategoryId <>{Category.CategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName} AND CategoryId <>{Category.CategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {

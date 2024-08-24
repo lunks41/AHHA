@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT COACategory1Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory1.CompanyId},{(short)Master.COACategory1},{(short)Modules.Master})) AND COACategory1Code='{COACategory1.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT COACategory1Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory1.CompanyId},{(short)Master.COACategory1},{(short)Modules.Master})) AND COACategory1Name='{COACategory1.COACategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory1.CompanyId},{(short)Master.COACategory1},{(short)Modules.Master})) AND COACategory1Code='{COACategory1.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory1.CompanyId},{(short)Master.COACategory1},{(short)Modules.Master})) AND COACategory1Name='{COACategory1.COACategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (COACategory1.COACategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT COACategory1Id FROM dbo.Fn_Adm_GetShareCompany ({COACategory1.CompanyId},{(short)Master.COACategory1},{(short)Modules.Master})) AND COACategory1Name='{COACategory1.COACategoryName} AND COACategory1Id <>{COACategory1.COACategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory1.CompanyId},{(short)Master.COACategory1},{(short)Modules.Master})) AND COACategory1Name='{COACategory1.COACategoryName} AND COACategory1Id <>{COACategory1.COACategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {

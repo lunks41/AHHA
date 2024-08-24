@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeCode='{PaymentType.PaymentTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeCode='{PaymentType.PaymentTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -206,7 +206,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (PaymentType.PaymentTypeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT PaymentTypeId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName} AND PaymentTypeId <>{PaymentType.PaymentTypeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName} AND PaymentTypeId <>{PaymentType.PaymentTypeId}'");
 
                         if (StrExist.Count() > 0)
                         {

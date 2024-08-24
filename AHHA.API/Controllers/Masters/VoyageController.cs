@@ -38,7 +38,7 @@ namespace AHHA.API.Controllers.Masters
                     {
                         //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
 
-                        headerViewModel.searchString = headerViewModel.searchString == null ? string.Empty : headerViewModel.searchString.Trim();
+                        
 
                         var voyageData = await _VoyageService.GetVoyageListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
