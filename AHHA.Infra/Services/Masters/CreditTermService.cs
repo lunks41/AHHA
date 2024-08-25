@@ -5,37 +5,38 @@ using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 namespace AHHA.Infra.Services.Masters
 {
-    public sealed class BankService : IBankService
+    public sealed class CreditTermService : ICreditTermService
     {
-        private readonly IRepository<M_Bank> _repository;
+        private readonly IRepository<M_CreditTerm> _repository;
         private ApplicationDbContext _context;
 
-        public BankService(IRepository<M_Bank> repository, ApplicationDbContext context)
+        public CreditTermService(IRepository<M_CreditTerm> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        public async Task<BankViewModelCount> GetBankListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<CreditTermViewModelCount> GetCreditTermListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            BankViewModelCount bankViewModelCount = new BankViewModelCount();
+            CreditTermViewModelCount CreditTermViewModelCount = new CreditTermViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.M_Bank M_Ban INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Ban.CurrencyId INNER JOIN dbo.M_ChartOfAccount M_Chr ON M_Chr.GLId = M_Ban.GLId WHERE (M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.AccountNo LIKE '%{searchString}%' OR M_Ban.SwiftCode LIKE '%{searchString}%' OR M_Ban.Remarks1 LIKE '%{searchString}%' OR M_Ban.Remarks2 LIKE '%{searchString}%' OR M_Chr.GLName LIKE '%{searchString}%' OR M_Chr.GLCode LIKE '%{searchString}%') AND M_Ban.BankId<>0 AND M_Ban.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Bank}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_CreditTerm WHERE (M_Cou.CreditTermName LIKE '%{searchString}%' OR M_Cou.CreditTermCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CreditTermId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.CreditTerms}))");
 
-                var result = await _repository.GetQueryAsync<BankViewModel>(RegId, $"SELECT M_Ban.BankId,M_Ban.BankCode,M_Ban.BankName,M_Cur.CurrencyCode,M_Cur.CurrencyName,M_Cur.CurrencyCode,M_Ban.AccountNo,M_Ban.SwiftCode,M_Ban.Remarks1,M_Ban.Remarks2,M_Chr.GLCode,M_Chr.GLName,M_Ban.IsActive,M_Ban.CreateById,M_Ban.CreateDate,M_Ban.EditById,M_Ban.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy  FROM dbo.M_Bank M_Ban INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Ban.CurrencyId INNER JOIN dbo.M_ChartOfAccount M_Chr ON M_Chr.GLId = M_Ban.GLId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Ban.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Ban.EditById WHERE (M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.AccountNo LIKE '%{searchString}%' OR M_Ban.SwiftCode LIKE '%{searchString}%' OR M_Ban.Remarks1 LIKE '%{searchString}%' OR M_Ban.Remarks2 LIKE '%{searchString}%' OR M_Chr.GLName LIKE '%{searchString}%' OR M_Chr.GLCode LIKE '%{searchString}%') AND M_Ban.BankId<>0 AND M_Ban.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Bank})) ORDER BY M_Ban.BankName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CreditTermViewModel>(RegId, $"SELECT M_Cou.CreditTermId,M_Cou.CreditTermCode,M_Cou.CreditTermName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CreditTerm M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CreditTermName LIKE '%{searchString}%' OR M_Cou.CreditTermCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CreditTermId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.CreditTerms},{(short)Modules.Master})) ORDER BY M_Cou.CreditTermName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                bankViewModelCount.responseCode = 200;
-                bankViewModelCount.responseMessage = "Success";
-                bankViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                bankViewModelCount.data = result == null ? null : result.ToList();
+                CreditTermViewModelCount.responseCode = 200;
+                CreditTermViewModelCount.responseMessage = "success";
+                CreditTermViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                CreditTermViewModelCount.data = result.ToList();
 
-                return bankViewModelCount;
+                return CreditTermViewModelCount;
             }
             catch (Exception ex)
             {
@@ -43,10 +44,10 @@ namespace AHHA.Infra.Services.Masters
                 {
                     CompanyId = CompanyId,
                     ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Bank,
+                    TransactionId = (short)Master.CreditTerms,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "M_Bank",
+                    TblName = "M_CreditTerm",
                     ModeId = (short)Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId
@@ -59,11 +60,11 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<M_Bank> GetBankByIdAsync(string RegId, Int16 CompanyId, Int16 BankId, Int32 UserId)
+        public async Task<M_CreditTerm> GetCreditTermByIdAsync(string RegId, Int16 CompanyId, Int32 CreditTermId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Bank>(RegId, $"SELECT BankId,BankCode,BankName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Bank WHERE BankId={BankId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CreditTerm>(RegId, $"SELECT CreditTermId,CreditTermCode,CreditTermName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CreditTerm WHERE CreditTermId={CreditTermId}");
 
                 return result;
             }
@@ -73,10 +74,10 @@ namespace AHHA.Infra.Services.Masters
                 {
                     CompanyId = CompanyId,
                     ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Bank,
+                    TransactionId = (short)Master.CreditTerms,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "M_Bank",
+                    TblName = "M_CreditTerm",
                     ModeId = (short)Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId,
@@ -89,57 +90,57 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> AddBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int32 UserId)
+        public async Task<SqlResponce> AddCreditTermAsync(string RegId, Int16 CompanyId, M_CreditTerm CreditTerm, Int32 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Bank.CompanyId},{(short)Modules.Master},{(short)Master.Bank})) AND BankCode='{Bank.BankCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Bank.CompanyId},{(short)Modules.Master},{(short)Master.Bank})) AND BankName='{Bank.BankName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CreditTerm WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CreditTerm.CompanyId},{(short)Master.CreditTerms},{(short)Modules.Master})) AND CreditTermCode='{CreditTerm.CreditTermCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CreditTerm WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CreditTerm.CompanyId},{(short)Master.CreditTerms},{(short)Modules.Master})) AND CreditTermName='{CreditTerm.CreditTermName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            return new SqlResponce { Result = -1, Message = "Bank Code Exist" };
+                            return new SqlResponce { Result = -1, Message = "CreditTerm Code Exist" };
                         }
                         else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            return new SqlResponce { Result = -2, Message = "Bank Name Exist" };
+                            return new SqlResponce { Result = -2, Message = "CreditTerm Name Exist" };
                         }
                     }
 
                     //Take the Missing Id From SQL
-                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (BankId + 1) FROM dbo.M_Bank WHERE (BankId + 1) NOT IN (SELECT BankId FROM dbo.M_Bank)),1) AS MissId");
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (CreditTermId + 1) FROM dbo.M_CreditTerm WHERE (CreditTermId + 1) NOT IN (SELECT CreditTermId FROM dbo.M_CreditTerm)),1) AS MissId");
 
                     if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        #region Saving Bank
+                        #region Saving CreditTerm
 
-                        Bank.BankId = Convert.ToInt16(sqlMissingResponce.MissId);
+                        CreditTerm.CreditTermId = Convert.ToInt16(sqlMissingResponce.MissId);
 
-                        var entity = _context.Add(Bank);
+                        var entity = _context.Add(CreditTerm);
                         entity.Property(b => b.EditDate).IsModified = false;
 
-                        var BankToSave = _context.SaveChanges();
+                        var CreditTermToSave = _context.SaveChanges();
 
-                        #endregion Saving Bank
+                        #endregion Saving CreditTerm
 
                         #region Save AuditLog
 
-                        if (BankToSave > 0)
+                        if (CreditTermToSave > 0)
                         {
                             //Saving Audit log
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.Bank,
-                                DocumentId = Bank.BankId,
-                                DocumentNo = Bank.BankCode,
-                                TblName = "M_Bank",
+                                TransactionId = (short)Master.CreditTerms,
+                                DocumentId = CreditTerm.CreditTermId,
+                                DocumentNo = CreditTerm.CreditTermCode,
+                                TblName = "M_CreditTerm",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Bank Save Successfully",
+                                Remarks = "CreditTerm Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -162,7 +163,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "BankId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CreditTermId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -175,10 +176,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.Bank,
+                        TransactionId = (short)Master.CreditTerms,
                         DocumentId = 0,
-                        DocumentNo = Bank.BankCode,
-                        TblName = "M_Bank",
+                        DocumentNo = CreditTerm.CreditTermCode,
+                        TblName = "M_CreditTerm",
                         ModeId = (short)Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId
@@ -191,37 +192,37 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> UpdateBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int32 UserId)
+        public async Task<SqlResponce> UpdateCreditTermAsync(string RegId, Int16 CompanyId, M_CreditTerm CreditTerm, Int32 UserId)
         {
-            int IsActive = Bank.IsActive == true ? 1 : 0;
+            int IsActive = CreditTerm.IsActive == true ? 1 : 0;
 
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    if (Bank.BankId > 0)
+                    if (CreditTerm.CreditTermId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Bank.CompanyId},{(short)Modules.Master},{(short)Master.Bank})) AND BankName='{Bank.BankName} AND BankId <>{Bank.BankId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CreditTerm WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CreditTerm.CompanyId},{(short)Master.CreditTerms},{(short)Modules.Master})) AND CreditTermName='{CreditTerm.CreditTermName} AND CreditTermId <>{CreditTerm.CreditTermId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                return new SqlResponce { Result = -2, Message = "Bank Name Exist" };
+                                return new SqlResponce { Result = -2, Message = "CreditTerm Name Exist" };
                             }
                         }
 
-                        #region Update Bank
+                        #region Update CreditTerm
 
-                        var entity = _context.Update(Bank);
+                        var entity = _context.Update(CreditTerm);
 
                         entity.Property(b => b.CreateById).IsModified = false;
-                        entity.Property(b => b.BankCode).IsModified = false;
+                        entity.Property(b => b.CreditTermCode).IsModified = false;
                         entity.Property(b => b.CompanyId).IsModified = false;
 
                         var counToUpdate = _context.SaveChanges();
 
-                        #endregion Update Bank
+                        #endregion Update CreditTerm
 
                         if (counToUpdate > 0)
                         {
@@ -229,12 +230,12 @@ namespace AHHA.Infra.Services.Masters
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.Bank,
-                                DocumentId = Bank.BankId,
-                                DocumentNo = Bank.BankCode,
-                                TblName = "M_Bank",
+                                TransactionId = (short)Master.CreditTerms,
+                                DocumentId = CreditTerm.CreditTermId,
+                                DocumentNo = CreditTerm.CreditTermCode,
+                                TblName = "M_CreditTerm",
                                 ModeId = (short)Mode.Update,
-                                Remarks = "Bank Update Successfully",
+                                Remarks = "CreditTerm Update Successfully",
                                 CreateById = UserId
                             };
                             _context.Add(auditLog);
@@ -253,7 +254,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "BankId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CreditTermId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -266,10 +267,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.Bank,
-                        DocumentId = Bank.BankId,
-                        DocumentNo = Bank.BankCode,
-                        TblName = "M_Bank",
+                        TransactionId = (short)Master.CreditTerms,
+                        DocumentId = CreditTerm.CreditTermId,
+                        DocumentNo = CreditTerm.CreditTermCode,
+                        TblName = "M_CreditTerm",
                         ModeId = (short)Mode.Update,
                         Remarks = ex.Message,
                         CreateById = UserId
@@ -282,28 +283,28 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> DeleteBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int32 UserId)
+        public async Task<SqlResponce> DeleteCreditTermAsync(string RegId, Int16 CompanyId, M_CreditTerm CreditTerm, Int32 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    if (Bank.BankId > 0)
+                    if (CreditTerm.CreditTermId > 0)
                     {
-                        var BankToRemove = _context.M_Bank.Where(x => x.BankId == Bank.BankId).ExecuteDelete();
+                        var CreditTermToRemove = _context.M_CreditTerm.Where(x => x.CreditTermId == CreditTerm.CreditTermId).ExecuteDelete();
 
-                        if (BankToRemove > 0)
+                        if (CreditTermToRemove > 0)
                         {
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.Bank,
-                                DocumentId = Bank.BankId,
-                                DocumentNo = Bank.BankCode,
-                                TblName = "M_Bank",
+                                TransactionId = (short)Master.CreditTerms,
+                                DocumentId = CreditTerm.CreditTermId,
+                                DocumentNo = CreditTerm.CreditTermCode,
+                                TblName = "M_CreditTerm",
                                 ModeId = (short)Mode.Delete,
-                                Remarks = "Bank Delete Successfully",
+                                Remarks = "CreditTerm Delete Successfully",
                                 CreateById = UserId
                             };
                             _context.Add(auditLog);
@@ -321,7 +322,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "BankId Should be zero" };
+                        return new SqlResponce { Result = -1, Message = "CreditTermId Should be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -333,10 +334,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.Bank,
+                        TransactionId = (short)Master.CreditTerms,
                         DocumentId = 0,
                         DocumentNo = "",
-                        TblName = "M_Bank",
+                        TblName = "M_CreditTerm",
                         ModeId = (short)Mode.Delete,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId,
@@ -347,6 +348,23 @@ namespace AHHA.Infra.Services.Masters
 
                     throw new Exception(ex.ToString());
                 }
+            }
+        }
+
+        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
+                parameters.Add("Id", Id, DbType.Int32);
+                return await _repository.GetExecuteDataSetStoredProcedure("", "USP_LMS_Training", parameters);
+            }
+            catch (Exception ex)
+            {
+                // Log exception
+                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
+                throw;
             }
         }
     }

@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<PaymentTypeViewModelCount> GetPaymentTypeListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            PaymentTypeViewModelCount PaymentTypeViewModelCount = new PaymentTypeViewModelCount();
+            PaymentTypeViewModelCount paymentTypeViewModelCount = new PaymentTypeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_PaymentType WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Product},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_PaymentType WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product}))");
 
-                var result = await _repository.GetQueryAsync<PaymentTypeViewModel>(RegId, $"SELECT M_Cou.PaymentTypeId,M_Cou.PaymentTypeCode,M_Cou.PaymentTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_PaymentType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.PaymentTypeName LIKE '%{searchString}%' OR M_Cou.PaymentTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.PaymentTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Product},{(short)Modules.Master})) ORDER BY M_Cou.PaymentTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<PaymentTypeViewModel>(RegId, $"SELECT M_Cou.PaymentTypeId,M_Cou.PaymentTypeCode,M_Cou.PaymentTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_PaymentType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.PaymentTypeName LIKE '%{searchString}%' OR M_Cou.PaymentTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.PaymentTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product})) ORDER BY M_Cou.PaymentTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                PaymentTypeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                PaymentTypeViewModelCount.data = result == null ? null : result.ToList();
+                paymentTypeViewModelCount.responseCode = 200;
+                paymentTypeViewModelCount.responseMessage = "success";
+                paymentTypeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                paymentTypeViewModelCount.data = result == null ? null : result.ToList();
 
-                return PaymentTypeViewModelCount;
+                return paymentTypeViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddPaymentTypeAsync(string RegId, Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeCode='{PaymentType.PaymentTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND PaymentTypeCode='{PaymentType.PaymentTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND PaymentTypeName='{PaymentType.PaymentTypeName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "PaymentType Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "PaymentType Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (PaymentTypeId + 1) FROM dbo.M_PaymentType WHERE (PaymentTypeId + 1) NOT IN (SELECT PaymentTypeId FROM dbo.M_PaymentType)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (PaymentTypeId + 1) FROM dbo.M_PaymentType WHERE (PaymentTypeId + 1) NOT IN (SELECT PaymentTypeId FROM dbo.M_PaymentType)),1) AS MissId");
-
                         #region Saving PaymentType
 
                         PaymentType.PaymentTypeId = Convert.ToInt32(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = PaymentType.PaymentTypeCode,
                                 TblName = "M_PaymentType",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Payment Type Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "PaymentTypeId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "PaymentTypeId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdatePaymentTypeAsync(string RegId, Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
         {
             int IsActive = PaymentType.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +200,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (PaymentType.PaymentTypeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND PaymentTypeName='{PaymentType.PaymentTypeName} AND PaymentTypeId <>{PaymentType.PaymentTypeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_PaymentType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PaymentType.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND PaymentTypeName='{PaymentType.PaymentTypeName} AND PaymentTypeId <>{PaymentType.PaymentTypeId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "PaymentType Name Exist" };
+                            }
+                        }
+
+                        #region Update PaymentType
+
+                        var entity = _context.Update(PaymentType);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.PaymentTypeCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update PaymentType
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Product,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = PaymentType.PaymentTypeId,
+                                DocumentNo = PaymentType.PaymentTypeCode,
+                                TblName = "M_PaymentType",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "PaymentType Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update PaymentType
-
-                            var entity = _context.Update(PaymentType);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.PaymentTypeCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update PaymentType
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Product,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = PaymentType.PaymentTypeId,
-                                    DocumentNo = PaymentType.PaymentTypeCode,
-                                    TblName = "M_PaymentType",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "PaymentType Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "PaymentTypeId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "PaymentTypeId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +276,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +283,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeletePaymentTypeAsync(string RegId, Int16 CompanyId, M_PaymentType PaymentType, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (PaymentType.PaymentTypeId > 0)
+                try
                 {
-                    var PaymentTypeToRemove = _context.M_PaymentType.Where(x => x.PaymentTypeId == PaymentType.PaymentTypeId).ExecuteDelete();
-
-                    if (PaymentTypeToRemove > 0)
+                    if (PaymentType.PaymentTypeId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var PaymentTypeToRemove = _context.M_PaymentType.Where(x => x.PaymentTypeId == PaymentType.PaymentTypeId).ExecuteDelete();
+
+                        if (PaymentTypeToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Product,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = PaymentType.PaymentTypeId,
-                            DocumentNo = PaymentType.PaymentTypeCode,
-                            TblName = "M_PaymentType",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "PaymentType Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Product,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = PaymentType.PaymentTypeId,
+                                DocumentNo = PaymentType.PaymentTypeCode,
+                                TblName = "M_PaymentType",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "PaymentType Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "PaymentTypeId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "PaymentTypeId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.Product,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_PaymentType",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.Product,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_PaymentType",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<CustomerContactViewModelCount> GetCustomerContactListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            CustomerContactViewModelCount CustomerContactViewModelCount = new CustomerContactViewModelCount();
+            CustomerContactViewModelCount customerContactViewModelCount = new CustomerContactViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_CustomerContact WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_CustomerContact WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))");
 
-                var result = await _repository.GetQueryAsync<CustomerContactViewModel>(RegId, $"SELECT M_Cou.CustomerId,M_Cou.OtherName,M_Cou.ContactName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerContact M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.ContactName LIKE '%{searchString}%' OR M_Cou.OtherName LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CustomerId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) ORDER BY M_Cou.ContactName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CustomerContactViewModel>(RegId, $"SELECT M_Cou.CustomerId,M_Cou.OtherName,M_Cou.ContactName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerContact M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.ContactName LIKE '%{searchString}%' OR M_Cou.OtherName LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CustomerId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) ORDER BY M_Cou.ContactName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                CustomerContactViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                CustomerContactViewModelCount.data = result == null ? null : result.ToList();
+                customerContactViewModelCount.responseCode = 200;
+                customerContactViewModelCount.responseMessage = "success";
+                customerContactViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                customerContactViewModelCount.data = result == null ? null : result.ToList();
 
-                return CustomerContactViewModelCount;
+                return customerContactViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddCustomerContactAsync(string RegId, Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND OtherName='{CustomerContact.OtherName}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND OtherName='{CustomerContact.OtherName}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND ContactName='{CustomerContact.ContactName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "CustomerContact Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "CustomerContact Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (CustomerId + 1) FROM dbo.M_CustomerContact WHERE (CustomerId + 1) NOT IN (SELECT CustomerId FROM dbo.M_CustomerContact)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (CustomerId + 1) FROM dbo.M_CustomerContact WHERE (CustomerId + 1) NOT IN (SELECT CustomerId FROM dbo.M_CustomerContact)),1) AS MissId");
-
                         #region Saving CustomerContact
 
                         CustomerContact.CustomerId = Convert.ToInt32(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = CustomerContact.OtherName,
                                 TblName = "M_CustomerContact",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Customer Contact Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "CustomerId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateCustomerContactAsync(string RegId, Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
         {
             int IsActive = CustomerContact.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,62 +200,60 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (CustomerContact.CustomerId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Customer},{(short)Modules.Master})) AND ContactName='{CustomerContact.ContactName} AND CustomerId <>{CustomerContact.CustomerId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND ContactName='{CustomerContact.ContactName} AND CustomerId <>{CustomerContact.CustomerId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "CustomerContact Name Exist" };
+                            }
+                        }
+
+                        #region Update CustomerContact
+
+                        var entity = _context.Update(CustomerContact);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.OtherName).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update CustomerContact
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Customer,
+                                DocumentId = CustomerContact.CustomerId,
+                                DocumentNo = CustomerContact.OtherName,
+                                TblName = "M_CustomerContact",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "CustomerContact Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update CustomerContact
-
-                            var entity = _context.Update(CustomerContact);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.OtherName).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update CustomerContact
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Modules.Master,
-                                    TransactionId = (short)Master.Customer,
-                                    DocumentId = CustomerContact.CustomerId,
-                                    DocumentNo = CustomerContact.OtherName,
-                                    TblName = "M_CustomerContact",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "CustomerContact Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "CustomerId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -283,8 +275,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -292,60 +282,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteCustomerContactAsync(string RegId, Int16 CompanyId, M_CustomerContact CustomerContact, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (CustomerContact.CustomerId > 0)
+                try
                 {
-                    var CustomerContactToRemove = _context.M_CustomerContact.Where(x => x.CustomerId == CustomerContact.CustomerId).ExecuteDelete();
-
-                    if (CustomerContactToRemove > 0)
+                    if (CustomerContact.CustomerId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var CustomerContactToRemove = _context.M_CustomerContact.Where(x => x.CustomerId == CustomerContact.CustomerId).ExecuteDelete();
+
+                        if (CustomerContactToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.Customer,
-                            DocumentId = CustomerContact.CustomerId,
-                            DocumentNo = CustomerContact.OtherName,
-                            TblName = "M_CustomerContact",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "CustomerContact Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Customer,
+                                DocumentId = CustomerContact.CustomerId,
+                                DocumentNo = CustomerContact.OtherName,
+                                TblName = "M_CustomerContact",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "CustomerContact Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "CustomerId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Customer,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_CustomerContact",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Customer,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_CustomerContact",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

@@ -28,9 +28,9 @@ namespace AHHA.Infra.Services.Masters
             CountryViewModelCount countryViewModelCount = new CountryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Country WHERE (M_Cou.CountryName LIKE '%{searchString}%' OR M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CountryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Country},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Country WHERE (M_Cou.CountryName LIKE '%{searchString}%' OR M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CountryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Country}))");
 
-                var result = await _repository.GetQueryAsync<CountryViewModel>(RegId, $"SELECT M_Cou.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Country M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CountryName LIKE '%{searchString}%' OR M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CountryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Country},{(short)Modules.Master})) ORDER BY M_Cou.CountryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CountryViewModel>(RegId, $"SELECT M_Cou.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Country M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CountryName LIKE '%{searchString}%' OR M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CountryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Country})) ORDER BY M_Cou.CountryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 countryViewModelCount.responseCode = 200;
                 countryViewModelCount.responseMessage = "success";
@@ -93,12 +93,11 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddCountryAsync(string RegId, Int16 CompanyId, M_Country country, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Country WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Master.Country},{(short)Modules.Master})) AND CountryCode='{country.CountryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Country WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Master.Country},{(short)Modules.Master})) AND CountryName='{country.CountryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Country WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Modules.Master},{(short)Master.Country})) AND CountryCode='{country.CountryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Country WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Modules.Master},{(short)Master.Country})) AND CountryName='{country.CountryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -153,17 +152,21 @@ namespace AHHA.Infra.Services.Masters
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "CountryId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CountryId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -193,8 +196,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateCountryAsync(string RegId, Int16 CompanyId, M_Country country, Int32 UserId)
         {
             int IsActive = country.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -202,7 +203,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (country.CountryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Country WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Master.Country},{(short)Modules.Master})) AND CountryName='{country.CountryName} AND CountryId <>{country.CountryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Country WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({country.CompanyId},{(short)Modules.Master},{(short)Master.Country})) AND CountryName='{country.CountryName} AND CountryId <>{country.CountryId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -242,15 +243,21 @@ namespace AHHA.Infra.Services.Masters
                             var auditLogSave = await _context.SaveChangesAsync();
 
                             if (auditLogSave > 0)
+                            {
                                 transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
                         }
-                        sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "CountryId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CountryId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -279,60 +286,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteCountryAsync(string RegId, Int16 CompanyId, M_Country country, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (country.CountryId > 0)
+                try
                 {
-                    var countryToRemove = _context.M_Country.Where(x => x.CountryId == country.CountryId).ExecuteDelete();
-
-                    if (countryToRemove > 0)
+                    if (country.CountryId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var countryToRemove = _context.M_Country.Where(x => x.CountryId == country.CountryId).ExecuteDelete();
+
+                        if (countryToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.Country,
-                            DocumentId = country.CountryId,
-                            DocumentNo = country.CountryCode,
-                            TblName = "M_Country",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Country Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Country,
+                                DocumentId = country.CountryId,
+                                DocumentNo = country.CountryCode,
+                                TblName = "M_Country",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Country Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CountryId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "CountryId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Country,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Country",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Country,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Country",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
 

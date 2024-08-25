@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<VesselViewModelCount> GetVesselListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            VesselViewModelCount VesselViewModelCount = new VesselViewModelCount();
+            VesselViewModelCount vesselViewModelCount = new VesselViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Vessel WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Vessel},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Vessel WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},,{(short)Modules.Master},{(short)Master.Vessel}))");
 
                 var result = await _repository.GetQueryAsync<VesselViewModel>(RegId, $"SELECT M_Vess.VesselId,M_Vess.CompanyId,M_Vess.VesselCode,M_Vess.VesselName,M_Vess.CallSign,M_Vess.IMOCode,M_Vess.GRT,M_Vess.LicenseNo,M_Vess.VesselType,M_Vess.Flag,M_Vess.Remarks,M_Vess.IsActive,M_Vess.CreateById,M_Vess.CreateDate,M_Vess.EditById,M_Vess.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_Vessel M_Vess LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Vess.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Vess.EditById WHERE (M_Vess.VesselName LIKE '%{searchString}%' OR M_Vess.VesselCode LIKE '%{searchString}%' OR M_Vess.VesselType LIKE '%{searchString}%') AND M_Vess.VesselId <>0 AND M_Vess.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany(1,25,1)) ORDER BY M_Vess.VesselName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                VesselViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                VesselViewModelCount.data = result == null ? null : result.ToList();
+                vesselViewModelCount.responseCode = 200;
+                vesselViewModelCount.responseMessage = "success";
+                vesselViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                vesselViewModelCount.data = result == null ? null : result.ToList();
 
-                return VesselViewModelCount;
+                return vesselViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddVesselAsync(string RegId, Int16 CompanyId, M_Vessel Vessel, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselCode='{Vessel.VesselCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselName='{Vessel.VesselName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},,{(short)Modules.Master},{(short)Master.Vessel})) AND VesselCode='{Vessel.VesselCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},,{(short)Modules.Master},{(short)Master.Vessel})) AND VesselName='{Vessel.VesselName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "Vessel Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "Vessel Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (VesselId + 1) FROM dbo.M_Vessel WHERE (VesselId + 1) NOT IN (SELECT VesselId FROM dbo.M_Vessel)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (VesselId + 1) FROM dbo.M_Vessel WHERE (VesselId + 1) NOT IN (SELECT VesselId FROM dbo.M_Vessel)),1) AS MissId");
-
                         #region Saving Vessel
 
                         Vessel.VesselId = Convert.ToInt32(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Vessel.VesselCode,
                                 TblName = "M_Vessel",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Vessel Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "VesselId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "VesselId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateVesselAsync(string RegId, Int16 CompanyId, M_Vessel Vessel, Int32 UserId)
         {
             int IsActive = Vessel.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +200,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Vessel.VesselId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},{(short)Master.Vessel},{(short)Modules.Master})) AND VesselName='{Vessel.VesselName} AND VesselId <>{Vessel.VesselId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Vessel WHERE CompanyId IN (SELECT DISTINCT VesselId FROM dbo.Fn_Adm_GetShareCompany ({Vessel.CompanyId},,{(short)Modules.Master},{(short)Master.Vessel})) AND VesselName='{Vessel.VesselName} AND VesselId <>{Vessel.VesselId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "Vessel Name Exist" };
+                            }
+                        }
+
+                        #region Update Vessel
+
+                        var entity = _context.Update(Vessel);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.VesselCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Vessel
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Vessel,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Vessel.VesselId,
+                                DocumentNo = Vessel.VesselCode,
+                                TblName = "M_Vessel",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Vessel Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Vessel
-
-                            var entity = _context.Update(Vessel);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.VesselCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Vessel
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Vessel,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = Vessel.VesselId,
-                                    DocumentNo = Vessel.VesselCode,
-                                    TblName = "M_Vessel",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Vessel Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "VesselId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "VesselId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +276,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +283,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteVesselAsync(string RegId, Int16 CompanyId, M_Vessel Vessel, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Vessel.VesselId > 0)
+                try
                 {
-                    var VesselToRemove = _context.M_Vessel.Where(x => x.VesselId == Vessel.VesselId).ExecuteDelete();
-
-                    if (VesselToRemove > 0)
+                    if (Vessel.VesselId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var VesselToRemove = _context.M_Vessel.Where(x => x.VesselId == Vessel.VesselId).ExecuteDelete();
+
+                        if (VesselToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Vessel,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = Vessel.VesselId,
-                            DocumentNo = Vessel.VesselCode,
-                            TblName = "M_Vessel",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Vessel Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Vessel,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Vessel.VesselId,
+                                DocumentNo = Vessel.VesselCode,
+                                TblName = "M_Vessel",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Vessel Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "VesselId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "VesselId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.Vessel,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Vessel",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.Vessel,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Vessel",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

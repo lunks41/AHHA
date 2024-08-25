@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<OrderTypeViewModelCount> GetOrderTypeListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            OrderTypeViewModelCount OrderTypeViewModelCount = new OrderTypeViewModelCount();
+            OrderTypeViewModelCount orderTypeViewModelCount = new OrderTypeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_OrderType WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.OrderType},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_OrderType WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderType}))");
 
-                var result = await _repository.GetQueryAsync<OrderTypeViewModel>(RegId, $"SELECT M_Cou.OrderTypeId,M_Cou.OrderTypeCode,M_Cou.OrderTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_OrderType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.OrderTypeName LIKE '%{searchString}%' OR M_Cou.OrderTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.OrderTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) ORDER BY M_Cou.OrderTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<OrderTypeViewModel>(RegId, $"SELECT M_Cou.OrderTypeId,M_Cou.OrderTypeCode,M_Cou.OrderTypeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_OrderType M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.OrderTypeName LIKE '%{searchString}%' OR M_Cou.OrderTypeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.OrderTypeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderType})) ORDER BY M_Cou.OrderTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                OrderTypeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                OrderTypeViewModelCount.data = result == null ? null : result.ToList();
+                orderTypeViewModelCount.responseCode = 200;
+                orderTypeViewModelCount.responseMessage = "success";
+                orderTypeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                orderTypeViewModelCount.data = result == null ? null : result.ToList();
 
-                return OrderTypeViewModelCount;
+                return orderTypeViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddOrderTypeAsync(string RegId, Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeCode='{OrderType.OrderTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Modules.Master},{(short)Master.OrderType})) AND OrderTypeCode='{OrderType.OrderTypeCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Modules.Master},{(short)Master.OrderType})) AND OrderTypeName='{OrderType.OrderTypeName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "OrderType Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "OrderType Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (OrderTypeId + 1) FROM dbo.M_OrderType WHERE (OrderTypeId + 1) NOT IN (SELECT OrderTypeId FROM dbo.M_OrderType)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (OrderTypeId + 1) FROM dbo.M_OrderType WHERE (OrderTypeId + 1) NOT IN (SELECT OrderTypeId FROM dbo.M_OrderType)),1) AS MissId");
-
                         #region Saving OrderType
 
                         OrderType.OrderTypeId = Convert.ToInt32(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = OrderType.OrderTypeCode,
                                 TblName = "M_OrderType",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Order Type Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "OrderTypeId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "OrderTypeId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateOrderTypeAsync(string RegId, Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
         {
             int IsActive = OrderType.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +200,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (OrderType.OrderTypeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Master.OrderType},{(short)Modules.Master})) AND OrderTypeName='{OrderType.OrderTypeName} AND OrderTypeId <>{OrderType.OrderTypeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_OrderType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({OrderType.CompanyId},{(short)Modules.Master},{(short)Master.OrderType})) AND OrderTypeName='{OrderType.OrderTypeName} AND OrderTypeId <>{OrderType.OrderTypeId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "OrderType Name Exist" };
+                            }
+                        }
+
+                        #region Update OrderType
+
+                        var entity = _context.Update(OrderType);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.OrderTypeCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update OrderType
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.OrderType,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = OrderType.OrderTypeId,
+                                DocumentNo = OrderType.OrderTypeCode,
+                                TblName = "M_OrderType",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "OrderType Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update OrderType
-
-                            var entity = _context.Update(OrderType);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.OrderTypeCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update OrderType
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.OrderType,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = OrderType.OrderTypeId,
-                                    DocumentNo = OrderType.OrderTypeCode,
-                                    TblName = "M_OrderType",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "OrderType Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "OrderTypeId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "OrderTypeId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +276,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +283,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteOrderTypeAsync(string RegId, Int16 CompanyId, M_OrderType OrderType, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (OrderType.OrderTypeId > 0)
+                try
                 {
-                    var OrderTypeToRemove = _context.M_OrderType.Where(x => x.OrderTypeId == OrderType.OrderTypeId).ExecuteDelete();
-
-                    if (OrderTypeToRemove > 0)
+                    if (OrderType.OrderTypeId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var OrderTypeToRemove = _context.M_OrderType.Where(x => x.OrderTypeId == OrderType.OrderTypeId).ExecuteDelete();
+
+                        if (OrderTypeToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.OrderType,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = OrderType.OrderTypeId,
-                            DocumentNo = OrderType.OrderTypeCode,
-                            TblName = "M_OrderType",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "OrderType Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.OrderType,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = OrderType.OrderTypeId,
+                                DocumentNo = OrderType.OrderTypeCode,
+                                TblName = "M_OrderType",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "OrderType Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "OrderTypeId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "OrderTypeId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.OrderType,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = OrderType.OrderTypeId,
+                        DocumentNo = OrderType.OrderTypeCode,
+                        TblName = "M_OrderType",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.OrderType,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = OrderType.OrderTypeId,
-                    DocumentNo = OrderType.OrderTypeCode,
-                    TblName = "M_OrderType",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

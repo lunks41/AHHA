@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<ChartOfAccountViewModelCount> GetChartOfAccountListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            ChartOfAccountViewModelCount ChartOfAccountViewModelCount = new ChartOfAccountViewModelCount();
+            ChartOfAccountViewModelCount chartOfAccountViewModelCount = new ChartOfAccountViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_ChartOfAccount WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_ChartOfAccount WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.ChartOfAccount}))");
 
-                var result = await _repository.GetQueryAsync<ChartOfAccountViewModel>(RegId, $"SELECT M_Cou.GLId,M_Cou.GLCode,M_Cou.GLName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_ChartOfAccount M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.GLName LIKE '%{searchString}%' OR M_Cou.GLCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.GLId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) ORDER BY M_Cou.GLName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<ChartOfAccountViewModel>(RegId, $"SELECT M_Cou.GLId,M_Cou.GLCode,M_Cou.GLName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_ChartOfAccount M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.GLName LIKE '%{searchString}%' OR M_Cou.GLCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.GLId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.ChartOfAccount})) ORDER BY M_Cou.GLName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                ChartOfAccountViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                ChartOfAccountViewModelCount.data = result == null ? null : result.ToList();
+                chartOfAccountViewModelCount.responseCode = 200;
+                chartOfAccountViewModelCount.responseMessage = "success";
+                chartOfAccountViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                chartOfAccountViewModelCount.data = result == null ? null : result.ToList();
 
-                return ChartOfAccountViewModelCount;
+                return chartOfAccountViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,29 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddChartOfAccountAsync(string RegId, Int16 CompanyId, M_ChartOfAccount ChartOfAccount, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLCode='{ChartOfAccount.GLCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLName='{ChartOfAccount.GLName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Modules.Master},{(short)Master.ChartOfAccount})) AND GLCode='{ChartOfAccount.GLCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Modules.Master},{(short)Master.ChartOfAccount})) AND GLName='{ChartOfAccount.GLName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "ChartOfAccount Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "ChartOfAccount Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
-                    {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (GLId + 1) FROM dbo.M_ChartOfAccount WHERE (GLId + 1) NOT IN (SELECT GLId FROM dbo.M_ChartOfAccount)),1) AS MissId");
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (GLId + 1) FROM dbo.M_ChartOfAccount WHERE (GLId + 1) NOT IN (SELECT GLId FROM dbo.M_ChartOfAccount)),1) AS MissId");
 
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
+                    {
                         #region Saving ChartOfAccount
 
                         ChartOfAccount.GLId = Convert.ToInt16(sqlMissingResponce.MissId);
@@ -145,7 +139,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = ChartOfAccount.GLCode,
                                 TblName = "M_ChartOfAccount",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Chart of Account Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +147,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "GLId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "GLId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +194,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateChartOfAccountAsync(string RegId, Int16 CompanyId, M_ChartOfAccount ChartOfAccount, Int32 UserId)
         {
             int IsActive = ChartOfAccount.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +201,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (ChartOfAccount.GLId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Master.ChartOfAccount},{(short)Modules.Master})) AND GLName='{ChartOfAccount.GLName} AND GLId <>{ChartOfAccount.GLId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({ChartOfAccount.CompanyId},{(short)Modules.Master},{(short)Master.ChartOfAccount})) AND GLName='{ChartOfAccount.GLName} AND GLId <>{ChartOfAccount.GLId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "ChartOfAccount Name Exist" };
+                            }
+                        }
+
+                        #region Update ChartOfAccount
+
+                        var entity = _context.Update(ChartOfAccount);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.GLCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update ChartOfAccount
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.ChartOfAccount,
+                                DocumentId = ChartOfAccount.GLId,
+                                DocumentNo = ChartOfAccount.GLCode,
+                                TblName = "M_ChartOfAccount",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "ChartOfAccount Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update ChartOfAccount
-
-                            var entity = _context.Update(ChartOfAccount);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.GLCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update ChartOfAccount
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Modules.Master,
-                                    TransactionId = (short)Master.ChartOfAccount,
-                                    DocumentId = ChartOfAccount.GLId,
-                                    DocumentNo = ChartOfAccount.GLCode,
-                                    TblName = "M_ChartOfAccount",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "ChartOfAccount Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "GLId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "GLId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +277,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +284,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteChartOfAccountAsync(string RegId, Int16 CompanyId, M_ChartOfAccount ChartOfAccount, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (ChartOfAccount.GLId > 0)
+                try
                 {
-                    var ChartOfAccountToRemove = _context.M_ChartOfAccount.Where(x => x.GLId == ChartOfAccount.GLId).ExecuteDelete();
-
-                    if (ChartOfAccountToRemove > 0)
+                    if (ChartOfAccount.GLId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var ChartOfAccountToRemove = _context.M_ChartOfAccount.Where(x => x.GLId == ChartOfAccount.GLId).ExecuteDelete();
+
+                        if (ChartOfAccountToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.ChartOfAccount,
-                            DocumentId = ChartOfAccount.GLId,
-                            DocumentNo = ChartOfAccount.GLCode,
-                            TblName = "M_ChartOfAccount",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "ChartOfAccount Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.ChartOfAccount,
+                                DocumentId = ChartOfAccount.GLId,
+                                DocumentNo = ChartOfAccount.GLCode,
+                                TblName = "M_ChartOfAccount",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "ChartOfAccount Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "GLId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "GLId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.ChartOfAccount,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_ChartOfAccount",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.ChartOfAccount,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_ChartOfAccount",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<COACategoryViewModelCount> GetCOACategory3ListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            COACategoryViewModelCount COACategoryViewModelCount = new COACategoryViewModelCount();
+            COACategoryViewModelCount cOACategoryViewModelCount = new COACategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_COACategory3 WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.COACategory3},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_COACategory3 WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory3}))");
 
-                var result = await _repository.GetQueryAsync<COACategoryViewModel>(RegId, $"SELECT M_Cou.COACategory3Id,M_Cou.COACategory3Code,M_Cou.COACategory3Name,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_COACategory3 M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.COACategory3Name LIKE '%{searchString}%' OR M_Cou.COACategory3Code LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.COACategory3Id<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) ORDER BY M_Cou.COACategory3Name OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<COACategoryViewModel>(RegId, $"SELECT M_Cou.COACategory3Id,M_Cou.COACategory3Code,M_Cou.COACategory3Name,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_COACategory3 M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.COACategory3Name LIKE '%{searchString}%' OR M_Cou.COACategory3Code LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.COACategory3Id<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory3})) ORDER BY M_Cou.COACategory3Name OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                COACategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                COACategoryViewModelCount.data = result == null ? null : result.ToList();
+                cOACategoryViewModelCount.responseCode = 200;
+                cOACategoryViewModelCount.responseMessage = "success";
+                cOACategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                cOACategoryViewModelCount.data = result == null ? null : result.ToList();
 
-                return COACategoryViewModelCount;
+                return cOACategoryViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,31 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddCOACategory3Async(string RegId, Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Code='{COACategory3.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Name='{COACategory3.COACategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Modules.Master},{(short)Master.COACategory3})) AND COACategory3Code='{COACategory3.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Modules.Master},{(short)Master.COACategory3})) AND COACategory3Name='{COACategory3.COACategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "COACategory3 Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "COACategory3 Name Exist" };
                         }
                     }
                     else
                     {
-                        isExist = false;
                     }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (COACategory3Id + 1) FROM dbo.M_COACategory3 WHERE (COACategory3Id + 1) NOT IN (SELECT COACategory3Id FROM dbo.M_COACategory3)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (COACategory3Id + 1) FROM dbo.M_COACategory3 WHERE (COACategory3Id + 1) NOT IN (SELECT COACategory3Id FROM dbo.M_COACategory3)),1) AS MissId");
-
                         #region Saving COACategory3
 
                         COACategory3.COACategoryId = Convert.ToInt16(sqlMissingResponce.MissId);
@@ -145,7 +141,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = COACategory3.COACategoryCode,
                                 TblName = "M_COACategory3",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Category Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +149,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "COACategory3Id Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "COACategory3Id Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +196,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateCOACategory3Async(string RegId, Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
         {
             int IsActive = COACategory3.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +203,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (COACategory3.COACategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Master.COACategory3},{(short)Modules.Master})) AND COACategory3Name='{COACategory3.COACategoryName} AND COACategory3Id <>{COACategory3.COACategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_COACategory3 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({COACategory3.CompanyId},{(short)Modules.Master},{(short)Master.COACategory3})) AND COACategory3Name='{COACategory3.COACategoryName} AND COACategory3Id <>{COACategory3.COACategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "COACategory3 Name Exist" };
+                            }
+                        }
+
+                        #region Update COACategory3
+
+                        var entity = _context.Update(COACategory3);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.COACategoryCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update COACategory3
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.COACategory3,
+                                DocumentId = COACategory3.COACategoryId,
+                                DocumentNo = COACategory3.COACategoryCode,
+                                TblName = "M_COACategory3",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "COACategory3 Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update COACategory3
-
-                            var entity = _context.Update(COACategory3);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.COACategoryCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update COACategory3
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Modules.Master,
-                                    TransactionId = (short)Master.COACategory3,
-                                    DocumentId = COACategory3.COACategoryId,
-                                    DocumentNo = COACategory3.COACategoryCode,
-                                    TblName = "M_COACategory3",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "COACategory3 Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "COACategory3Id Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "COACategory3Id Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +279,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +286,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteCOACategory3Async(string RegId, Int16 CompanyId, M_COACategory3 COACategory3, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (COACategory3.COACategoryId > 0)
+                try
                 {
-                    var COACategory3ToRemove = _context.M_COACategory3.Where(x => x.COACategoryId == COACategory3.COACategoryId).ExecuteDelete();
-
-                    if (COACategory3ToRemove > 0)
+                    if (COACategory3.COACategoryId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var COACategory3ToRemove = _context.M_COACategory3.Where(x => x.COACategoryId == COACategory3.COACategoryId).ExecuteDelete();
+
+                        if (COACategory3ToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.COACategory3,
-                            DocumentId = COACategory3.COACategoryId,
-                            DocumentNo = COACategory3.COACategoryCode,
-                            TblName = "M_COACategory3",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "COACategory3 Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.COACategory3,
+                                DocumentId = COACategory3.COACategoryId,
+                                DocumentNo = COACategory3.COACategoryCode,
+                                TblName = "M_COACategory3",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "COACategory3 Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "COACategory3Id Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "COACategory3Id Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.COACategory3,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_COACategory3",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.COACategory3,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_COACategory3",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<DesignationViewModelCount> GetDesignationListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            DesignationViewModelCount DesignationViewModelCount = new DesignationViewModelCount();
+            DesignationViewModelCount designationViewModelCount = new DesignationViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Designation M_Des WHERE (M_Des.DesignationName LIKE '%{searchString}%' OR M_Des.DesignationCode LIKE '%{searchString}%' OR M_Des.Remarks LIKE '%{searchString}%') AND M_Des.DesignationId<>0 AND M_Des.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Designation M_Des WHERE (M_Des.DesignationName LIKE '%{searchString}%' OR M_Des.DesignationCode LIKE '%{searchString}%' OR M_Des.Remarks LIKE '%{searchString}%') AND M_Des.DesignationId<>0 AND M_Des.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Designation}))");
 
-                var result = await _repository.GetQueryAsync<DesignationViewModel>(RegId, $"SELECT M_Des.DesignationId,M_Des.DesignationCode,M_Des.DesignationName,M_Des.CompanyId,M_Des.Remarks,M_Des.IsActive,M_Des.CreateById,M_Des.CreateDate,M_Des.EditById,M_Des.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Designation M_Des LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Des.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Des.EditById WHERE (M_Des.DesignationName LIKE '%{searchString}%' OR M_Des.DesignationCode LIKE '%{searchString}%' OR M_Des.Remarks LIKE '%{searchString}%') AND M_Des.DesignationId<>0 AND M_Des.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Designation},{(short)Modules.Master})) ORDER BY M_Des.DesignationName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<DesignationViewModel>(RegId, $"SELECT M_Des.DesignationId,M_Des.DesignationCode,M_Des.DesignationName,M_Des.CompanyId,M_Des.Remarks,M_Des.IsActive,M_Des.CreateById,M_Des.CreateDate,M_Des.EditById,M_Des.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Designation M_Des LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Des.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Des.EditById WHERE (M_Des.DesignationName LIKE '%{searchString}%' OR M_Des.DesignationCode LIKE '%{searchString}%' OR M_Des.Remarks LIKE '%{searchString}%') AND M_Des.DesignationId<>0 AND M_Des.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Designation})) ORDER BY M_Des.DesignationName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                DesignationViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                DesignationViewModelCount.data = result == null ? null : result.ToList();
+                designationViewModelCount.responseCode = 200;
+                designationViewModelCount.responseMessage = "success";
+                designationViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                designationViewModelCount.data = result == null ? null : result.ToList();
 
-                return DesignationViewModelCount;
+                return designationViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,29 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddDesignationAsync(string RegId, Int16 CompanyId, M_Designation Designation, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationCode='{Designation.DesignationCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Modules.Master},{(short)Master.Designation})) AND DesignationCode='{Designation.DesignationCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Modules.Master},{(short)Master.Designation})) AND DesignationName='{Designation.DesignationName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "Designation Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "Designation Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
-                    {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (DesignationId + 1) FROM dbo.M_Designation WHERE (DesignationId + 1) NOT IN (SELECT DesignationId FROM dbo.M_Designation)),1) AS MissId");
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (DesignationId + 1) FROM dbo.M_Designation WHERE (DesignationId + 1) NOT IN (SELECT DesignationId FROM dbo.M_Designation)),1) AS MissId");
 
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
+                    {
                         #region Saving Designation
 
                         Designation.DesignationId = Convert.ToInt16(sqlMissingResponce.MissId);
@@ -145,7 +139,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Designation.DesignationCode,
                                 TblName = "M_Designation",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Designation Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +147,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "DesignationId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "DesignationId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +194,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateDesignationAsync(string RegId, Int16 CompanyId, M_Designation Designation, Int32 UserId)
         {
             int IsActive = Designation.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +201,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Designation.DesignationId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Master.Designation},{(short)Modules.Master})) AND DesignationName='{Designation.DesignationName} AND DesignationId <>{Designation.DesignationId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Designation WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Designation.CompanyId},{(short)Modules.Master},{(short)Master.Designation})) AND DesignationName='{Designation.DesignationName} AND DesignationId <>{Designation.DesignationId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "Designation Name Exist" };
+                            }
+                        }
+
+                        #region Update Designation
+
+                        var entity = _context.Update(Designation);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.DesignationCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Designation
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Designation,
+                                DocumentId = Designation.DesignationId,
+                                DocumentNo = Designation.DesignationCode,
+                                TblName = "M_Designation",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Designation Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Designation
-
-                            var entity = _context.Update(Designation);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.DesignationCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Designation
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Modules.Master,
-                                    TransactionId = (short)Master.Designation,
-                                    DocumentId = Designation.DesignationId,
-                                    DocumentNo = Designation.DesignationCode,
-                                    TblName = "M_Designation",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Designation Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "DesignationId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "DesignationId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +277,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +284,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteDesignationAsync(string RegId, Int16 CompanyId, M_Designation Designation, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Designation.DesignationId > 0)
+                try
                 {
-                    var DesignationToRemove = _context.M_Designation.Where(x => x.DesignationId == Designation.DesignationId).ExecuteDelete();
-
-                    if (DesignationToRemove > 0)
+                    if (Designation.DesignationId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var DesignationToRemove = _context.M_Designation.Where(x => x.DesignationId == Designation.DesignationId).ExecuteDelete();
+
+                        if (DesignationToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.Designation,
-                            DocumentId = Designation.DesignationId,
-                            DocumentNo = Designation.DesignationCode,
-                            TblName = "M_Designation",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Designation Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Designation,
+                                DocumentId = Designation.DesignationId,
+                                DocumentNo = Designation.DesignationCode,
+                                TblName = "M_Designation",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Designation Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "DesignationId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "DesignationId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Designation,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Designation",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Designation,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Designation",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

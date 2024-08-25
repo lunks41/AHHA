@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<GstViewModelCount> GetGstListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            GstViewModelCount GstViewModelCount = new GstViewModelCount();
+            GstViewModelCount gstViewModelCount = new GstViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Gst WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Gst},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Gst WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Gst}))");
 
-                var result = await _repository.GetQueryAsync<GstViewModel>(RegId, $"SELECT M_Cou.GstId,M_Cou.GstCode,M_Cou.GstName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Gst M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.GstName LIKE '%{searchString}%' OR M_Cou.GstCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.GstId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Gst},{(short)Modules.Master})) ORDER BY M_Cou.GstName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<GstViewModel>(RegId, $"SELECT M_Cou.GstId,M_Cou.GstCode,M_Cou.GstName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Gst M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.GstName LIKE '%{searchString}%' OR M_Cou.GstCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.GstId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Gst})) ORDER BY M_Cou.GstName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                GstViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                GstViewModelCount.data = result == null ? null : result.ToList();
+                gstViewModelCount.responseCode = 200;
+                gstViewModelCount.responseMessage = "success";
+                gstViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                gstViewModelCount.data = result == null ? null : result.ToList();
 
-                return GstViewModelCount;
+                return gstViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddGstAsync(string RegId, Int16 CompanyId, M_Gst Gst, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstCode='{Gst.GstCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstName='{Gst.GstName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Modules.Master},{(short)Master.Gst})) AND GstCode='{Gst.GstCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Modules.Master},{(short)Master.Gst})) AND GstName='{Gst.GstName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "Gst Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "Gst Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (GstId + 1) FROM dbo.M_Gst WHERE (GstId + 1) NOT IN (SELECT GstId FROM dbo.M_Gst)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (GstId + 1) FROM dbo.M_Gst WHERE (GstId + 1) NOT IN (SELECT GstId FROM dbo.M_Gst)),1) AS MissId");
-
                         #region Saving Gst
 
                         Gst.GstId = Convert.ToInt16(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Gst.GstCode,
                                 TblName = "M_Gst",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Gst Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "GstId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "GstId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateGstAsync(string RegId, Int16 CompanyId, M_Gst Gst, Int32 UserId)
         {
             int IsActive = Gst.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +200,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Gst.GstId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Master.Gst},{(short)Modules.Master})) AND GstName='{Gst.GstName} AND GstId <>{Gst.GstId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Gst WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Gst.CompanyId},{(short)Modules.Master},{(short)Master.Gst})) AND GstName='{Gst.GstName} AND GstId <>{Gst.GstId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "Gst Name Exist" };
+                            }
+                        }
+
+                        #region Update Gst
+
+                        var entity = _context.Update(Gst);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.GstCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Gst
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Gst,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Gst.GstId,
+                                DocumentNo = Gst.GstCode,
+                                TblName = "M_Gst",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Gst Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Gst
-
-                            var entity = _context.Update(Gst);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.GstCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Gst
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Gst,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = Gst.GstId,
-                                    DocumentNo = Gst.GstCode,
-                                    TblName = "M_Gst",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Gst Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "GstId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "GstId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +276,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +283,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteGstAsync(string RegId, Int16 CompanyId, M_Gst Gst, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Gst.GstId > 0)
+                try
                 {
-                    var GstToRemove = _context.M_Gst.Where(x => x.GstId == Gst.GstId).ExecuteDelete();
-
-                    if (GstToRemove > 0)
+                    if (Gst.GstId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var GstToRemove = _context.M_Gst.Where(x => x.GstId == Gst.GstId).ExecuteDelete();
+
+                        if (GstToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Gst,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = Gst.GstId,
-                            DocumentNo = Gst.GstCode,
-                            TblName = "M_Gst",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Gst Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Gst,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Gst.GstId,
+                                DocumentNo = Gst.GstCode,
+                                TblName = "M_Gst",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Gst Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "GstId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "GstId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.Gst,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Gst",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.Gst,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Gst",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

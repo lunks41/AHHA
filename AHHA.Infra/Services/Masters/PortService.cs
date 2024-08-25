@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<PortViewModelCount> GetPortListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            PortViewModelCount PortViewModelCount = new PortViewModelCount();
+            PortViewModelCount portViewModelCount = new PortViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Port WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Port},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Port WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Port}))");
 
-                var result = await _repository.GetQueryAsync<PortViewModel>(RegId, $"SELECT M_Cou.PortId,M_Cou.PortCode,M_Cou.PortName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Port M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.PortName LIKE '%{searchString}%' OR M_Cou.PortCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.PortId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Port},{(short)Modules.Master})) ORDER BY M_Cou.PortName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<PortViewModel>(RegId, $"SELECT M_Cou.PortId,M_Cou.PortCode,M_Cou.PortName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Port M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.PortName LIKE '%{searchString}%' OR M_Cou.PortCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.PortId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Port})) ORDER BY M_Cou.PortName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                PortViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                PortViewModelCount.data = result == null ? null : result.ToList();
+                portViewModelCount.responseCode = 200;
+                portViewModelCount.responseMessage = "success";
+                portViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                portViewModelCount.data = result == null ? null : result.ToList();
 
-                return PortViewModelCount;
+                return portViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddPortAsync(string RegId, Int16 CompanyId, M_Port Port, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Master.Port},{(short)Modules.Master})) AND PortCode='{Port.PortCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Master.Port},{(short)Modules.Master})) AND PortName='{Port.PortName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortCode='{Port.PortCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortName='{Port.PortName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "Port Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "Port Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (PortId + 1) FROM dbo.M_Port WHERE (PortId + 1) NOT IN (SELECT PortId FROM dbo.M_Port)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (PortId + 1) FROM dbo.M_Port WHERE (PortId + 1) NOT IN (SELECT PortId FROM dbo.M_Port)),1) AS MissId");
-
                         #region Saving Port
 
                         Port.PortId = Convert.ToInt32(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Port.PortCode,
                                 TblName = "M_Port",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Port Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "PortId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "PortId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdatePortAsync(string RegId, Int16 CompanyId, M_Port Port, Int32 UserId)
         {
             int IsActive = Port.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +200,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Port.PortId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Master.Port},{(short)Modules.Master})) AND PortName='{Port.PortName} AND PortId <>{Port.PortId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortName='{Port.PortName} AND PortId <>{Port.PortId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "Port Name Exist" };
+                            }
+                        }
+
+                        #region Update Port
+
+                        var entity = _context.Update(Port);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.PortCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Port
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Port,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Port.PortId,
+                                DocumentNo = Port.PortCode,
+                                TblName = "M_Port",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Port Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Port
-
-                            var entity = _context.Update(Port);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.PortCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Port
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Port,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = Port.PortId,
-                                    DocumentNo = Port.PortCode,
-                                    TblName = "M_Port",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Port Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "PortId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "PortId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +276,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +283,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeletePortAsync(string RegId, Int16 CompanyId, M_Port Port, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Port.PortId > 0)
+                try
                 {
-                    var PortToRemove = _context.M_Port.Where(x => x.PortId == Port.PortId).ExecuteDelete();
-
-                    if (PortToRemove > 0)
+                    if (Port.PortId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var PortToRemove = _context.M_Port.Where(x => x.PortId == Port.PortId).ExecuteDelete();
+
+                        if (PortToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Port,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = Port.PortId,
-                            DocumentNo = Port.PortCode,
-                            TblName = "M_Port",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Port Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Port,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Port.PortId,
+                                DocumentNo = Port.PortCode,
+                                TblName = "M_Port",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Port Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "PortId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "PortId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.Port,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Port",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.Port,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Port",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

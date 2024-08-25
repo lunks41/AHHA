@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<CategoryViewModelCount> GetCategoryListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            CategoryViewModelCount CategoryViewModelCount = new CategoryViewModelCount();
+            CategoryViewModelCount categoryViewModelCount = new CategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Category WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Category},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Category WHERE (M_Cat.CategoryName LIKE '%{searchString}%' OR M_Cat.CategoryCode LIKE '%{searchString}%' OR M_Cat.Remarks LIKE '%{searchString}%') AND M_Cat.CategoryId<>0 AND M_Cat.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Category}))");
 
-                var result = await _repository.GetQueryAsync<CategoryViewModel>(RegId, $"SELECT M_Cou.CategoryId,M_Cou.CategoryCode,M_Cou.CategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Category M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CategoryName LIKE '%{searchString}%' OR M_Cou.CategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Category},{(short)Modules.Master})) ORDER BY M_Cou.CategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CategoryViewModel>(RegId, $"SELECT M_Cat.CategoryId,M_Cat.CategoryCode,M_Cat.CategoryName,M_Cat.CompanyId,M_Cat.Remarks,M_Cat.IsActive,M_Cat.CreateById,M_Cat.CreateDate,M_Cat.EditById,M_Cat.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Category M_Cat LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cat.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cat.EditById WHERE (M_Cat.CategoryName LIKE '%{searchString}%' OR M_Cat.CategoryCode LIKE '%{searchString}%' OR M_Cat.Remarks LIKE '%{searchString}%') AND M_Cat.CategoryId<>0 AND M_Cat.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Category})) ORDER BY M_Cat.CategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                CategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                CategoryViewModelCount.data = result == null ? null : result.ToList();
+                categoryViewModelCount.responseCode = 200;
+                categoryViewModelCount.responseMessage = "success";
+                categoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                categoryViewModelCount.data = result == null ? null : result.ToList();
 
-                return CategoryViewModelCount;
+                return categoryViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,13 +91,11 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddCategoryAsync(string RegId, Int16 CompanyId, M_Category Category, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryCode='{Category.CategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Modules.Master},{(short)Master.Category})) AND CategoryCode='{Category.CategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Modules.Master},{(short)Master.Category})) AND CategoryName='{Category.CategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -108,16 +108,12 @@ namespace AHHA.Infra.Services.Masters
                             return new SqlResponce { Result = -2, Message = "Category Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
-                    {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (CategoryId + 1) FROM dbo.M_Category WHERE (CategoryId + 1) NOT IN (SELECT CategoryId FROM dbo.M_Category)),1) AS MissId");
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (CategoryId + 1) FROM dbo.M_Category WHERE (CategoryId + 1) NOT IN (SELECT CategoryId FROM dbo.M_Category)),1) AS MissId");
 
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
+                    {
                         #region Saving Category
 
                         Category.CategoryId = Convert.ToInt16(sqlMissingResponce.MissId);
@@ -143,7 +139,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Category.CategoryCode,
                                 TblName = "M_Category",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Category Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -151,21 +147,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "CategoryId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CategoryId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -195,8 +194,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateCategoryAsync(string RegId, Int16 CompanyId, M_Category Category, Int32 UserId)
         {
             int IsActive = Category.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -204,7 +201,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Category.CategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Master.Category},{(short)Modules.Master})) AND CategoryName='{Category.CategoryName} AND CategoryId <>{Category.CategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Category WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Category.CompanyId},{(short)Modules.Master},{(short)Master.Category})) AND CategoryName='{Category.CategoryName} AND CategoryId <>{Category.CategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -213,53 +210,52 @@ namespace AHHA.Infra.Services.Masters
                                 return new SqlResponce { Result = -2, Message = "Category Name Exist" };
                             }
                         }
+
+                        #region Update Category
+
+                        var entity = _context.Update(Category);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.CategoryCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Category
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Category,
+                                DocumentId = Category.CategoryId,
+                                DocumentNo = Category.CategoryCode,
+                                TblName = "M_Category",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Category Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
+                        }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Category
-
-                            var entity = _context.Update(Category);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.CategoryCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Category
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Modules.Master,
-                                    TransactionId = (short)Master.Category,
-                                    DocumentId = Category.CategoryId,
-                                    DocumentNo = Category.CategoryCode,
-                                    TblName = "M_Category",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Category Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "CategoryId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CategoryId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -281,8 +277,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -290,60 +284,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteCategoryAsync(string RegId, Int16 CompanyId, M_Category Category, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Category.CategoryId > 0)
+                try
                 {
-                    var CategoryToRemove = _context.M_Category.Where(x => x.CategoryId == Category.CategoryId).ExecuteDelete();
-
-                    if (CategoryToRemove > 0)
+                    if (Category.CategoryId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var CategoryToRemove = _context.M_Category.Where(x => x.CategoryId == Category.CategoryId).ExecuteDelete();
+
+                        if (CategoryToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.Category,
-                            DocumentId = Category.CategoryId,
-                            DocumentNo = Category.CategoryCode,
-                            TblName = "M_Category",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Category Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Category,
+                                DocumentId = Category.CategoryId,
+                                DocumentNo = Category.CategoryCode,
+                                TblName = "M_Category",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Category Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CategoryId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "CategoryId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Category,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Category",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Category,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Category",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

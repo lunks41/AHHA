@@ -22,17 +22,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<ProductViewModelCount> GetProductListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            ProductViewModelCount ProductViewModelCount = new ProductViewModelCount();
+            ProductViewModelCount productViewModelCount = new ProductViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Product WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Product},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Product WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product}))");
 
-                var result = await _repository.GetQueryAsync<ProductViewModel>(RegId, $"SELECT M_Cou.ProductId,M_Cou.ProductCode,M_Cou.ProductName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Product M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.ProductName LIKE '%{searchString}%' OR M_Cou.ProductCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.ProductId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Product},{(short)Modules.Master})) ORDER BY M_Cou.ProductName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<ProductViewModel>(RegId, $"SELECT M_Cou.ProductId,M_Cou.ProductCode,M_Cou.ProductName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Product M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.ProductName LIKE '%{searchString}%' OR M_Cou.ProductCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.ProductId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product})) ORDER BY M_Cou.ProductName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                ProductViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                ProductViewModelCount.data = result == null ? null : result.ToList();
+                productViewModelCount.responseCode = 200;
+                productViewModelCount.responseMessage = "success";
+                productViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                productViewModelCount.data = result == null ? null : result.ToList();
 
-                return ProductViewModelCount;
+                return productViewModelCount;
             }
             catch (Exception ex)
             {
@@ -88,37 +90,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddProductAsync(string RegId, Int16 CompanyId, M_Product Product, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND ProductCode='{Product.ProductCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND ProductName='{Product.ProductName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductCode='{Product.ProductCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductName='{Product.ProductName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "Product Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "Product Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (ProductId + 1) FROM dbo.M_Product WHERE (ProductId + 1) NOT IN (SELECT ProductId FROM dbo.M_Product)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (ProductId + 1) FROM dbo.M_Product WHERE (ProductId + 1) NOT IN (SELECT ProductId FROM dbo.M_Product)),1) AS MissId");
-
                         #region Saving Product
 
                         Product.ProductId = Convert.ToInt16(sqlMissingResponce.MissId);
@@ -144,7 +137,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Product.ProductCode,
                                 TblName = "M_Product",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Product Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -152,21 +145,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "ProductId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "ProductId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -196,8 +192,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateProductAsync(string RegId, Int16 CompanyId, M_Product Product, Int32 UserId)
         {
             int IsActive = Product.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -205,63 +199,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Product.ProductId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Master.Product},{(short)Modules.Master})) AND ProductName='{Product.ProductName} AND ProductId <>{Product.ProductId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductName='{Product.ProductName} AND ProductId <>{Product.ProductId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "Product Name Exist" };
+                            }
+                        }
+
+                        #region Update Product
+
+                        var entity = _context.Update(Product);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.ProductCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Product
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Product,
+                                DocumentId = Product.ProductId,
+                                DocumentNo = Product.ProductCode,
+                                TblName = "M_Product",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Product Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Product
-
-                            var entity = _context.Update(Product);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.ProductCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Product
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Modules.Master,
-                                    TransactionId = (short)Master.Product,
-                                    DocumentId = Product.ProductId,
-                                    DocumentNo = Product.ProductCode,
-                                    TblName = "M_Product",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Product Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "ProductId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "ProductId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -283,8 +275,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -292,60 +282,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteProductAsync(string RegId, Int16 CompanyId, M_Product Product, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Product.ProductId > 0)
+                try
                 {
-                    var ProductToRemove = _context.M_Product.Where(x => x.ProductId == Product.ProductId).ExecuteDelete();
-
-                    if (ProductToRemove > 0)
+                    if (Product.ProductId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var ProductToRemove = _context.M_Product.Where(x => x.ProductId == Product.ProductId).ExecuteDelete();
+
+                        if (ProductToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.Product,
-                            DocumentId = Product.ProductId,
-                            DocumentNo = Product.ProductCode,
-                            TblName = "M_Product",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Product Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Product,
+                                DocumentId = Product.ProductId,
+                                DocumentNo = Product.ProductCode,
+                                TblName = "M_Product",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Product Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "ProductId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "ProductId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Product,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Product",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Product,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Product",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

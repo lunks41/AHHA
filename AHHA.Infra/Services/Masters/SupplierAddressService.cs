@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SupplierAddressViewModelCount> GetSupplierAddressListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            SupplierAddressViewModelCount SupplierAddressViewModelCount = new SupplierAddressViewModelCount();
+            SupplierAddressViewModelCount supplierAddressViewModelCount = new SupplierAddressViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SupplierAddress WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Supplier},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SupplierAddress WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Supplier}))");
 
-                var result = await _repository.GetQueryAsync<SupplierAddressViewModel>(RegId, $"SELECT M_Cou.AddressId,M_Cou.SupplierAddressCode,M_Cou.SupplierAddressName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SupplierAddress M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SupplierAddressName LIKE '%{searchString}%' OR M_Cou.SupplierAddressCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.AddressId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Supplier},{(short)Modules.Master})) ORDER BY M_Cou.SupplierAddressName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<SupplierAddressViewModel>(RegId, $"SELECT M_Cou.AddressId,M_Cou.SupplierAddressCode,M_Cou.SupplierAddressName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SupplierAddress M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SupplierAddressName LIKE '%{searchString}%' OR M_Cou.SupplierAddressCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.AddressId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) ORDER BY M_Cou.SupplierAddressName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                SupplierAddressViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                SupplierAddressViewModelCount.data = result == null ? null : result.ToList();
+                supplierAddressViewModelCount.responseCode = 200;
+                supplierAddressViewModelCount.responseMessage = "success";
+                supplierAddressViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                supplierAddressViewModelCount.data = result == null ? null : result.ToList();
 
-                return SupplierAddressViewModelCount;
+                return supplierAddressViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddSupplierAddressAsync(string RegId, Int16 CompanyId, M_SupplierAddress SupplierAddress, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Supplier},{(short)Modules.Master})) UNION ALL SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Supplier},{(short)Modules.Master}))");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) UNION ALL SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier}))");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "SupplierAddress Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "SupplierAddress Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AddressId + 1) FROM dbo.M_SupplierAddress WHERE (AddressId + 1) NOT IN (SELECT AddressId FROM dbo.M_SupplierAddress)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AddressId + 1) FROM dbo.M_SupplierAddress WHERE (AddressId + 1) NOT IN (SELECT AddressId FROM dbo.M_SupplierAddress)),1) AS MissId");
-
                         #region Saving SupplierAddress
 
                         SupplierAddress.AddressId = Convert.ToInt32(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = "",
                                 TblName = "M_SupplierAddress",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Supplier Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "AddressId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AddressId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateSupplierAddressAsync(string RegId, Int16 CompanyId, M_SupplierAddress SupplierAddress, Int32 UserId)
         {
             int IsActive = SupplierAddress.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,61 +200,59 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (SupplierAddress.AddressId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.Supplier},{(short)Modules.Master})) AND SupplierAddressName='{SupplierAddress.Address1} AND AddressId <>{SupplierAddress.AddressId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierAddressName='{SupplierAddress.Address1} AND AddressId <>{SupplierAddress.AddressId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "SupplierAddress Name Exist" };
+                            }
+                        }
+
+                        #region Update SupplierAddress
+
+                        var entity = _context.Update(SupplierAddress);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update SupplierAddress
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Supplier,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = SupplierAddress.AddressId,
+                                DocumentNo = SupplierAddress.Address1,
+                                TblName = "M_SupplierAddress",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "SupplierAddress Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update SupplierAddress
-
-                            var entity = _context.Update(SupplierAddress);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update SupplierAddress
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Supplier,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = SupplierAddress.AddressId,
-                                    DocumentNo = SupplierAddress.Address1,
-                                    TblName = "M_SupplierAddress",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "SupplierAddress Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "AddressId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AddressId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -282,8 +274,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -291,60 +281,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteSupplierAddressAsync(string RegId, Int16 CompanyId, M_SupplierAddress SupplierAddress, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (SupplierAddress.AddressId > 0)
+                try
                 {
-                    var SupplierAddressToRemove = _context.M_SupplierAddress.Where(x => x.AddressId == SupplierAddress.AddressId).ExecuteDelete();
-
-                    if (SupplierAddressToRemove > 0)
+                    if (SupplierAddress.AddressId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var SupplierAddressToRemove = _context.M_SupplierAddress.Where(x => x.AddressId == SupplierAddress.AddressId).ExecuteDelete();
+
+                        if (SupplierAddressToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Supplier,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = SupplierAddress.AddressId,
-                            DocumentNo = SupplierAddress.Address1,
-                            TblName = "M_SupplierAddress",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "SupplierAddress Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Supplier,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = SupplierAddress.AddressId,
+                                DocumentNo = SupplierAddress.Address1,
+                                TblName = "M_SupplierAddress",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "SupplierAddress Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AddressId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "AddressId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.Supplier,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_SupplierAddress",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.Supplier,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_SupplierAddress",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

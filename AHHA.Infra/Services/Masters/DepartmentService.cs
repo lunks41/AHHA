@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             DepartmentViewModelCount departmentViewModelCount = new DepartmentViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Department M_Dep WHERE (M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%' OR M_Dep.Remarks LIKE '%{searchString}%') AND M_Dep.DepartmentId<>0 AND M_Dep.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Department M_Dep WHERE (M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%' OR M_Dep.Remarks LIKE '%{searchString}%') AND M_Dep.DepartmentId<>0 AND M_Dep.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Department}))");
 
-                var result = await _repository.GetQueryAsync<DepartmentViewModel>(RegId, $"SELECT M_Dep.DepartmentId,M_Dep.DepartmentCode,M_Dep.DepartmentName,M_Dep.CompanyId,M_Dep.Remarks,M_Dep.IsActive,M_Dep.CreateById,M_Dep.CreateDate,M_Dep.EditById,M_Dep.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Department M_Dep LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Dep.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Dep.EditById WHERE (M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%' OR M_Dep.Remarks LIKE '%{searchString}%') AND M_Dep.DepartmentId<>0 AND M_Dep.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Department},{(short)Modules.Master})) ORDER BY M_Dep.DepartmentName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<DepartmentViewModel>(RegId, $"SELECT M_Dep.DepartmentId,M_Dep.DepartmentCode,M_Dep.DepartmentName,M_Dep.CompanyId,M_Dep.Remarks,M_Dep.IsActive,M_Dep.CreateById,M_Dep.CreateDate,M_Dep.EditById,M_Dep.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Department M_Dep LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Dep.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Dep.EditById WHERE (M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%' OR M_Dep.Remarks LIKE '%{searchString}%') AND M_Dep.DepartmentId<>0 AND M_Dep.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Department})) ORDER BY M_Dep.DepartmentName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 departmentViewModelCount.responseCode = 200;
                 departmentViewModelCount.responseMessage = "Success";
@@ -91,37 +91,31 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddDepartmentAsync(string RegId, Int16 CompanyId, M_Department Department, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentCode='{Department.DepartmentCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Modules.Master},{(short)Master.Department})) AND DepartmentCode='{Department.DepartmentCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Modules.Master},{(short)Master.Department})) AND DepartmentName='{Department.DepartmentName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "Department Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "Department Name Exist" };
                         }
                     }
                     else
                     {
-                        isExist = false;
                     }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (DepartmentId + 1) FROM dbo.M_Department WHERE (DepartmentId + 1) NOT IN (SELECT DepartmentId FROM dbo.M_Department)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (DepartmentId + 1) FROM dbo.M_Department WHERE (DepartmentId + 1) NOT IN (SELECT DepartmentId FROM dbo.M_Department)),1) AS MissId");
-
                         #region Saving Department
 
                         Department.DepartmentId = Convert.ToInt32(sqlMissingResponce.MissId);
@@ -147,7 +141,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Department.DepartmentCode,
                                 TblName = "M_Department",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Department Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -155,21 +149,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "DepartmentId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "DepartmentId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -199,8 +196,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateDepartmentAsync(string RegId, Int16 CompanyId, M_Department Department, Int32 UserId)
         {
             int IsActive = Department.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -208,63 +203,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Department.DepartmentId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Master.Department},{(short)Modules.Master})) AND DepartmentName='{Department.DepartmentName} AND DepartmentId <>{Department.DepartmentId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Department WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Department.CompanyId},{(short)Modules.Master},{(short)Master.Department})) AND DepartmentName='{Department.DepartmentName} AND DepartmentId <>{Department.DepartmentId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "Department Name Exist" };
+                            }
+                        }
+
+                        #region Update Department
+
+                        var entity = _context.Update(Department);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.DepartmentCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Department
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Department,
+                                DocumentId = Department.DepartmentId,
+                                DocumentNo = Department.DepartmentCode,
+                                TblName = "M_Department",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Department Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Department
-
-                            var entity = _context.Update(Department);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.DepartmentCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Department
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Modules.Master,
-                                    TransactionId = (short)Master.Department,
-                                    DocumentId = Department.DepartmentId,
-                                    DocumentNo = Department.DepartmentCode,
-                                    TblName = "M_Department",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Department Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "DepartmentId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "DepartmentId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -286,8 +279,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -295,60 +286,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteDepartmentAsync(string RegId, Int16 CompanyId, M_Department Department, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Department.DepartmentId > 0)
+                try
                 {
-                    var DepartmentToRemove = _context.M_Department.Where(x => x.DepartmentId == Department.DepartmentId).ExecuteDelete();
-
-                    if (DepartmentToRemove > 0)
+                    if (Department.DepartmentId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var DepartmentToRemove = _context.M_Department.Where(x => x.DepartmentId == Department.DepartmentId).ExecuteDelete();
+
+                        if (DepartmentToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.Department,
-                            DocumentId = Department.DepartmentId,
-                            DocumentNo = Department.DepartmentCode,
-                            TblName = "M_Department",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Department Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Department,
+                                DocumentId = Department.DepartmentId,
+                                DocumentNo = Department.DepartmentCode,
+                                TblName = "M_Department",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Department Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "DepartmentId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "DepartmentId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Department,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Department",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Department,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Department",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

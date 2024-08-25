@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SubCategoryViewModelCount> GetSubCategoryListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            SubCategoryViewModelCount SubCategoryViewModelCount = new SubCategoryViewModelCount();
+            SubCategoryViewModelCount subCategoryViewModelCount = new SubCategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SubCategory WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.SubCategory},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SubCategory WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.SubCategory}))");
 
-                var result = await _repository.GetQueryAsync<SubCategoryViewModel>(RegId, $"SELECT M_Cou.SubCategoryId,M_Cou.SubCategoryCode,M_Cou.SubCategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SubCategory M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SubCategoryName LIKE '%{searchString}%' OR M_Cou.SubCategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.SubCategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.SubCategory},{(short)Modules.Master})) ORDER BY M_Cou.SubCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<SubCategoryViewModel>(RegId, $"SELECT M_Cou.SubCategoryId,M_Cou.SubCategoryCode,M_Cou.SubCategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SubCategory M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SubCategoryName LIKE '%{searchString}%' OR M_Cou.SubCategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.SubCategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) ORDER BY M_Cou.SubCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                SubCategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                SubCategoryViewModelCount.data = result == null ? null : result.ToList();
+                subCategoryViewModelCount.responseCode = 200;
+                subCategoryViewModelCount.responseMessage = "success";
+                subCategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                subCategoryViewModelCount.data = result == null ? null : result.ToList();
 
-                return SubCategoryViewModelCount;
+                return subCategoryViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddSubCategoryAsync(string RegId, Int16 CompanyId, M_SubCategory SubCategory, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Master.SubCategory},{(short)Modules.Master})) AND SubCategoryCode='{SubCategory.SubCategoryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Master.SubCategory},{(short)Modules.Master})) AND SubCategoryName='{SubCategory.SubCategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryCode='{SubCategory.SubCategoryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryName='{SubCategory.SubCategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "SubCategory Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "SubCategory Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (SubCategoryId + 1) FROM dbo.M_SubCategory WHERE (SubCategoryId + 1) NOT IN (SELECT SubCategoryId FROM dbo.M_SubCategory)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (SubCategoryId + 1) FROM dbo.M_SubCategory WHERE (SubCategoryId + 1) NOT IN (SELECT SubCategoryId FROM dbo.M_SubCategory)),1) AS MissId");
-
                         #region Saving SubCategory
 
                         SubCategory.SubCategoryId = Convert.ToInt32(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = SubCategory.SubCategoryCode,
                                 TblName = "M_SubCategory",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Sub Category Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "SubCategoryId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "SubCategoryId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateSubCategoryAsync(string RegId, Int16 CompanyId, M_SubCategory SubCategory, Int32 UserId)
         {
             int IsActive = SubCategory.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +200,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (SubCategory.SubCategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Master.SubCategory},{(short)Modules.Master})) AND SubCategoryName='{SubCategory.SubCategoryName} AND SubCategoryId <>{SubCategory.SubCategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryName='{SubCategory.SubCategoryName} AND SubCategoryId <>{SubCategory.SubCategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "SubCategory Name Exist" };
+                            }
+                        }
+
+                        #region Update SubCategory
+
+                        var entity = _context.Update(SubCategory);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.SubCategoryCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update SubCategory
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.SubCategory,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = SubCategory.SubCategoryId,
+                                DocumentNo = SubCategory.SubCategoryCode,
+                                TblName = "M_SubCategory",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "SubCategory Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update SubCategory
-
-                            var entity = _context.Update(SubCategory);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.SubCategoryCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update SubCategory
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.SubCategory,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = SubCategory.SubCategoryId,
-                                    DocumentNo = SubCategory.SubCategoryCode,
-                                    TblName = "M_SubCategory",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "SubCategory Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "SubCategoryId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "SubCategoryId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +276,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +283,70 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteSubCategoryAsync(string RegId, Int16 CompanyId, M_SubCategory SubCategory, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (SubCategory.SubCategoryId > 0)
+                try
                 {
-                    var SubCategoryToRemove = _context.M_SubCategory.Where(x => x.SubCategoryId == SubCategory.SubCategoryId).ExecuteDelete();
-
-                    if (SubCategoryToRemove > 0)
+                    if (SubCategory.SubCategoryId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var SubCategoryToRemove = _context.M_SubCategory.Where(x => x.SubCategoryId == SubCategory.SubCategoryId).ExecuteDelete();
+
+                        if (SubCategoryToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.SubCategory,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = SubCategory.SubCategoryId,
-                            DocumentNo = SubCategory.SubCategoryCode,
-                            TblName = "M_SubCategory",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "SubCategory Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.SubCategory,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = SubCategory.SubCategoryId,
+                                DocumentNo = SubCategory.SubCategoryCode,
+                                TblName = "M_SubCategory",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "SubCategory Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "SubCategoryId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "SubCategoryId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Product,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Product",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.SubCategory,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_SubCategory",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

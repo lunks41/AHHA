@@ -5,37 +5,39 @@ using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Reflection;
 
 namespace AHHA.Infra.Services.Masters
 {
-    public sealed class BankService : IBankService
+    public sealed class CurrencyService : ICurrencyService
     {
-        private readonly IRepository<M_Bank> _repository;
+        private readonly IRepository<M_Currency> _repository;
         private ApplicationDbContext _context;
 
-        public BankService(IRepository<M_Bank> repository, ApplicationDbContext context)
+        public CurrencyService(IRepository<M_Currency> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        public async Task<BankViewModelCount> GetBankListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<CurrencyViewModelCount> GetCurrencyListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            BankViewModelCount bankViewModelCount = new BankViewModelCount();
+            CurrencyViewModelCount CurrencyViewModelCount = new CurrencyViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.M_Bank M_Ban INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Ban.CurrencyId INNER JOIN dbo.M_ChartOfAccount M_Chr ON M_Chr.GLId = M_Ban.GLId WHERE (M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.AccountNo LIKE '%{searchString}%' OR M_Ban.SwiftCode LIKE '%{searchString}%' OR M_Ban.Remarks1 LIKE '%{searchString}%' OR M_Ban.Remarks2 LIKE '%{searchString}%' OR M_Chr.GLName LIKE '%{searchString}%' OR M_Chr.GLCode LIKE '%{searchString}%') AND M_Ban.BankId<>0 AND M_Ban.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Bank}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Currency WHERE (M_Cou.CurrencyName LIKE '%{searchString}%' OR M_Cou.CurrencyCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CurrencyId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Currency}))");
 
-                var result = await _repository.GetQueryAsync<BankViewModel>(RegId, $"SELECT M_Ban.BankId,M_Ban.BankCode,M_Ban.BankName,M_Cur.CurrencyCode,M_Cur.CurrencyName,M_Cur.CurrencyCode,M_Ban.AccountNo,M_Ban.SwiftCode,M_Ban.Remarks1,M_Ban.Remarks2,M_Chr.GLCode,M_Chr.GLName,M_Ban.IsActive,M_Ban.CreateById,M_Ban.CreateDate,M_Ban.EditById,M_Ban.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy  FROM dbo.M_Bank M_Ban INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Ban.CurrencyId INNER JOIN dbo.M_ChartOfAccount M_Chr ON M_Chr.GLId = M_Ban.GLId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Ban.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Ban.EditById WHERE (M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.AccountNo LIKE '%{searchString}%' OR M_Ban.SwiftCode LIKE '%{searchString}%' OR M_Ban.Remarks1 LIKE '%{searchString}%' OR M_Ban.Remarks2 LIKE '%{searchString}%' OR M_Chr.GLName LIKE '%{searchString}%' OR M_Chr.GLCode LIKE '%{searchString}%') AND M_Ban.BankId<>0 AND M_Ban.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Bank})) ORDER BY M_Ban.BankName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CurrencyViewModel>(RegId, $"SELECT M_Cou.CurrencyId,M_Cou.CurrencyCode,M_Cou.CurrencyName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Currency M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CurrencyName LIKE '%{searchString}%' OR M_Cou.CurrencyCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CurrencyId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Currency})) ORDER BY M_Cou.CurrencyName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                bankViewModelCount.responseCode = 200;
-                bankViewModelCount.responseMessage = "Success";
-                bankViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                bankViewModelCount.data = result == null ? null : result.ToList();
+                CurrencyViewModelCount.responseCode = 200;
+                CurrencyViewModelCount.responseMessage = "success";
+                CurrencyViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                CurrencyViewModelCount.data = result.ToList();
 
-                return bankViewModelCount;
+                return CurrencyViewModelCount;
             }
             catch (Exception ex)
             {
@@ -43,10 +45,10 @@ namespace AHHA.Infra.Services.Masters
                 {
                     CompanyId = CompanyId,
                     ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Bank,
+                    TransactionId = (short)Master.Currency,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "M_Bank",
+                    TblName = "M_Currency",
                     ModeId = (short)Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId
@@ -59,11 +61,11 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<M_Bank> GetBankByIdAsync(string RegId, Int16 CompanyId, Int16 BankId, Int32 UserId)
+        public async Task<M_Currency> GetCurrencyByIdAsync(string RegId, Int16 CompanyId, Int32 CurrencyId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Bank>(RegId, $"SELECT BankId,BankCode,BankName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Bank WHERE BankId={BankId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Currency>(RegId, $"SELECT CurrencyId,CurrencyCode,CurrencyName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Currency WHERE CurrencyId={CurrencyId}");
 
                 return result;
             }
@@ -73,10 +75,10 @@ namespace AHHA.Infra.Services.Masters
                 {
                     CompanyId = CompanyId,
                     ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Bank,
+                    TransactionId = (short)Master.Currency,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "M_Bank",
+                    TblName = "M_Currency",
                     ModeId = (short)Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId,
@@ -89,57 +91,57 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> AddBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int32 UserId)
+        public async Task<SqlResponce> AddCurrencyAsync(string RegId, Int16 CompanyId, M_Currency Currency, Int32 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Bank.CompanyId},{(short)Modules.Master},{(short)Master.Bank})) AND BankCode='{Bank.BankCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Bank.CompanyId},{(short)Modules.Master},{(short)Master.Bank})) AND BankName='{Bank.BankName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Currency WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Currency.CompanyId},{(short)Modules.Master},{(short)Master.Currency})) AND CurrencyCode='{Currency.CurrencyCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Currency WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Currency.CompanyId},{(short)Modules.Master},{(short)Master.Currency})) AND CurrencyName='{Currency.CurrencyName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            return new SqlResponce { Result = -1, Message = "Bank Code Exist" };
+                            return new SqlResponce { Result = -1, Message = "Currency Code Exist" };
                         }
                         else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            return new SqlResponce { Result = -2, Message = "Bank Name Exist" };
+                            return new SqlResponce { Result = -2, Message = "Currency Name Exist" };
                         }
                     }
 
                     //Take the Missing Id From SQL
-                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (BankId + 1) FROM dbo.M_Bank WHERE (BankId + 1) NOT IN (SELECT BankId FROM dbo.M_Bank)),1) AS MissId");
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (CurrencyId + 1) FROM dbo.M_Currency WHERE (CurrencyId + 1) NOT IN (SELECT CurrencyId FROM dbo.M_Currency)),1) AS MissId");
 
                     if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        #region Saving Bank
+                        #region Saving Currency
 
-                        Bank.BankId = Convert.ToInt16(sqlMissingResponce.MissId);
+                        Currency.CurrencyId = Convert.ToInt16(sqlMissingResponce.MissId);
 
-                        var entity = _context.Add(Bank);
+                        var entity = _context.Add(Currency);
                         entity.Property(b => b.EditDate).IsModified = false;
 
-                        var BankToSave = _context.SaveChanges();
+                        var CurrencyToSave = _context.SaveChanges();
 
-                        #endregion Saving Bank
+                        #endregion Saving Currency
 
                         #region Save AuditLog
 
-                        if (BankToSave > 0)
+                        if (CurrencyToSave > 0)
                         {
                             //Saving Audit log
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.Bank,
-                                DocumentId = Bank.BankId,
-                                DocumentNo = Bank.BankCode,
-                                TblName = "M_Bank",
+                                TransactionId = (short)Master.Currency,
+                                DocumentId = Currency.CurrencyId,
+                                DocumentNo = Currency.CurrencyCode,
+                                TblName = "M_Currency",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Bank Save Successfully",
+                                Remarks = "Currency Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -162,7 +164,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "BankId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CurrencyId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -175,10 +177,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.Bank,
+                        TransactionId = (short)Master.Currency,
                         DocumentId = 0,
-                        DocumentNo = Bank.BankCode,
-                        TblName = "M_Bank",
+                        DocumentNo = Currency.CurrencyCode,
+                        TblName = "M_Currency",
                         ModeId = (short)Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId
@@ -191,37 +193,37 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> UpdateBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int32 UserId)
+        public async Task<SqlResponce> UpdateCurrencyAsync(string RegId, Int16 CompanyId, M_Currency Currency, Int32 UserId)
         {
-            int IsActive = Bank.IsActive == true ? 1 : 0;
+            int IsActive = Currency.IsActive == true ? 1 : 0;
 
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    if (Bank.BankId > 0)
+                    if (Currency.CurrencyId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Bank.CompanyId},{(short)Modules.Master},{(short)Master.Bank})) AND BankName='{Bank.BankName} AND BankId <>{Bank.BankId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Currency WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Currency.CompanyId},{(short)Modules.Master},{(short)Master.Currency})) AND CurrencyName='{Currency.CurrencyName} AND CurrencyId <>{Currency.CurrencyId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                return new SqlResponce { Result = -2, Message = "Bank Name Exist" };
+                                return new SqlResponce { Result = -2, Message = "Currency Name Exist" };
                             }
                         }
 
-                        #region Update Bank
+                        #region Update Currency
 
-                        var entity = _context.Update(Bank);
+                        var entity = _context.Update(Currency);
 
                         entity.Property(b => b.CreateById).IsModified = false;
-                        entity.Property(b => b.BankCode).IsModified = false;
+                        entity.Property(b => b.CurrencyCode).IsModified = false;
                         entity.Property(b => b.CompanyId).IsModified = false;
 
                         var counToUpdate = _context.SaveChanges();
 
-                        #endregion Update Bank
+                        #endregion Update Currency
 
                         if (counToUpdate > 0)
                         {
@@ -229,12 +231,12 @@ namespace AHHA.Infra.Services.Masters
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.Bank,
-                                DocumentId = Bank.BankId,
-                                DocumentNo = Bank.BankCode,
-                                TblName = "M_Bank",
+                                TransactionId = (short)Master.Currency,
+                                DocumentId = Currency.CurrencyId,
+                                DocumentNo = Currency.CurrencyCode,
+                                TblName = "M_Currency",
                                 ModeId = (short)Mode.Update,
-                                Remarks = "Bank Update Successfully",
+                                Remarks = "Currency Update Successfully",
                                 CreateById = UserId
                             };
                             _context.Add(auditLog);
@@ -253,7 +255,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "BankId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "CurrencyId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -266,10 +268,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.Bank,
-                        DocumentId = Bank.BankId,
-                        DocumentNo = Bank.BankCode,
-                        TblName = "M_Bank",
+                        TransactionId = (short)Master.Currency,
+                        DocumentId = Currency.CurrencyId,
+                        DocumentNo = Currency.CurrencyCode,
+                        TblName = "M_Currency",
                         ModeId = (short)Mode.Update,
                         Remarks = ex.Message,
                         CreateById = UserId
@@ -282,28 +284,28 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> DeleteBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int32 UserId)
+        public async Task<SqlResponce> DeleteCurrencyAsync(string RegId, Int16 CompanyId, M_Currency Currency, Int32 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    if (Bank.BankId > 0)
+                    if (Currency.CurrencyId > 0)
                     {
-                        var BankToRemove = _context.M_Bank.Where(x => x.BankId == Bank.BankId).ExecuteDelete();
+                        var CurrencyToRemove = _context.M_Currency.Where(x => x.CurrencyId == Currency.CurrencyId).ExecuteDelete();
 
-                        if (BankToRemove > 0)
+                        if (CurrencyToRemove > 0)
                         {
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.Bank,
-                                DocumentId = Bank.BankId,
-                                DocumentNo = Bank.BankCode,
-                                TblName = "M_Bank",
+                                TransactionId = (short)Master.Currency,
+                                DocumentId = Currency.CurrencyId,
+                                DocumentNo = Currency.CurrencyCode,
+                                TblName = "M_Currency",
                                 ModeId = (short)Mode.Delete,
-                                Remarks = "Bank Delete Successfully",
+                                Remarks = "Currency Delete Successfully",
                                 CreateById = UserId
                             };
                             _context.Add(auditLog);
@@ -321,7 +323,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "BankId Should be zero" };
+                        return new SqlResponce { Result = -1, Message = "CurrencyId Should be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -333,10 +335,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.Bank,
+                        TransactionId = (short)Master.Currency,
                         DocumentId = 0,
                         DocumentNo = "",
-                        TblName = "M_Bank",
+                        TblName = "M_Currency",
                         ModeId = (short)Mode.Delete,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId,
@@ -347,6 +349,23 @@ namespace AHHA.Infra.Services.Masters
 
                     throw new Exception(ex.ToString());
                 }
+            }
+        }
+
+        public async Task<DataSet> GetTrainingByIdsAsync(int Id)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("Type", "GET_BY_TRAINING_ID", DbType.String);
+                parameters.Add("Id", Id, DbType.Int32);
+                return await _repository.GetExecuteDataSetStoredProcedure("", "USP_LMS_Training", parameters);
+            }
+            catch (Exception ex)
+            {
+                // Log exception
+                Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
+                throw;
             }
         }
     }

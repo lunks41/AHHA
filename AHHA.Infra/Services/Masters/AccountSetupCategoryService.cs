@@ -89,14 +89,13 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> AddAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory AccountSetupCategory, Int32 UserId)
+        public async Task<SqlResponce> AddAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory accountSetupCategory, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetupCategory})) AND AccSetupCategoryCode='{AccountSetupCategory.AccSetupCategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetupCategory})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetupCategory})) AND AccSetupCategoryCode='{accountSetupCategory.AccSetupCategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetupCategory})) AND AccSetupCategoryName='{accountSetupCategory.AccSetupCategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -117,9 +116,9 @@ namespace AHHA.Infra.Services.Masters
                     {
                         #region Saving AccountSetupCategory
 
-                        AccountSetupCategory.AccSetupCategoryId = Convert.ToInt16(sqlMissingResponce.MissId);
+                        accountSetupCategory.AccSetupCategoryId = Convert.ToInt16(sqlMissingResponce.MissId);
 
-                        var entity = _context.Add(AccountSetupCategory);
+                        var entity = _context.Add(accountSetupCategory);
                         entity.Property(b => b.EditDate).IsModified = false;
 
                         var AccountSetupCategoryToSave = _context.SaveChanges();
@@ -136,8 +135,8 @@ namespace AHHA.Infra.Services.Masters
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
                                 TransactionId = (short)Master.AccountSetupCategory,
-                                DocumentId = AccountSetupCategory.AccSetupCategoryId,
-                                DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
+                                DocumentId = accountSetupCategory.AccSetupCategoryId,
+                                DocumentNo = accountSetupCategory.AccSetupCategoryCode,
                                 TblName = "M_AccountSetupCategory",
                                 ModeId = (short)Mode.Create,
                                 Remarks = "Account Setup Category Save Successfully",
@@ -146,22 +145,26 @@ namespace AHHA.Infra.Services.Masters
                             };
 
                             _context.Add(auditLog);
-                            var auditLogSave = _context.SaveChanges();
+                            int auditLogSave = _context.SaveChanges();
 
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
-
-                            #endregion Save AuditLog
                         }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "AccSetupCategoryId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccSetupCategoryId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -174,7 +177,7 @@ namespace AHHA.Infra.Services.Masters
                         ModuleId = (short)Modules.Master,
                         TransactionId = (short)Master.AccountSetupCategory,
                         DocumentId = 0,
-                        DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
+                        DocumentNo = accountSetupCategory.AccSetupCategoryCode,
                         TblName = "M_AccountSetupCategory",
                         ModeId = (short)Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
@@ -188,18 +191,17 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> UpdateAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory AccountSetupCategory, Int32 UserId)
+        public async Task<SqlResponce> UpdateAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory accountSetupCategory, Int32 UserId)
         {
-            int IsActive = AccountSetupCategory.IsActive == true ? 1 : 0;
-            var sqlResponce = new SqlResponce();
+            int IsActive = accountSetupCategory.IsActive == true ? 1 : 0;
 
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    if (AccountSetupCategory.AccSetupCategoryId > 0)
+                    if (accountSetupCategory.AccSetupCategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Master.AccountSetupCategory},{(short)Modules.Master})) AND AccSetupCategoryName='{AccountSetupCategory.AccSetupCategoryName} AND AccSetupCategoryId <>{AccountSetupCategory.AccSetupCategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountSetupCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetupCategory})) AND AccSetupCategoryName='{accountSetupCategory.AccSetupCategoryName} AND AccSetupCategoryId <>{accountSetupCategory.AccSetupCategoryId}'");
 
                         if (StrExist.Any() && StrExist.ToList()[0].IsExist == 2)
                         {
@@ -208,7 +210,7 @@ namespace AHHA.Infra.Services.Masters
 
                         #region Update AccountSetupCategory
 
-                        var entity = _context.Update(AccountSetupCategory);
+                        var entity = _context.Update(accountSetupCategory);
 
                         entity.Property(b => b.CreateById).IsModified = false;
                         entity.Property(b => b.AccSetupCategoryCode).IsModified = false;
@@ -224,8 +226,8 @@ namespace AHHA.Infra.Services.Masters
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
                                 TransactionId = (short)Master.AccountSetupCategory,
-                                DocumentId = AccountSetupCategory.AccSetupCategoryId,
-                                DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
+                                DocumentId = accountSetupCategory.AccSetupCategoryId,
+                                DocumentNo = accountSetupCategory.AccSetupCategoryCode,
                                 TblName = "M_AccountSetupCategory",
                                 ModeId = (short)Mode.Update,
                                 Remarks = "Account Setup Category Update Successfully",
@@ -235,15 +237,21 @@ namespace AHHA.Infra.Services.Masters
                             var auditLogSave = await _context.SaveChangesAsync();
 
                             if (auditLogSave > 0)
+                            {
                                 transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
                         }
-                        sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "AccSetupCategoryId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccSetupCategoryId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -255,8 +263,8 @@ namespace AHHA.Infra.Services.Masters
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
                         TransactionId = (short)Master.AccountSetupCategory,
-                        DocumentId = AccountSetupCategory.AccSetupCategoryId,
-                        DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
+                        DocumentId = accountSetupCategory.AccSetupCategoryId,
+                        DocumentNo = accountSetupCategory.AccSetupCategoryCode,
                         TblName = "M_AccountSetupCategory",
                         ModeId = (short)Mode.Update,
                         Remarks = ex.Message,
@@ -270,62 +278,72 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> DeleteAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory AccountSetupCategory, Int32 UserId)
+        public async Task<SqlResponce> DeleteAccountSetupCategoryAsync(string RegId, Int16 CompanyId, M_AccountSetupCategory accountSetupCategory, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (AccountSetupCategory.AccSetupCategoryId > 0)
+                try
                 {
-                    var AccountSetupCategoryToRemove = _context.M_AccountSetupCategory.Where(x => x.AccSetupCategoryId == AccountSetupCategory.AccSetupCategoryId).ExecuteDelete();
-
-                    if (AccountSetupCategoryToRemove > 0)
+                    if (accountSetupCategory.AccSetupCategoryId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var accountSetupCategoryToRemove = _context.M_AccountSetupCategory.Where(x => x.AccSetupCategoryId == accountSetupCategory.AccSetupCategoryId).ExecuteDelete();
+
+                        if (accountSetupCategoryToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.AccountSetupCategory,
-                            DocumentId = AccountSetupCategory.AccSetupCategoryId,
-                            DocumentNo = AccountSetupCategory.AccSetupCategoryCode,
-                            TblName = "M_AccountSetupCategory",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "AccountSetupCategory Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.AccountSetupCategory,
+                                DocumentId = accountSetupCategory.AccSetupCategoryId,
+                                DocumentNo = accountSetupCategory.AccSetupCategoryCode,
+                                TblName = "M_AccountSetupCategory",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "AccountSetupCategory Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AccSetupCategoryId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "AccSetupCategoryId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.AccountSetupCategory,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_AccountSetupCategory",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.AccountSetupCategory,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_AccountSetupCategory",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

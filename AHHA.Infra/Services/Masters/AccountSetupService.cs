@@ -92,7 +92,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddAccountSetupAsync(string RegId, Int16 CompanyId, M_AccountSetup AccountSetup, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
@@ -149,21 +148,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "AccountSetupId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccountSetupId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -193,7 +195,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateAccountSetupAsync(string RegId, Int16 CompanyId, M_AccountSetup AccountSetup, Int32 UserId)
         {
             int IsActive = AccountSetup.IsActive == true ? 1 : 0;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -241,15 +242,21 @@ namespace AHHA.Infra.Services.Masters
                             var auditLogSave = await _context.SaveChangesAsync();
 
                             if (auditLogSave > 0)
+                            {
                                 transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
                         }
-                        sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "AccountSetupId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccountSetupId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -271,8 +278,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -280,60 +285,70 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteAccountSetupAsync(string RegId, Int16 CompanyId, M_AccountSetup AccountSetup, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (AccountSetup.AccSetupId > 0)
+                try
                 {
-                    var AccountSetupToRemove = _context.M_AccountSetup.Where(x => x.AccSetupId == AccountSetup.AccSetupId).ExecuteDelete();
-
-                    if (AccountSetupToRemove > 0)
+                    if (AccountSetup.AccSetupId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var AccountSetupToRemove = _context.M_AccountSetup.Where(x => x.AccSetupId == AccountSetup.AccSetupId).ExecuteDelete();
+
+                        if (AccountSetupToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Modules.Master,
-                            TransactionId = (short)Master.AccountSetup,
-                            DocumentId = AccountSetup.AccSetupId,
-                            DocumentNo = AccountSetup.AccSetupCode,
-                            TblName = "M_AccountSetup",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "AccountSetup Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.AccountSetup,
+                                DocumentId = AccountSetup.AccSetupId,
+                                DocumentNo = AccountSetup.AccSetupCode,
+                                TblName = "M_AccountSetup",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "AccountSetup Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AccountSetupId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "AccountSetupId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.AccountSetup,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_AccountSetup",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.AccountSetup,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_AccountSetup",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

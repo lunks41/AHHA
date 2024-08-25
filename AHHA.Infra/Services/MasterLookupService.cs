@@ -108,6 +108,36 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
+        public async Task<IEnumerable<BargeLookupModel>> GetBargeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<BargeLookupModel>(RegId, $"SELECT BargeId,BargeCode,BargeName FROM M_Barge WHERE BargeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge})) order by BargeName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Barge,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Barge",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
         public async Task<IEnumerable<CategoryLookupModel>> GetCategoryLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
@@ -288,7 +318,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<CustomerGroupCreditLimitLookupModel>> GetCustomerGroupCreditLimitLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<CustomerGroupCreditLimitLookupModel>> GetCustomerGroupCreditLimitLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -318,7 +348,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<CustomerLookupModel>> GetCustomerLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<CustomerLookupModel>> GetCustomerLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -348,7 +378,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<DepartmentLookupModel>> GetDepartmentLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<DepartmentLookupModel>> GetDepartmentLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -378,7 +408,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<DesignationLookupModel>> GetDesignationLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<DesignationLookupModel>> GetDesignationLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -408,7 +438,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<EmployeeLookupModel>> GetEmployeeLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<EmployeeLookupModel>> GetEmployeeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -438,7 +468,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<GroupCreditLimitLookupModel>> GetGroupCreditLimitLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<GroupCreditLimitLookupModel>> GetGroupCreditLimitLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -468,7 +498,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<GstLookupModel>> GetGstLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<GstLookupModel>> GetGstLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -498,7 +528,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<GstCategoryLookupModel>> GetGstCategoryLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<GstCategoryLookupModel>> GetGstCategoryLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -528,7 +558,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<OrderTypeCategoryLookupModel>> GetOrderTypeCategoryLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<OrderTypeCategoryLookupModel>> GetOrderTypeCategoryLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -558,7 +588,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<OrderTypeLookupModel>> GetOrderTypeLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<OrderTypeLookupModel>> GetOrderTypeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -588,7 +618,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<PaymentTypeLookupModel>> GetPaymentTypeLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<PaymentTypeLookupModel>> GetPaymentTypeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -618,7 +648,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<PortLookupModel>> GetPortLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<PortLookupModel>> GetPortLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -648,7 +678,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<PortRegionLookupModel>> GetPortRegionLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<PortRegionLookupModel>> GetPortRegionLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -678,7 +708,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<ProductLookupModel>> GetProductLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<ProductLookupModel>> GetProductLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -708,7 +738,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<SubCategoryLookupModel>> GetSubCategoryLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<SubCategoryLookupModel>> GetSubCategoryLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -738,7 +768,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<SupplierLookupModel>> GetSupplierLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<SupplierLookupModel>> GetSupplierLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -768,7 +798,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<UomLookupModel>> GetUomLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<UomLookupModel>> GetUomLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -798,7 +828,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<VoyageLookupModel>> GetVoyageLookpListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        public async Task<IEnumerable<VoyageLookupModel>> GetVoyageLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
             {
@@ -846,36 +876,6 @@ namespace AHHA.Infra.Services.Masters
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Vessel",
-                    ModeId = (short)Mode.Lookup,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
-            }
-        }
-
-        public async Task<IEnumerable<BargeLookupModel>> GetBargeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
-        {
-            try
-            {
-                var result = await _repository.GetQueryAsync<BargeLookupModel>(RegId, $"SELECT BargeId,BargeCode,BargeName FROM M_Barge WHERE BargeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge})) order by BargeName");
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.Barge,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Barge",
                     ModeId = (short)Mode.Lookup,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId

@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<UomViewModelCount> GetUomListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            UomViewModelCount UomViewModelCount = new UomViewModelCount();
+            UomViewModelCount uomViewModelCount = new UomViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Uom WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Uom},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Uom WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Uom}))");
 
-                var result = await _repository.GetQueryAsync<UomViewModel>(RegId, $"SELECT M_Cou.UomId,M_Cou.UomCode,M_Cou.UomName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Uom M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.UomName LIKE '%{searchString}%' OR M_Cou.UomCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.UomId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Uom},{(short)Modules.Master})) ORDER BY M_Cou.UomName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<UomViewModel>(RegId, $"SELECT M_Cou.UomId,M_Cou.UomCode,M_Cou.UomName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Uom M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.UomName LIKE '%{searchString}%' OR M_Cou.UomCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.UomId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Uom})) ORDER BY M_Cou.UomName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                UomViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                UomViewModelCount.data = result == null ? null : result.ToList();
+                uomViewModelCount.responseCode = 200;
+                uomViewModelCount.responseMessage = "success";
+                uomViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                uomViewModelCount.data = result == null ? null : result.ToList();
 
-                return UomViewModelCount;
+                return uomViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddUomAsync(string RegId, Int16 CompanyId, M_Uom Uom, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Master.Uom},{(short)Modules.Master})) AND UomCode='{Uom.UomCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Master.Uom},{(short)Modules.Master})) AND UomName='{Uom.UomName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomCode='{Uom.UomCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomName='{Uom.UomName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "Uom Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "Uom Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (UomId + 1) FROM dbo.M_Uom WHERE (UomId + 1) NOT IN (SELECT UomId FROM dbo.M_Uom)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (UomId + 1) FROM dbo.M_Uom WHERE (UomId + 1) NOT IN (SELECT UomId FROM dbo.M_Uom)),1) AS MissId");
-
                         #region Saving Uom
 
                         Uom.UomId = Convert.ToInt16(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Uom.UomCode,
                                 TblName = "M_Uom",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Uom Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "UomId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "UomId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateUomAsync(string RegId, Int16 CompanyId, M_Uom Uom, Int32 UserId)
         {
             int IsActive = Uom.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +200,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Uom.UomId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Master.Uom},{(short)Modules.Master})) AND UomName='{Uom.UomName} AND UomId <>{Uom.UomId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomName='{Uom.UomName} AND UomId <>{Uom.UomId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "Uom Name Exist" };
+                            }
+                        }
+
+                        #region Update Uom
+
+                        var entity = _context.Update(Uom);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.UomCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Uom
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Uom,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Uom.UomId,
+                                DocumentNo = Uom.UomCode,
+                                TblName = "M_Uom",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Uom Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Uom
-
-                            var entity = _context.Update(Uom);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.UomCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Uom
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Uom,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = Uom.UomId,
-                                    DocumentNo = Uom.UomCode,
-                                    TblName = "M_Uom",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Uom Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "UomId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "UomId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +276,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +283,69 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteUomAsync(string RegId, Int16 CompanyId, M_Uom Uom, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Uom.UomId > 0)
+                try
                 {
-                    var UomToRemove = _context.M_Uom.Where(x => x.UomId == Uom.UomId).ExecuteDelete();
-
-                    if (UomToRemove > 0)
+                    if (Uom.UomId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var UomToRemove = _context.M_Uom.Where(x => x.UomId == Uom.UomId).ExecuteDelete();
+
+                        if (UomToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Uom,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = Uom.UomId,
-                            DocumentNo = Uom.UomCode,
-                            TblName = "M_Uom",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Uom Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Uom,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Uom.UomId,
+                                DocumentNo = Uom.UomCode,
+                                TblName = "M_Uom",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Uom Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "UomId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "UomId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.Uom,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Uom",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.Uom,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Uom",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }

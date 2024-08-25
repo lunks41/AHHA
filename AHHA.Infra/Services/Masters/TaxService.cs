@@ -23,17 +23,19 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<TaxViewModelCount> GetTaxListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            TaxViewModelCount TaxViewModelCount = new TaxViewModelCount();
+            TaxViewModelCount taxViewModelCount = new TaxViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Tax WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Tax},{(short)Modules.Master}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Tax WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Tax}))");
 
-                var result = await _repository.GetQueryAsync<TaxViewModel>(RegId, $"SELECT M_Cou.TaxId,M_Cou.TaxCode,M_Cou.TaxName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Tax M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.TaxName LIKE '%{searchString}%' OR M_Cou.TaxCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.TaxId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.Tax},{(short)Modules.Master})) ORDER BY M_Cou.TaxName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<TaxViewModel>(RegId, $"SELECT M_Cou.TaxId,M_Cou.TaxCode,M_Cou.TaxName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Tax M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.TaxName LIKE '%{searchString}%' OR M_Cou.TaxCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.TaxId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Tax})) ORDER BY M_Cou.TaxName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                TaxViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                TaxViewModelCount.data = result == null ? null : result.ToList();
+                taxViewModelCount.responseCode = 200;
+                taxViewModelCount.responseMessage = "success";
+                taxViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                taxViewModelCount.data = result == null ? null : result.ToList();
 
-                return TaxViewModelCount;
+                return taxViewModelCount;
             }
             catch (Exception ex)
             {
@@ -89,37 +91,28 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> AddTaxAsync(string RegId, Int16 CompanyId, M_Tax Tax, Int32 UserId)
         {
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxCode='{Tax.TaxCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxName='{Tax.TaxName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxCode='{Tax.TaxCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxName='{Tax.TaxName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            
                             return new SqlResponce { Result = -1, Message = "Tax Code Exist" };
                         }
-                         else if (StrExist.ToList()[0].IsExist == 2)
+                        else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            
                             return new SqlResponce { Result = -2, Message = "Tax Name Exist" };
                         }
                     }
-                    else
-                    {
-                        isExist = false;
-                    }
 
-                   if(isExist)
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (TaxId + 1) FROM dbo.M_Tax WHERE (TaxId + 1) NOT IN (SELECT TaxId FROM dbo.M_Tax)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
-                        //Take the Missing Id From SQL
-                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (TaxId + 1) FROM dbo.M_Tax WHERE (TaxId + 1) NOT IN (SELECT TaxId FROM dbo.M_Tax)),1) AS MissId");
-
                         #region Saving Tax
 
                         Tax.TaxId = Convert.ToInt16(sqlMissingResponce.MissId);
@@ -145,7 +138,7 @@ namespace AHHA.Infra.Services.Masters
                                 DocumentNo = Tax.TaxCode,
                                 TblName = "M_Tax",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Invoice Save Successfully",
+                                Remarks = "Tax Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -153,21 +146,24 @@ namespace AHHA.Infra.Services.Masters
                             _context.Add(auditLog);
                             var auditLogSave = _context.SaveChanges();
 
-                            //await _auditLogServices.AddAuditLogAsync(auditLog);
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
-                                sqlResponce = new SqlResponce { Result = 1, Message = "Save Successfully" };
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
                             }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
                         }
 
                         #endregion Save AuditLog
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "TaxId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "TaxId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -197,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
         public async Task<SqlResponce> UpdateTaxAsync(string RegId, Int16 CompanyId, M_Tax Tax, Int32 UserId)
         {
             int IsActive = Tax.IsActive == true ? 1 : 0;
-            bool isExist = true;
-            var sqlResponce = new SqlResponce();
 
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -206,63 +200,61 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (Tax.TaxId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Master.Tax},{(short)Modules.Master})) AND TaxName='{Tax.TaxName} AND TaxId <>{Tax.TaxId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxName='{Tax.TaxName} AND TaxId <>{Tax.TaxId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                
                                 return new SqlResponce { Result = -2, Message = "Tax Name Exist" };
+                            }
+                        }
+
+                        #region Update Tax
+
+                        var entity = _context.Update(Tax);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.TaxCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update Tax
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Tax,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Tax.TaxId,
+                                DocumentNo = Tax.TaxCode,
+                                TblName = "M_Tax",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "Tax Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
                             }
                         }
                         else
                         {
-                            isExist = false;
-                        }
-
-                       if(isExist)
-                        {
-                            #region Update Tax
-
-                            var entity = _context.Update(Tax);
-
-                            entity.Property(b => b.CreateById).IsModified = false;
-                            entity.Property(b => b.TaxCode).IsModified = false;
-                            entity.Property(b => b.CompanyId).IsModified = false;
-
-                            var counToUpdate = _context.SaveChanges();
-
-                            #endregion Update Tax
-
-                            if (counToUpdate > 0)
-                            {
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)Master.Tax,
-                                    TransactionId = (short)Modules.Master,
-                                    DocumentId = Tax.TaxId,
-                                    DocumentNo = Tax.TaxCode,
-                                    TblName = "M_Tax",
-                                    ModeId = (short)Mode.Update,
-                                    Remarks = "Tax Update Successfully",
-                                    CreateById = UserId
-                                };
-                                _context.Add(auditLog);
-                                var auditLogSave = await _context.SaveChangesAsync();
-
-                                if (auditLogSave > 0)
-                                    transaction.Commit();
-                            }
-                            sqlResponce = new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
                         }
                     }
                     else
                     {
-                        sqlResponce = new SqlResponce { Result = -1, Message = "TaxId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "TaxId Should not be zero" };
                     }
-                    return sqlResponce;
+                    return new SqlResponce();
                 }
                 catch (Exception ex)
                 {
@@ -284,8 +276,6 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    //await _errorLogServices.AddErrorLogAsync(errorLog);
-
                     throw new Exception(ex.ToString());
                 }
             }
@@ -293,60 +283,70 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> DeleteTaxAsync(string RegId, Int16 CompanyId, M_Tax Tax, Int32 UserId)
         {
-            var sqlResponce = new SqlResponce();
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                if (Tax.TaxId > 0)
+                try
                 {
-                    var TaxToRemove = _context.M_Tax.Where(x => x.TaxId == Tax.TaxId).ExecuteDelete();
-
-                    if (TaxToRemove > 0)
+                    if (Tax.TaxId > 0)
                     {
-                        var auditLog = new AdmAuditLog
+                        var TaxToRemove = _context.M_Tax.Where(x => x.TaxId == Tax.TaxId).ExecuteDelete();
+
+                        if (TaxToRemove > 0)
                         {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)Master.Tax,
-                            TransactionId = (short)Modules.Master,
-                            DocumentId = Tax.TaxId,
-                            DocumentNo = Tax.TaxCode,
-                            TblName = "M_Tax",
-                            ModeId = (short)Mode.Delete,
-                            Remarks = "Tax Delete Successfully",
-                            CreateById = UserId
-                        };
-                        _context.Add(auditLog);
-                        var auditLogSave = await _context.SaveChangesAsync();
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Master.Tax,
+                                TransactionId = (short)Modules.Master,
+                                DocumentId = Tax.TaxId,
+                                DocumentNo = Tax.TaxCode,
+                                TblName = "M_Tax",
+                                ModeId = (short)Mode.Delete,
+                                Remarks = "Tax Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
                     }
-
-                    sqlResponce = new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "TaxId Should be zero" };
+                    }
+                    return new SqlResponce();
                 }
-                else
+                catch (Exception ex)
                 {
-                    sqlResponce = new SqlResponce { Result = -1, Message = "TaxId Should be zero" };
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Master.TaxCategory,
+                        TransactionId = (short)Modules.Master,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_TaxCategory",
+                        ModeId = (short)Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
                 }
-                return sqlResponce;
-            }
-            catch (Exception ex)
-            {
-                _context.ChangeTracker.Clear();
-
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)Master.Tax,
-                    TransactionId = (short)Modules.Master,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "M_Tax",
-                    ModeId = (short)Mode.Delete,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
             }
         }
     }
