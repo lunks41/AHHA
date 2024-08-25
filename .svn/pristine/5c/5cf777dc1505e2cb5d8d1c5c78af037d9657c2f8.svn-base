@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace AHHA.API.Controllers.Masters
+namespace AHHA.API.Controllers.Admin
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class Vessel_BackController : ControllerBase
+    public class ShareDataController : ControllerBase
     {
     }
 }

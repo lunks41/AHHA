@@ -37,7 +37,7 @@ namespace AHHA.API.Controllers
                     var cacheData = await _MasterLookupService.GetCountryLookupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
                     return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                    //return Ok(cacheData);
+                    //return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                 }
                 else
                 {
@@ -66,7 +66,7 @@ namespace AHHA.API.Controllers
                     var cacheData = await _MasterLookupService.GetVesselLookupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
                     return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                    //return Ok(cacheData);
+                    //return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                 }
                 else
                 {
@@ -95,7 +95,7 @@ namespace AHHA.API.Controllers
                     var cacheData = await _MasterLookupService.GetBargeLookupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
                     return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                    //return Ok(cacheData);
+                    //return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                 }
                 else
                 {
@@ -124,7 +124,7 @@ namespace AHHA.API.Controllers
                     var cacheData = await _MasterLookupService.GetCategoryLookupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
                     return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                    //return Ok(cacheData);
+                    //return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                 }
                 else
                 {
