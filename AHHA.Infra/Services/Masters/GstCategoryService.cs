@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             GstCategoryViewModelCount gstCategoryViewModelCount = new GstCategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_GstCategory WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GstCategory}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_GstCategory M_Gstc WHERE (M_Gstc.GstCategoryName LIKE '%{searchString}%' OR M_Gstc.GstCategoryCode LIKE '%{searchString}%' OR M_Gstc.Remarks LIKE '%{searchString}%') AND M_Gstc.GstCategoryId<>0 AND M_Gstc.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GstCategory}))");
 
-                var result = await _repository.GetQueryAsync<GstCategoryViewModel>(RegId, $"SELECT M_Cou.GstCategoryId,M_Cou.GstCategoryCode,M_Cou.GstCategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_GstCategory M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.GstCategoryName LIKE '%{searchString}%' OR M_Cou.GstCategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.GstCategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GstCategory})) ORDER BY M_Cou.GstCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<GstCategoryViewModel>(RegId, $"SELECT M_Gstc.GstCategoryId,M_Gstc.GstCategoryCode,M_Gstc.GstCategoryName,M_Gstc.CompanyId,M_Gstc.Remarks,M_Gstc.IsActive,M_Gstc.CreateById,M_Gstc.CreateDate,M_Gstc.EditById,M_Gstc.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_GstCategory M_Gstc LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Gstc.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Gstc.EditById WHERE (M_Gstc.GstCategoryName LIKE '%{searchString}%' OR M_Gstc.GstCategoryCode LIKE '%{searchString}%' OR M_Gstc.Remarks LIKE '%{searchString}%') AND M_Gstc.GstCategoryId<>0 AND M_Gstc.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GstCategory})) ORDER BY M_Gstc.GstCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 gstCategoryViewModelCount.responseCode = 200;
                 gstCategoryViewModelCount.responseMessage = "success";
@@ -42,8 +42,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.GstCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.GstCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_GstCategory",
@@ -72,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.GstCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.GstCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_GstCategory",
@@ -132,8 +132,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.GstCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.GstCategory,
                                 DocumentId = GstCategory.GstCategoryId,
                                 DocumentNo = GstCategory.GstCategoryCode,
                                 TblName = "M_GstCategory",
@@ -173,8 +173,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.GstCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.GstCategory,
                         DocumentId = 0,
                         DocumentNo = GstCategory.GstCategoryCode,
                         TblName = "M_GstCategory",
@@ -192,8 +192,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateGstCategoryAsync(string RegId, Int16 CompanyId, M_GstCategory GstCategory, Int32 UserId)
         {
-            int IsActive = GstCategory.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
@@ -227,8 +225,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.GstCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.GstCategory,
                                 DocumentId = GstCategory.GstCategoryId,
                                 DocumentNo = GstCategory.GstCategoryCode,
                                 TblName = "M_GstCategory",
@@ -264,8 +262,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.GstCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.GstCategory,
                         DocumentId = GstCategory.GstCategoryId,
                         DocumentNo = GstCategory.GstCategoryCode,
                         TblName = "M_GstCategory",
@@ -296,8 +294,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.GstCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.GstCategory,
                                 DocumentId = GstCategory.GstCategoryId,
                                 DocumentNo = GstCategory.GstCategoryCode,
                                 TblName = "M_GstCategory",
@@ -331,8 +329,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.GstCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.GstCategory,
                         DocumentId = 0,
                         DocumentNo = "",
                         TblName = "M_GstCategory",

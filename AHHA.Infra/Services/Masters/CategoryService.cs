@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             CategoryViewModelCount categoryViewModelCount = new CategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Category WHERE (M_Cat.CategoryName LIKE '%{searchString}%' OR M_Cat.CategoryCode LIKE '%{searchString}%' OR M_Cat.Remarks LIKE '%{searchString}%') AND M_Cat.CategoryId<>0 AND M_Cat.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Category}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Category M_Cat WHERE (M_Cat.CategoryName LIKE '%{searchString}%' OR M_Cat.CategoryCode LIKE '%{searchString}%' OR M_Cat.Remarks LIKE '%{searchString}%') AND M_Cat.CategoryId<>0 AND M_Cat.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Category}))");
 
-                var result = await _repository.GetQueryAsync<CategoryViewModel>(RegId, $"SELECT M_Cat.CategoryId,M_Cat.CategoryCode,M_Cat.CategoryName,M_Cat.CompanyId,M_Cat.Remarks,M_Cat.IsActive,M_Cat.CreateById,M_Cat.CreateDate,M_Cat.EditById,M_Cat.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Category M_Cat LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cat.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cat.EditById WHERE (M_Cat.CategoryName LIKE '%{searchString}%' OR M_Cat.CategoryCode LIKE '%{searchString}%' OR M_Cat.Remarks LIKE '%{searchString}%') AND M_Cat.CategoryId<>0 AND M_Cat.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Category})) ORDER BY M_Cat.CategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CategoryViewModel>(RegId, $"SELECT M_Cat.CategoryId,M_Cat.CompanyId,M_Cat.CategoryCode,M_Cat.CategoryName,M_Cat.Remarks,M_Cat.IsActive,M_Cat.CreateById,M_Cat.CreateDate,M_Cat.EditById,M_Cat.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Category M_Cat LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cat.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cat.EditById WHERE (M_Cat.CategoryName LIKE '%{searchString}%' OR M_Cat.CategoryCode LIKE '%{searchString}%' OR M_Cat.Remarks LIKE '%{searchString}%') AND M_Cat.CategoryId<>0 AND M_Cat.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Category})) ORDER BY M_Cat.CategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 categoryViewModelCount.responseCode = 200;
                 categoryViewModelCount.responseMessage = "success";
@@ -193,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateCategoryAsync(string RegId, Int16 CompanyId, M_Category Category, Int32 UserId)
         {
-            int IsActive = Category.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try

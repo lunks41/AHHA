@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             PortViewModelCount portViewModelCount = new PortViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Port WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Port}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Port M_Pro INNER JOIN dbo.M_PortRegion M_Prg ON M_Prg.PortRegionId = M_Pro.PortRegionId WHERE (M_Pro.PortName LIKE '%{searchString}%' OR M_Pro.PortCode LIKE '%{searchString}%' OR M_Pro.Remarks LIKE '%{searchString}%'OR M_Prg.PortRegionCode LIKE '%{searchString}%' OR M_Prg.PortRegionName LIKE '%{searchString}%') AND M_Pro.PortId<>0 AND M_Pro.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Port}))");
 
-                var result = await _repository.GetQueryAsync<PortViewModel>(RegId, $"SELECT M_Cou.PortId,M_Cou.PortCode,M_Cou.PortName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Port M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.PortName LIKE '%{searchString}%' OR M_Cou.PortCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.PortId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Port})) ORDER BY M_Cou.PortName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<PortViewModel>(RegId, $"SELECT M_Pro.PortId,M_Pro.PortCode,M_Pro.PortName,M_Pro.CompanyId,M_Pro.Remarks,M_Pro.IsActive,M_Prg.PortRegionCode,M_Prg.PortRegionName,M_Pro.CreateById,M_Pro.CreateDate,M_Pro.EditById,M_Pro.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Port M_Pro INNER JOIN dbo.M_PortRegion M_Prg ON M_Prg.PortRegionId = M_Pro.PortRegionId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Pro.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Pro.EditById WHERE (M_Pro.PortName LIKE '%{searchString}%' OR M_Pro.PortCode LIKE '%{searchString}%' OR M_Pro.Remarks LIKE '%{searchString}%'OR M_Prg.PortRegionCode LIKE '%{searchString}%' OR M_Prg.PortRegionName LIKE '%{searchString}%') AND M_Pro.PortId<>0 AND M_Pro.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Port})) ORDER BY M_Pro.PortName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 portViewModelCount.responseCode = 200;
                 portViewModelCount.responseMessage = "success";
@@ -42,8 +42,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Port,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Port,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Port",
@@ -72,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Port,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Port,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Port",
@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortCode='{Port.PortCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortName='{Port.PortName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortCode='{Port.PortCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortName='{Port.PortName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -132,8 +132,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Port,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Port,
                                 DocumentId = Port.PortId,
                                 DocumentNo = Port.PortCode,
                                 TblName = "M_Port",
@@ -173,8 +173,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Port,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Port,
                         DocumentId = 0,
                         DocumentNo = Port.PortCode,
                         TblName = "M_Port",
@@ -192,15 +192,13 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdatePortAsync(string RegId, Int16 CompanyId, M_Port Port, Int32 UserId)
         {
-            int IsActive = Port.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
                     if (Port.PortId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT PortId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortName='{Port.PortName} AND PortId <>{Port.PortId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Port WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Port.CompanyId},{(short)Modules.Master},{(short)Master.Port})) AND PortName='{Port.PortName} AND PortId <>{Port.PortId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -227,8 +225,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Port,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Port,
                                 DocumentId = Port.PortId,
                                 DocumentNo = Port.PortCode,
                                 TblName = "M_Port",
@@ -264,8 +262,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Port,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Port,
                         DocumentId = Port.PortId,
                         DocumentNo = Port.PortCode,
                         TblName = "M_Port",
@@ -296,8 +294,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Port,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Port,
                                 DocumentId = Port.PortId,
                                 DocumentNo = Port.PortCode,
                                 TblName = "M_Port",
@@ -331,8 +329,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Port,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Port,
                         DocumentId = 0,
                         DocumentNo = "",
                         TblName = "M_Port",

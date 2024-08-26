@@ -73,12 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var DesignationViewModel = _mapper.Map<DesignationViewModel>(await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationId, headerViewModel.UserId));
+                        var designationViewModel = _mapper.Map<DesignationViewModel>(await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationId, headerViewModel.UserId));
 
-                        if (DesignationViewModel == null)
+                        if (designationViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, DesignationViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, designationViewModel);
                     }
                     else
                     {

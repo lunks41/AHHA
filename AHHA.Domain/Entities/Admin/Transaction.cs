@@ -18,6 +18,6 @@ namespace AHHA.Core.Entities.Admin
         public Int32 CreateBy { get; set; }
         public DateTime CreateDate { get; set; }
         public Int32 EditBy { get; set; }
-        public DateTime EditDate { get; set; }
+        public DateTime? EditDate { get; set; }
     }
 }

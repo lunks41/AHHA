@@ -75,12 +75,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var GstViewModel = _mapper.Map<GstViewModel>(await _GstService.GetGstByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstId, headerViewModel.UserId));
+                        var gstViewModel = _mapper.Map<GstViewModel>(await _GstService.GetGstByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstId, headerViewModel.UserId));
 
-                        if (GstViewModel == null)
+                        if (gstViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, GstViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, gstViewModel);
                     }
                     else
                     {

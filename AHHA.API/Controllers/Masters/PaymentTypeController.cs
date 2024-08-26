@@ -73,12 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var PaymentTypeViewModel = _mapper.Map<PaymentTypeViewModel>(await _PaymentTypeService.GetPaymentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeId, headerViewModel.UserId));
+                        var paymentTypeViewModel = _mapper.Map<PaymentTypeViewModel>(await _PaymentTypeService.GetPaymentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeId, headerViewModel.UserId));
 
-                        if (PaymentTypeViewModel == null)
+                        if (paymentTypeViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, PaymentTypeViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, paymentTypeViewModel);
                     }
                     else
                     {

@@ -65,7 +65,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<CustomerAddressViewModel>> GetCustomerAddressById(Int16 AddressId, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var CustomerAddressViewModel = new CustomerAddressViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -74,22 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        if (_memoryCache.TryGetValue($"CustomerAddress_{AddressId}", out CustomerAddressViewModel? cachedProduct))
-                        {
-                            CustomerAddressViewModel = cachedProduct;
-                        }
-                        else
-                        {
-                            CustomerAddressViewModel = _mapper.Map<CustomerAddressViewModel>(await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AddressId, headerViewModel.UserId));
+                        var customerAddressViewModel = _mapper.Map<CustomerAddressViewModel>(await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AddressId, headerViewModel.UserId));
 
-                            if (CustomerAddressViewModel == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
-                            else
-                                // Cache the CustomerAddress with an expiration time of 10 minutes
-                                _memoryCache.Set($"CustomerAddress_{AddressId}", CustomerAddressViewModel, TimeSpan.FromMinutes(10));
-                        }
-                        return StatusCode(StatusCodes.Status202Accepted, CustomerAddressViewModel);
-                        //return Ok(CustomerAddressViewModel);
+                        if (customerAddressViewModel == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, customerAddressViewModel);
                     }
                     else
                     {

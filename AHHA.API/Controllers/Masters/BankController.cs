@@ -65,7 +65,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<BankViewModel>> GetBankById(Int16 BankId, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var BankViewModel = new BankViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -74,22 +73,14 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        if (_memoryCache.TryGetValue($"Bank_{BankId}", out BankViewModel? cachedProduct))
-                        {
-                            BankViewModel = cachedProduct;
-                        }
-                        else
-                        {
-                            BankViewModel = _mapper.Map<BankViewModel>(await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId));
 
-                            if (BankViewModel == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
-                            else
-                                // Cache the Bank with an expiration time of 10 minutes
-                                _memoryCache.Set($"Bank_{BankId}", BankViewModel, TimeSpan.FromMinutes(10));
-                        }
-                        return StatusCode(StatusCodes.Status202Accepted, BankViewModel);
-                        //return Ok(BankViewModel);
+                        var bankViewModel = _mapper.Map<BankViewModel>(await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId));
+
+                        if (bankViewModel == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, bankViewModel);
+
                     }
                     else
                     {

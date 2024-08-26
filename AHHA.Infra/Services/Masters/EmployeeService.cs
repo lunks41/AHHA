@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             EmployeeViewModelCount employeeViewModelCount = new EmployeeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Employee WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Employee}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Employee M_Emp INNER JOIN M_Department M_Dep ON M_Dep.DepartmentId = M_Emp.DepartmentId WHERE (M_Emp.EmployeeName LIKE '%{searchString}%' OR M_Emp.EmployeeCode LIKE '%{searchString}%' OR M_Emp.Remarks LIKE '%{searchString}%' OR M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%') AND M_Emp.EmployeeId<>0 AND M_Emp.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Employee}))");
 
-                var result = await _repository.GetQueryAsync<EmployeeViewModel>(RegId, $"SELECT M_Cou.EmployeeId,M_Cou.EmployeeCode,M_Cou.EmployeeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Employee M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.EmployeeName LIKE '%{searchString}%' OR M_Cou.EmployeeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.EmployeeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Employee})) ORDER BY M_Cou.EmployeeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<EmployeeViewModel>(RegId, $"SELECT M_Emp.EmployeeId,M_Emp.EmployeeCode,M_Emp.EmployeeName,M_Emp.EmployeeOtherName,M_Emp.EmployeePhoto,M_Emp.EmployeeSignature,M_Dep.DepartmentCode,M_Dep.DepartmentName,M_Emp.EmployeeSex,M_Emp.MartialStatus,M_Emp.EmployeeDOB,M_Emp.EmployeeJoinDate,M_Emp.EmployeeOffEmailAdd,M_Emp.Remarks,M_Emp.IsActive,M_Emp.CreateById,M_Emp.CreateDate,M_Emp.EditById,M_Emp.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Employee M_Emp INNER JOIN M_Department M_Dep ON M_Dep.DepartmentId = M_Emp.DepartmentId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Emp.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Emp.EditById WHERE (M_Emp.EmployeeName LIKE '%{searchString}%' OR M_Emp.EmployeeCode LIKE '%{searchString}%' OR M_Emp.Remarks LIKE '%{searchString}%' OR M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%') AND M_Emp.EmployeeId<>0 AND M_Emp.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Employee})) ORDER BY M_Emp.EmployeeName");
 
                 employeeViewModelCount.responseCode = 200;
                 employeeViewModelCount.responseMessage = "success";
@@ -42,8 +42,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Employee,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Employee,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Employee",
@@ -72,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Employee,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Employee,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Employee",
@@ -132,8 +132,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Employee,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Employee,
                                 DocumentId = Employee.EmployeeId,
                                 DocumentNo = Employee.EmployeeCode,
                                 TblName = "M_Employee",
@@ -173,8 +173,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Employee,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Employee,
                         DocumentId = 0,
                         DocumentNo = Employee.EmployeeCode,
                         TblName = "M_Employee",
@@ -192,8 +192,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateEmployeeAsync(string RegId, Int16 CompanyId, M_Employee Employee, Int32 UserId)
         {
-            int IsActive = Employee.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
@@ -227,8 +225,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Employee,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Employee,
                                 DocumentId = Employee.EmployeeId,
                                 DocumentNo = Employee.EmployeeCode,
                                 TblName = "M_Employee",
@@ -264,8 +262,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Employee,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Employee,
                         DocumentId = Employee.EmployeeId,
                         DocumentNo = Employee.EmployeeCode,
                         TblName = "M_Employee",
@@ -296,8 +294,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Employee,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Employee,
                                 DocumentId = Employee.EmployeeId,
                                 DocumentNo = Employee.EmployeeCode,
                                 TblName = "M_Employee",
@@ -331,8 +329,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Employee,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Employee,
                         DocumentId = 0,
                         DocumentNo = "",
                         TblName = "M_Employee",

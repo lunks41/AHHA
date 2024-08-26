@@ -73,12 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var TaxViewModel = _mapper.Map<TaxViewModel>(await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId));
+                        var taxViewModel = _mapper.Map<TaxViewModel>(await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId));
 
-                        if (TaxViewModel == null)
+                        if (taxViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, TaxViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, taxViewModel);
                     }
                     else
                     {

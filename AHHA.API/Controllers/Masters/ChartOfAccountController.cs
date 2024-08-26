@@ -65,7 +65,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<ChartOfAccountViewModel>> GetChartOfAccountById(Int16 GLId, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var ChartOfAccountViewModel = new ChartOfAccountViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -74,12 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        ChartOfAccountViewModel = _mapper.Map<ChartOfAccountViewModel>(await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId));
+                        var chartOfAccountViewModel = _mapper.Map<ChartOfAccountViewModel>(await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId));
 
-                        if (ChartOfAccountViewModel == null)
+                        if (chartOfAccountViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, ChartOfAccountViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, chartOfAccountViewModel);
                     }
                     else
                     {

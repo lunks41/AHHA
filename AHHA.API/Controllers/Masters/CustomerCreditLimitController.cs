@@ -65,7 +65,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<CustomerCreditLimitViewModel>> GetCustomerCreditLimitById(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var CustomerCreditLimitViewModel = new CustomerCreditLimitViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -74,22 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        if (_memoryCache.TryGetValue($"CustomerCreditLimit_{CustomerId}", out CustomerCreditLimitViewModel? cachedProduct))
-                        {
-                            CustomerCreditLimitViewModel = cachedProduct;
-                        }
-                        else
-                        {
-                            CustomerCreditLimitViewModel = _mapper.Map<CustomerCreditLimitViewModel>(await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId));
+                        var customerCreditLimitViewModel = _mapper.Map<CustomerCreditLimitViewModel>(await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId));
 
-                            if (CustomerCreditLimitViewModel == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
-                            else
-                                // Cache the CustomerCreditLimit with an expiration time of 10 minutes
-                                _memoryCache.Set($"CustomerCreditLimit_{CustomerId}", CustomerCreditLimitViewModel, TimeSpan.FromMinutes(10));
-                        }
-                        return StatusCode(StatusCodes.Status202Accepted, CustomerCreditLimitViewModel);
-                        //return Ok(CustomerCreditLimitViewModel);
+                        if (customerCreditLimitViewModel == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, customerCreditLimitViewModel);
                     }
                     else
                     {

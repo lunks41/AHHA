@@ -65,7 +65,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<BargeViewModel>> GetBargeById(Int16 BargeId, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var BargeViewModel = new BargeViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -74,12 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        BargeViewModel = _mapper.Map<BargeViewModel>(await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeId, headerViewModel.UserId));
+                        var bargeViewModel = _mapper.Map<BargeViewModel>(await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeId, headerViewModel.UserId));
 
-                        if (BargeViewModel == null)
+                        if (bargeViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, BargeViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, bargeViewModel);
                     }
                     else
                     {
@@ -126,7 +125,7 @@ namespace AHHA.API.Controllers.Masters
                                 IMOCode = Barge.IMOCode,
                                 GRT = Barge.GRT,
                                 LicenseNo = Barge.LicenseNo,
-                                BargeIType = Barge.BargeIType,
+                                BargeType = Barge.BargeType,
                                 Flag = Barge.Flag,
                                 IsActive = Barge.IsActive,
                                 Remarks = Barge.Remarks,
@@ -163,7 +162,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<BargeViewModel>> UpdateBarge(Int16 BargeId, [FromBody] BargeViewModel Barge, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var BargeViewModel = new BargeViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -192,7 +190,7 @@ namespace AHHA.API.Controllers.Masters
                                 IMOCode = Barge.IMOCode,
                                 GRT = Barge.GRT,
                                 LicenseNo = Barge.LicenseNo,
-                                BargeIType = Barge.BargeIType,
+                                BargeType = Barge.BargeType,
                                 Flag = Barge.Flag,
                                 IsActive = Barge.IsActive,
                                 Remarks = Barge.Remarks,

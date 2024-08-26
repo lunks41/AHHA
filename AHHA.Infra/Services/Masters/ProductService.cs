@@ -25,9 +25,9 @@ namespace AHHA.Infra.Services.Masters
             ProductViewModelCount productViewModelCount = new ProductViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Product WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Product M_Prod WHERE (M_Prod.ProductName LIKE '%{searchString}%' OR M_Prod.ProductCode LIKE '%{searchString}%' OR M_Prod.Remarks LIKE '%{searchString}%') AND M_Prod.ProductId<>0 AND M_Prod.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product}))");
 
-                var result = await _repository.GetQueryAsync<ProductViewModel>(RegId, $"SELECT M_Cou.ProductId,M_Cou.ProductCode,M_Cou.ProductName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Product M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.ProductName LIKE '%{searchString}%' OR M_Cou.ProductCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.ProductId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product})) ORDER BY M_Cou.ProductName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<ProductViewModel>(RegId, $"SELECT M_Prod.ProductId,M_Prod.ProductCode,M_Prod.ProductName,M_Prod.CompanyId,M_Prod.Remarks,M_Prod.IsActive,M_Prod.CreateById,M_Prod.CreateDate,M_Prod.EditById,M_Prod.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Product M_Prod LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Prod.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Prod.EditById WHERE (M_Prod.ProductName LIKE '%{searchString}%' OR M_Prod.ProductCode LIKE '%{searchString}%' OR M_Prod.Remarks LIKE '%{searchString}%') AND M_Prod.ProductId<>0 AND M_Prod.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Product})) ORDER BY M_Prod.ProductName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 productViewModelCount.responseCode = 200;
                 productViewModelCount.responseMessage = "success";
@@ -94,7 +94,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductCode='{Product.ProductCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductName='{Product.ProductName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductCode='{Product.ProductCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductName='{Product.ProductName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -191,15 +191,13 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateProductAsync(string RegId, Int16 CompanyId, M_Product Product, Int32 UserId)
         {
-            int IsActive = Product.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
                     if (Product.ProductId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT ProductId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductName='{Product.ProductName} AND ProductId <>{Product.ProductId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Product WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Product.CompanyId},{(short)Modules.Master},{(short)Master.Product})) AND ProductName='{Product.ProductName} AND ProductId <>{Product.ProductId}'");
 
                         if (StrExist.Count() > 0)
                         {

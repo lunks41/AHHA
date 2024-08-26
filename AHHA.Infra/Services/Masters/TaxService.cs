@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             TaxViewModelCount taxViewModelCount = new TaxViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Tax WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Tax}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Tax M_Tx INNER JOIN dbo.M_TaxCategory M_Txc ON M_Txc.TaxCategoryId = M_Tx.TaxCategoryId  WHERE (M_Tx.TaxName LIKE '%{searchString}%' OR M_Tx.TaxName LIKE '%{searchString}%' OR M_Tx.Remarks LIKE '%{searchString}%' OR M_Txc.TaxCategoryCode LIKE '%{searchString}%' OR M_Txc.TaxCategoryName LIKE '%{searchString}%' ) AND M_Tx.TaxId<>0 AND M_Tx.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Tax}))");
 
-                var result = await _repository.GetQueryAsync<TaxViewModel>(RegId, $"SELECT M_Cou.TaxId,M_Cou.TaxCode,M_Cou.TaxName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Tax M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.TaxName LIKE '%{searchString}%' OR M_Cou.TaxCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.TaxId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Tax})) ORDER BY M_Cou.TaxName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<TaxViewModel>(RegId, $"SELECT M_Tx.TaxId,M_Tx.TaxName,M_Tx.TaxCode,M_Tx.CompanyId,M_Tx.Remarks,M_Tx.IsActive,M_Txc.TaxCategoryCode,M_Txc.TaxCategoryName,M_Tx.CreateById,M_Tx.CreateDate,M_Tx.EditById,M_Tx.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Tax M_Tx INNER JOIN dbo.M_TaxCategory M_Txc ON M_Txc.TaxCategoryId = M_Tx.TaxCategoryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Tx.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Tx.EditById WHERE (M_Tx.TaxName LIKE '%{searchString}%' OR M_Tx.TaxName LIKE '%{searchString}%' OR M_Tx.Remarks LIKE '%{searchString}%' OR M_Txc.TaxCategoryCode LIKE '%{searchString}%' OR M_Txc.TaxCategoryName LIKE '%{searchString}%' ) AND M_Tx.TaxId<>0 AND M_Tx.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Tax})) ORDER BY M_Tx.TaxName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 taxViewModelCount.responseCode = 200;
                 taxViewModelCount.responseMessage = "success";
@@ -42,8 +42,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Tax,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Tax,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Tax",
@@ -72,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Tax,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Tax,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Tax",
@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxCode='{Tax.TaxCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxName='{Tax.TaxName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxCode='{Tax.TaxCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxName='{Tax.TaxName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -132,8 +132,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Tax,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Tax,
                                 DocumentId = Tax.TaxId,
                                 DocumentNo = Tax.TaxCode,
                                 TblName = "M_Tax",
@@ -173,8 +173,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Tax,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Tax,
                         DocumentId = 0,
                         DocumentNo = Tax.TaxCode,
                         TblName = "M_Tax",
@@ -192,15 +192,13 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateTaxAsync(string RegId, Int16 CompanyId, M_Tax Tax, Int32 UserId)
         {
-            int IsActive = Tax.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
                     if (Tax.TaxId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT TaxId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxName='{Tax.TaxName} AND TaxId <>{Tax.TaxId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Tax WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Tax.CompanyId},{(short)Modules.Master},{(short)Master.Tax})) AND TaxName='{Tax.TaxName} AND TaxId <>{Tax.TaxId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -227,8 +225,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Tax,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Tax,
                                 DocumentId = Tax.TaxId,
                                 DocumentNo = Tax.TaxCode,
                                 TblName = "M_Tax",
@@ -264,8 +262,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Tax,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Tax,
                         DocumentId = Tax.TaxId,
                         DocumentNo = Tax.TaxCode,
                         TblName = "M_Tax",
@@ -296,8 +294,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Tax,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Tax,
                                 DocumentId = Tax.TaxId,
                                 DocumentNo = Tax.TaxCode,
                                 TblName = "M_Tax",
@@ -333,7 +331,7 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Master.TaxCategory,
-                        TransactionId = (short)Modules.Master,
+                        TransactionId = (short)Master.Tax,
                         DocumentId = 0,
                         DocumentNo = "",
                         TblName = "M_TaxCategory",

@@ -19,8 +19,8 @@
         public Int32 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
         public Int16 EditVer { get; set; }
-        public Int32 EditById { get; set; }
-        public DateTime EditDate { get; set; }
+        public Int32? EditById { get; set; }
+        public DateTime? EditDate { get; set; }
         public bool IsCancel { get; set; }
         public Int32 CancelById { get; set; }
         public DateTime CancelDate { get; set; }

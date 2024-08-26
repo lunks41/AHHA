@@ -15,7 +15,7 @@ namespace AHHA.Core.Entities.Masters
         public string IMOCode { get; set; }
         public string GRT { get; set; }
         public string LicenseNo { get; set; }
-        public string BargeIType { get; set; }
+        public string BargeType { get; set; }
         public string Flag { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
@@ -24,7 +24,7 @@ namespace AHHA.Core.Entities.Masters
         [NotMapped]
         public DateTime CreateDate { get; set; }
 
-        public Int32 EditById { get; set; }
-        public DateTime EditDate { get; set; }
+        public Int32? EditById { get; set; }
+        public DateTime? EditDate { get; set; }
     }
 }

@@ -73,15 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var UomViewModel = _mapper.Map<UomViewModel>(await _UomService.GetUomByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomId, headerViewModel.UserId));
+                        var uomViewModel = _mapper.Map<UomViewModel>(await _UomService.GetUomByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomId, headerViewModel.UserId));
 
-                        if (UomViewModel == null)
+                        if (uomViewModel == null)
                             return NotFound();
-                        else
-                            // Cache the Uom with an expiration time of 10 minutes
-                            _memoryCache.Set($"Uom_{UomId}", UomViewModel, TimeSpan.FromMinutes(10));
 
-                        return StatusCode(StatusCodes.Status202Accepted, UomViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, uomViewModel);
                     }
                     else
                     {

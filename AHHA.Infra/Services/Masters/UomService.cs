@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             UomViewModelCount uomViewModelCount = new UomViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Uom WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Uom}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Uom M_Um WHERE (M_Um.UomName LIKE '%{searchString}%' OR M_Um.UomCode LIKE '%{searchString}%' OR M_Um.Remarks LIKE '%{searchString}%') AND M_Um.UomId<>0 AND M_Um.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Uom}))");
 
-                var result = await _repository.GetQueryAsync<UomViewModel>(RegId, $"SELECT M_Cou.UomId,M_Cou.UomCode,M_Cou.UomName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Uom M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.UomName LIKE '%{searchString}%' OR M_Cou.UomCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.UomId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Uom})) ORDER BY M_Cou.UomName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<UomViewModel>(RegId, $"SELECT M_Um.UomId,M_Um.UomCode,M_Um.UomName,M_Um.CompanyId,M_Um.Remarks,M_Um.IsActive,M_Um.CreateById,M_Um.CreateDate,M_Um.EditById,M_Um.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Uom M_Um LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Um.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Um.EditById WHERE (M_Um.UomName LIKE '%{searchString}%' OR M_Um.UomCode LIKE '%{searchString}%' OR M_Um.Remarks LIKE '%{searchString}%') AND M_Um.UomId<>0 AND M_Um.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Uom})) ORDER BY M_Um.UomName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 uomViewModelCount.responseCode = 200;
                 uomViewModelCount.responseMessage = "success";
@@ -42,8 +42,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Uom,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Uom,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Uom",
@@ -72,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Uom,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Uom,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_Uom",
@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomCode='{Uom.UomCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomName='{Uom.UomName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomCode='{Uom.UomCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomName='{Uom.UomName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -132,8 +132,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Uom,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Uom,
                                 DocumentId = Uom.UomId,
                                 DocumentNo = Uom.UomCode,
                                 TblName = "M_Uom",
@@ -173,8 +173,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Uom,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Uom,
                         DocumentId = 0,
                         DocumentNo = Uom.UomCode,
                         TblName = "M_Uom",
@@ -192,15 +192,13 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateUomAsync(string RegId, Int16 CompanyId, M_Uom Uom, Int32 UserId)
         {
-            int IsActive = Uom.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
                     if (Uom.UomId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT UomId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomName='{Uom.UomName} AND UomId <>{Uom.UomId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Uom WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Uom.CompanyId},{(short)Modules.Master},{(short)Master.Uom})) AND UomName='{Uom.UomName} AND UomId <>{Uom.UomId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -227,8 +225,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Uom,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Uom,
                                 DocumentId = Uom.UomId,
                                 DocumentNo = Uom.UomCode,
                                 TblName = "M_Uom",
@@ -264,8 +262,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Uom,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Uom,
                         DocumentId = Uom.UomId,
                         DocumentNo = Uom.UomCode,
                         TblName = "M_Uom",
@@ -296,8 +294,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Uom,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Uom,
                                 DocumentId = Uom.UomId,
                                 DocumentNo = Uom.UomCode,
                                 TblName = "M_Uom",
@@ -331,8 +329,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Uom,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Uom,
                         DocumentId = 0,
                         DocumentNo = "",
                         TblName = "M_Uom",

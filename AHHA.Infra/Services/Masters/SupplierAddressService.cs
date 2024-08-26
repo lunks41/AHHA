@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             SupplierAddressViewModelCount supplierAddressViewModelCount = new SupplierAddressViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SupplierAddress WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Supplier}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SupplierAddress M_Sad INNER JOIN dbo.M_Supplier M_Sup ON M_Sup.SupplierId = M_Sad.SupplierId WHERE (M_Sad.Address1 LIKE '%{searchString}%' OR M_Sad.Address2 LIKE '%{searchString}%' OR M_Sad.Address3 LIKE '%{searchString}%' OR M_Sad.Address4 LIKE '%{searchString}%' OR M_Sup.SupplierCode LIKE '%{searchString}%' OR M_Sup.SupplierName LIKE '%{searchString}%') AND M_Sad.AddressId<>0 AND M_Sup.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Supplier}))");
 
-                var result = await _repository.GetQueryAsync<SupplierAddressViewModel>(RegId, $"SELECT M_Cou.AddressId,M_Cou.SupplierAddressCode,M_Cou.SupplierAddressName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SupplierAddress M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SupplierAddressName LIKE '%{searchString}%' OR M_Cou.SupplierAddressCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.AddressId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) ORDER BY M_Cou.SupplierAddressName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<SupplierAddressViewModel>(RegId, $"SELECT M_Sad.AddressId,M_Sad.Address1,M_Sad.Address2,M_Sad.Address3,M_Sad.Address4,M_Sad.PhoneNo,M_Sad.EmailAdd,M_Sad.IsDefaultAdd,M_Sad.IsDeliveryAdd,M_Sad.IsFinAdd,M_Sad.IsSalesAdd,M_Sad.IsActive,M_Sup.SupplierCode,M_Sup.SupplierName,M_Sad.CreateById,M_Sad.CreateDate,M_Sad.EditById,M_Sad.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SupplierAddress M_Sad INNER JOIN dbo.M_Supplier M_Sup ON M_Sup.SupplierId = M_Sad.SupplierId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Sad.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_Sad.EditById WHERE (M_Sad.Address1 LIKE '%{searchString}%' OR M_Sad.Address2 LIKE '%{searchString}%' OR M_Sad.Address3 LIKE '%{searchString}%' OR M_Sad.Address4 LIKE '%{searchString}%' OR M_Sup.SupplierCode LIKE '%{searchString}%' OR M_Sup.SupplierName LIKE '%{searchString}%') AND M_Sad.AddressId<>0 AND M_Sup.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) ORDER BY M_Sup.Address1 OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 supplierAddressViewModelCount.responseCode = 200;
                 supplierAddressViewModelCount.responseMessage = "success";
@@ -42,8 +42,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Supplier,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Supplier,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_SupplierAddress",
@@ -72,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.Supplier,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.Supplier,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_SupplierAddress",
@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) UNION ALL SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier}))");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) UNION ALL SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier}))");
 
                     if (StrExist.Count() > 0)
                     {
@@ -132,8 +132,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Supplier,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Supplier,
                                 DocumentId = SupplierAddress.SupplierId,
                                 DocumentNo = "",
                                 TblName = "M_SupplierAddress",
@@ -173,8 +173,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Supplier,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Supplier,
                         DocumentId = 0,
                         DocumentNo = SupplierAddress.Address1,
                         TblName = "M_SupplierAddress",
@@ -192,15 +192,13 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateSupplierAddressAsync(string RegId, Int16 CompanyId, M_SupplierAddress SupplierAddress, Int32 UserId)
         {
-            int IsActive = SupplierAddress.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
                     if (SupplierAddress.AddressId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT AddressId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierAddressName='{SupplierAddress.Address1} AND AddressId <>{SupplierAddress.AddressId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierAddressName='{SupplierAddress.Address1} AND AddressId <>{SupplierAddress.AddressId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -225,8 +223,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Supplier,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Supplier,
                                 DocumentId = SupplierAddress.AddressId,
                                 DocumentNo = SupplierAddress.Address1,
                                 TblName = "M_SupplierAddress",
@@ -262,8 +260,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Supplier,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Supplier,
                         DocumentId = SupplierAddress.AddressId,
                         DocumentNo = SupplierAddress.Address1,
                         TblName = "M_SupplierAddress",
@@ -294,8 +292,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.Supplier,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.Supplier,
                                 DocumentId = SupplierAddress.AddressId,
                                 DocumentNo = SupplierAddress.Address1,
                                 TblName = "M_SupplierAddress",
@@ -329,8 +327,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.Supplier,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.Supplier,
                         DocumentId = 0,
                         DocumentNo = "",
                         TblName = "M_SupplierAddress",

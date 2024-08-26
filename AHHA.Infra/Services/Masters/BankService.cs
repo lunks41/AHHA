@@ -193,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int32 UserId)
         {
-            int IsActive = Bank.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try

@@ -65,7 +65,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<AccountSetupCategoryViewModel>> GetAccountSetupCategoryById(Int16 AccSetupCategoryId, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var AccountSetupCategoryViewModel = new AccountSetupCategoryViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -76,12 +75,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        AccountSetupCategoryViewModel = _mapper.Map<AccountSetupCategoryViewModel>(await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupCategoryId, headerViewModel.UserId));
+                        var accountSetupCategoryViewModel = _mapper.Map<AccountSetupCategoryViewModel>(await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupCategoryId, headerViewModel.UserId));
 
-                        if (AccountSetupCategoryViewModel == null)
+                        if (accountSetupCategoryViewModel == null)
                             return NotFound();
 
-                        return StatusCode(StatusCodes.Status202Accepted, AccountSetupCategoryViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, accountSetupCategoryViewModel);
                     }
                     else
                     {
@@ -158,7 +157,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<AccountSetupCategoryViewModel>> UpdateAccountSetupCategory(Int16 AccSetupCategoryId, [FromBody] AccountSetupCategoryViewModel AccountSetupCategory, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var AccountSetupCategoryViewModel = new AccountSetupCategoryViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))

@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             SubCategoryViewModelCount subCategoryViewModelCount = new SubCategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SubCategory WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.SubCategory}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SubCategory M_Sub WHERE (M_Sub.SubCategoryName LIKE '%{searchString}%' OR M_Sub.SubCategoryCode LIKE '%{searchString}%' OR M_Sub.Remarks LIKE '%{searchString}%') AND M_Sub.SubCategoryId<>0 AND M_Sub.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.SubCategory}))");
 
-                var result = await _repository.GetQueryAsync<SubCategoryViewModel>(RegId, $"SELECT M_Cou.SubCategoryId,M_Cou.SubCategoryCode,M_Cou.SubCategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SubCategory M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.SubCategoryName LIKE '%{searchString}%' OR M_Cou.SubCategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.SubCategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) ORDER BY M_Cou.SubCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<SubCategoryViewModel>(RegId, $"SELECT M_Sub.SubCategoryId,M_Sub.SubCategoryCode,M_Sub.SubCategoryName,M_Sub.CompanyId,M_Sub.Remarks,M_Sub.IsActive,M_Sub.CreateById,M_Sub.CreateDate,M_Sub.EditById,M_Sub.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SubCategory M_Sub LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Sub.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Sub.EditById WHERE (M_Sub.SubCategoryName LIKE '%{searchString}%' OR M_Sub.SubCategoryCode LIKE '%{searchString}%' OR M_Sub.Remarks LIKE '%{searchString}%') AND M_Sub.SubCategoryId<>0 AND M_Sub.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) ORDER BY M_Sub.SubCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 subCategoryViewModelCount.responseCode = 200;
                 subCategoryViewModelCount.responseMessage = "success";
@@ -42,8 +42,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.SubCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.SubCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_SubCategory",
@@ -72,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.SubCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.SubCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_SubCategory",
@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryCode='{SubCategory.SubCategoryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryName='{SubCategory.SubCategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryCode='{SubCategory.SubCategoryCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryName='{SubCategory.SubCategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -132,8 +132,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.SubCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.SubCategory,
                                 DocumentId = SubCategory.SubCategoryId,
                                 DocumentNo = SubCategory.SubCategoryCode,
                                 TblName = "M_SubCategory",
@@ -173,8 +173,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.SubCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.SubCategory,
                         DocumentId = 0,
                         DocumentNo = SubCategory.SubCategoryCode,
                         TblName = "M_SubCategory",
@@ -192,15 +192,13 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateSubCategoryAsync(string RegId, Int16 CompanyId, M_SubCategory SubCategory, Int32 UserId)
         {
-            int IsActive = SubCategory.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
                     if (SubCategory.SubCategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT SubCategoryId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryName='{SubCategory.SubCategoryName} AND SubCategoryId <>{SubCategory.SubCategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SubCategory WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({SubCategory.CompanyId},{(short)Modules.Master},{(short)Master.SubCategory})) AND SubCategoryName='{SubCategory.SubCategoryName} AND SubCategoryId <>{SubCategory.SubCategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -227,8 +225,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.SubCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.SubCategory,
                                 DocumentId = SubCategory.SubCategoryId,
                                 DocumentNo = SubCategory.SubCategoryCode,
                                 TblName = "M_SubCategory",
@@ -264,8 +262,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.SubCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.SubCategory,
                         DocumentId = SubCategory.SubCategoryId,
                         DocumentNo = SubCategory.SubCategoryCode,
                         TblName = "M_SubCategory",
@@ -296,8 +294,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.SubCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.SubCategory,
                                 DocumentId = SubCategory.SubCategoryId,
                                 DocumentNo = SubCategory.SubCategoryCode,
                                 TblName = "M_SubCategory",

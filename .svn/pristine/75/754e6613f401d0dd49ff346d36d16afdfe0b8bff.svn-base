@@ -1,0 +1,19 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+
+namespace AHHA.Application.IServices.Masters
+{
+    public interface ICreditTermService
+    {
+        public Task<CreditTermViewModelCount> GetCreditTermListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId);
+
+        public Task<M_CreditTerm> GetCreditTermByIdAsync(string RegId, Int16 CompanyId, Int32 CreditTermId, Int32 UserId);
+
+        public Task<SqlResponce> AddCreditTermAsync(string RegId, Int16 CompanyId, M_CreditTerm M_CreditTerm, Int32 UserId);
+
+        public Task<SqlResponce> UpdateCreditTermAsync(string RegId, Int16 CompanyId, M_CreditTerm M_CreditTerm, Int32 UserId);
+
+        public Task<SqlResponce> DeleteCreditTermAsync(string RegId, Int16 CompanyId, M_CreditTerm M_CreditTerm, Int32 UserId);
+    }
+}

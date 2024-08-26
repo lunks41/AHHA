@@ -10,7 +10,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace AHHA.API.Controllers.Masters
 {
-    [Route("api/[controller]")]
+    [Route("api/Master")]
     [ApiController]
     public class CreditTermController : BaseController
     {
@@ -41,11 +41,7 @@ namespace AHHA.API.Controllers.Masters
                         if (CreditTermData == null)
                             return NotFound();
 
-                        //_memoryCache.Set<CreditTermViewModelCount>("CreditTerm", cacheData, expirationTime);
-
                         return StatusCode(StatusCodes.Status202Accepted, CreditTermData);
-                        //return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-                        //}
                     }
                     else
                     {
@@ -78,12 +74,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var CreditTermViewModel = _mapper.Map<CreditTermViewModel>(await _CreditTermService.GetCreditTermByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermId, headerViewModel.UserId));
+                        var creditTermViewModel = _mapper.Map<CreditTermViewModel>(await _CreditTermService.GetCreditTermByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermId, headerViewModel.UserId));
 
-                        if (CreditTermViewModel == null)
+                        if (creditTermViewModel == null)
                             return NotFound();
 
-                        return StatusCode(StatusCodes.Status202Accepted, CreditTermViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, creditTermViewModel);
                     }
                     else
                     {

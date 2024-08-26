@@ -73,12 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var CustomerGroupCreditLimitViewModel = _mapper.Map<CustomerGroupCreditLimitViewModel>(await _CustomerGroupCreditLimitService.GetCustomerGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId));
+                        var customerGroupCreditLimitViewModel = _mapper.Map<CustomerGroupCreditLimitViewModel>(await _CustomerGroupCreditLimitService.GetCustomerGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId));
 
-                        if (CustomerGroupCreditLimitViewModel == null)
+                        if (customerGroupCreditLimitViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, CustomerGroupCreditLimitViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, customerGroupCreditLimitViewModel);
                     }
                     else
                     {

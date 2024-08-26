@@ -27,7 +27,7 @@
         public string CreateBy { get; set; }
         public DateTime CreateDate { get; set; }
         public string EditBy { get; set; }
-        public DateTime EditDate { get; set; }
+        public DateTime? EditDate { get; set; }
         public bool IsCancel { get; set; }
         public string CancelBy { get; set; }
         public DateTime CancelDate { get; set; }

@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             BargeViewModelCount bargeViewModelCount = new BargeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Barge WHERE (M_Cou.BargeName LIKE '%{searchString}%' OR M_Cou.BargeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.BargeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Barge M_Brg WHERE (M_Brg.BargeName LIKE '%{searchString}%' OR M_Brg.BargeCode LIKE '%{searchString}%' OR M_Brg.Remarks LIKE '%{searchString}%') AND M_Brg.BargeId<>0 AND M_Brg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge}))");
 
-                var result = await _repository.GetQueryAsync<BargeViewModel>(RegId, $"SELECT M_Cou.BargeId,M_Cou.BargeCode,M_Cou.BargeName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Barge M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.BargeName LIKE '%{searchString}%' OR M_Cou.BargeCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.BargeId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge})) ORDER BY M_Cou.BargeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<BargeViewModel>(RegId, $"SELECT M_Brg.BargeId,M_Brg.CompanyId,M_Brg.BargeCode,M_Brg.BargeName,M_Brg.CallSign,M_Brg.IMOCode,M_Brg.GRT,M_Brg.LicenseNo,M_Brg.BargeType,M_Brg.IsActive,M_Brg.CreateById,M_Brg.CreateDate,M_Brg.EditById,M_Brg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Barge M_Brg LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Brg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Brg.EditById WHERE (M_Brg.BargeName LIKE '%{searchString}%' OR M_Brg.BargeCode LIKE '%{searchString}%' OR M_Brg.Remarks LIKE '%{searchString}%') AND M_Brg.BargeId<>0 AND M_Brg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge})) ORDER BY M_Brg.BargeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 bargeViewModelCount.responseCode = 200;
                 bargeViewModelCount.responseMessage = "success";
@@ -63,7 +63,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Barge>(RegId, $"SELECT BargeId,BargeCode,BargeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Barge WHERE BargeId={BargeId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Barge>(RegId, $"SELECT BargeId,CompanyId,BargeCode,BargeName,CallSign,IMOCode,GRT,LicenseNo,BargeType,Flag,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Barge WHERE BargeId={BargeId}");
 
                 return result;
             }
@@ -193,8 +193,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateBargeAsync(string RegId, Int16 CompanyId, M_Barge Barge, Int32 UserId)
         {
-            int IsActive = Barge.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try

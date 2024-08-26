@@ -73,12 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var PortViewModel = _mapper.Map<PortViewModel>(await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId));
+                        var portViewModel = _mapper.Map<PortViewModel>(await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId));
 
-                        if (PortViewModel == null)
+                        if (portViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, PortViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, portViewModel);
                     }
                     else
                     {

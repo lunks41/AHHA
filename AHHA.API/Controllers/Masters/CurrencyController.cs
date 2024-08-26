@@ -10,7 +10,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace AHHA.API.Controllers.Masters
 {
-    [Route("api/[controller]")]
+    [Route("api/Master")]
     [ApiController]
     public class CurrencyController : BaseController
     {
@@ -36,26 +36,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        ////Get the data from cache memory
-                        //var cacheData = _memoryCache.Get<CurrencyViewModelCount>("Currency");
-
-                        //if (cacheData != null)
-                        //    return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                        ////return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-                        //else
-                        //{
-                        //var expirationTime = DateTimeOffset.Now.AddSeconds(30);
-
                         var CurrencyData = await _CurrencyService.GetCurrencyListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (CurrencyData == null)
                             return NotFound();
 
-                        //_memoryCache.Set<CurrencyViewModelCount>("Currency", cacheData, expirationTime);
-
                         return StatusCode(StatusCodes.Status202Accepted, CurrencyData);
-                        //return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-                        //}
                     }
                     else
                     {
@@ -88,12 +74,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var CurrencyViewModel = _mapper.Map<CurrencyViewModel>(await _CurrencyService.GetCurrencyByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, headerViewModel.UserId));
+                        var currencyViewModel = _mapper.Map<CurrencyViewModel>(await _CurrencyService.GetCurrencyByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, headerViewModel.UserId));
 
-                        if (CurrencyViewModel == null)
+                        if (currencyViewModel == null)
                             return NotFound();
 
-                        return StatusCode(StatusCodes.Status202Accepted, CurrencyViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, currencyViewModel);
                     }
                     else
                     {

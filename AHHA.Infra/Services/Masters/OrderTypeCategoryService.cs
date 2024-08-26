@@ -26,9 +26,9 @@ namespace AHHA.Infra.Services.Masters
             OrderTypeCategoryViewModelCount orderTypeCategoryViewModelCount = new OrderTypeCategoryViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_OrderTypeCategory WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderTypeCategory}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_OrderTypeCategory M_OrdC WHERE (M_OrdC.OrderTypeCategoryName LIKE '%{searchString}%' OR M_OrdC.OrderTypeCategoryCode LIKE '%{searchString}%' OR M_OrdC.Remarks LIKE '%{searchString}%') AND M_OrdC.OrderTypeCategoryId<>0 AND M_OrdC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderTypeCategory}))");
 
-                var result = await _repository.GetQueryAsync<OrderTypeCategoryViewModel>(RegId, $"SELECT M_Cou.OrderTypeCategoryId,M_Cou.OrderTypeCategoryCode,M_Cou.OrderTypeCategoryName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_OrderTypeCategory M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.OrderTypeCategoryName LIKE '%{searchString}%' OR M_Cou.OrderTypeCategoryCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.OrderTypeCategoryId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderTypeCategory})) ORDER BY M_Cou.OrderTypeCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<OrderTypeCategoryViewModel>(RegId, $"SELECT M_OrdC.OrderTypeCategoryId,M_OrdC.OrderTypeCategoryCode,M_OrdC.OrderTypeCategoryName,M_OrdC.CompanyId,M_OrdC.Remarks,M_OrdC.IsActive,M_OrdC.CreateById,M_OrdC.CreateDate,M_OrdC.EditById,M_OrdC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_OrderTypeCategory M_OrdC LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_OrdC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_OrdC.EditById WHERE (M_OrdC.OrderTypeCategoryName LIKE '%{searchString}%' OR M_OrdC.OrderTypeCategoryCode LIKE '%{searchString}%' OR M_OrdC.Remarks LIKE '%{searchString}%') AND M_OrdC.OrderTypeCategoryId<>0 AND M_OrdC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderTypeCategory})) ORDER BY M_OrdC.OrderTypeCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 orderTypeCategoryViewModelCount.responseCode = 200;
                 orderTypeCategoryViewModelCount.responseMessage = "success";
@@ -42,8 +42,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.OrderTypeCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.OrderTypeCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_OrderTypeCategory",
@@ -72,8 +72,8 @@ namespace AHHA.Infra.Services.Masters
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)Master.OrderTypeCategory,
-                    TransactionId = (short)Modules.Master,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.OrderTypeCategory,
                     DocumentId = 0,
                     DocumentNo = "",
                     TblName = "M_OrderTypeCategory",
@@ -132,8 +132,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.OrderTypeCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.OrderTypeCategory,
                                 DocumentId = OrderTypeCategory.OrderTypeCategoryId,
                                 DocumentNo = OrderTypeCategory.OrderTypeCategoryCode,
                                 TblName = "M_OrderTypeCategory",
@@ -173,8 +173,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.OrderTypeCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.OrderTypeCategory,
                         DocumentId = 0,
                         DocumentNo = OrderTypeCategory.OrderTypeCategoryCode,
                         TblName = "M_OrderTypeCategory",
@@ -192,8 +192,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateOrderTypeCategoryAsync(string RegId, Int16 CompanyId, M_OrderTypeCategory OrderTypeCategory, Int32 UserId)
         {
-            int IsActive = OrderTypeCategory.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
@@ -227,8 +225,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.OrderTypeCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.OrderTypeCategory,
                                 DocumentId = OrderTypeCategory.OrderTypeCategoryId,
                                 DocumentNo = OrderTypeCategory.OrderTypeCategoryCode,
                                 TblName = "M_OrderTypeCategory",
@@ -264,8 +262,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.OrderTypeCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.OrderTypeCategory,
                         DocumentId = OrderTypeCategory.OrderTypeCategoryId,
                         DocumentNo = OrderTypeCategory.OrderTypeCategoryCode,
                         TblName = "M_OrderTypeCategory",
@@ -296,8 +294,8 @@ namespace AHHA.Infra.Services.Masters
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
-                                ModuleId = (short)Master.OrderTypeCategory,
-                                TransactionId = (short)Modules.Master,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Master.OrderTypeCategory,
                                 DocumentId = OrderTypeCategory.OrderTypeCategoryId,
                                 DocumentNo = OrderTypeCategory.OrderTypeCategoryCode,
                                 TblName = "M_OrderTypeCategory",
@@ -331,8 +329,8 @@ namespace AHHA.Infra.Services.Masters
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)Master.OrderTypeCategory,
-                        TransactionId = (short)Modules.Master,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Master.OrderTypeCategory,
                         DocumentId = 0,
                         DocumentNo = "",
                         TblName = "M_OrderTypeCategory",

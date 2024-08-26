@@ -73,15 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var DepartmentViewModel = _mapper.Map<DepartmentViewModel>(await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId));
+                        var departmentViewModel = _mapper.Map<DepartmentViewModel>(await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId));
 
-                        if (DepartmentViewModel == null)
+                        if (departmentViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
-                        else
-                            // Cache the Department with an expiration time of 10 minutes
-                            _memoryCache.Set($"Department_{DepartmentId}", DepartmentViewModel, TimeSpan.FromMinutes(10));
 
-                        return StatusCode(StatusCodes.Status202Accepted, DepartmentViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, departmentViewModel);
                     }
                     else
                     {

@@ -20,6 +20,6 @@ namespace AHHA.Core.Entities.Masters
         public string CreateBy { get; set; }
         public DateTime CreateDate { get; set; }
         public string EditBy { get; set; }
-        public DateTime EditDate { get; set; }
+        public DateTime? EditDate { get; set; }
     }
 }

@@ -27,9 +27,9 @@ namespace AHHA.Infra.Services.Masters
             CreditTermViewModelCount CreditTermViewModelCount = new CreditTermViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_CreditTerm WHERE (M_Cou.CreditTermName LIKE '%{searchString}%' OR M_Cou.CreditTermCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CreditTermId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.CreditTerms}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_CreditTerm M_Crd WHERE (M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Crd.Remarks LIKE '%{searchString}%') AND M_Crd.CreditTermId<>0 AND M_Crd.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.CreditTerms}))");
 
-                var result = await _repository.GetQueryAsync<CreditTermViewModel>(RegId, $"SELECT M_Cou.CreditTermId,M_Cou.CreditTermCode,M_Cou.CreditTermName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CreditTerm M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CreditTermName LIKE '%{searchString}%' OR M_Cou.CreditTermCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CreditTermId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Master.CreditTerms},{(short)Modules.Master})) ORDER BY M_Cou.CreditTermName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CreditTermViewModel>(RegId, $"SELECT M_Crd.CreditTermId,M_Crd.CreditTermCode,M_Crd.CreditTermName,M_Crd.NoDays,M_Crd.Remarks,M_Crd.IsActive,M_Crd.CreateById,M_Crd.CreateDate,M_Crd.EditById,M_Crd.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_CreditTerm M_Crd LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Crd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Crd.EditById WHERE (M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Crd.Remarks LIKE '%{searchString}%') AND M_Crd.CreditTermId<>0 AND M_Crd.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.CreditTerms})) ORDER BY M_Crd.CreditTermName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 CreditTermViewModelCount.responseCode = 200;
                 CreditTermViewModelCount.responseMessage = "success";
@@ -194,8 +194,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateCreditTermAsync(string RegId, Int16 CompanyId, M_CreditTerm CreditTerm, Int32 UserId)
         {
-            int IsActive = CreditTerm.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try

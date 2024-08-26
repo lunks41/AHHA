@@ -22,10 +22,10 @@ namespace AHHA.Core.Entities.Admin
         public DateTime CreateDate { get; set; }
 
         [NotMapped]
-        public Int32 EditById { get; set; }
+        public Int32? EditById { get; set; }
 
         [NotMapped]
-        public DateTime EditDate { get; set; }
+        public DateTime? EditDate { get; set; }
 
         public Int16 UserGroupId { get; set; }
         public string RefreshToken { get; set; }

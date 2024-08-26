@@ -10,7 +10,7 @@
         public string IMOCode { get; set; }
         public string GRT { get; set; }
         public string LicenseNo { get; set; }
-        public string BargeIType { get; set; }
+        public string BargeType { get; set; }
         public string Flag { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }

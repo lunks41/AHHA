@@ -25,19 +25,19 @@ namespace AHHA.Infra.Services.Masters
         public async Task<PortRegionViewModelCount> GetPortRegionListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
             var parameters = new DynamicParameters();
-            PortRegionViewModelCount PortRegionViewModelCount = new PortRegionViewModelCount();
+            PortRegionViewModelCount portRegionViewModelCount = new PortRegionViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.M_PortRegion M_PortRg INNER JOIN  dbo.M_Country M_Cou ON M_Cou.CountryId = M_PortRg.CountryId WHERE M_PortRg.PortRegionId<>0 AND  ( M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%' OR M_PortRg.PortRegionName LIKE '%{searchString}%' OR M_PortRg.PortRegionCode LIKE '%{searchString}%' OR M_PortRg.Remarks LIKE '%{searchString}%') AND  M_PortRg.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Modules.Master},{(short)Master.PortRegion}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.M_PortRegion M_PortRg INNER JOIN  dbo.M_Country M_Cou ON M_Cou.CountryId = M_PortRg.CountryId WHERE M_PortRg.PortRegionId<>0 AND  ( M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%' OR M_PortRg.PortRegionName LIKE '%{searchString}%' OR M_PortRg.PortRegionCode LIKE '%{searchString}%' OR M_PortRg.Remarks LIKE '%{searchString}%') AND  M_PortRg.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.PortRegion}))");
 
                 var result = await _repository.GetQueryAsync<PortRegionViewModel>(RegId, $"SELECT M_PortRg.PortRegionId,M_PortRg.PortRegionCode,M_PortRg.PortRegionName,M_PortRg.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_PortRg.CompanyId,M_PortRg.Remarks,M_PortRg.IsActive,M_PortRg.CreateById,M_PortRg.CreateDate,M_PortRg.EditById,M_PortRg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_PortRegion M_PortRg INNER JOIN  dbo.M_Country M_Cou ON M_Cou.CountryId = M_PortRg.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_PortRg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_PortRg.EditById WHERE M_PortRg.PortRegionId<>0 AND  ( M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%' OR M_PortRg.PortRegionName LIKE '%{searchString}%' OR M_PortRg.PortRegionCode LIKE '%{searchString}%' OR M_PortRg.Remarks LIKE '%{searchString}%') AND  M_PortRg.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.PortRegion})) ORDER BY M_PortRg.PortRegionName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                PortRegionViewModelCount.responseCode = 200;
-                PortRegionViewModelCount.responseMessage = "Success";
-                PortRegionViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                PortRegionViewModelCount.data = result == null ? null : result.ToList();
+                portRegionViewModelCount.responseCode = 200;
+                portRegionViewModelCount.responseMessage = "Success";
+                portRegionViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                portRegionViewModelCount.data = result == null ? null : result.ToList();
 
-                return PortRegionViewModelCount;
+                return portRegionViewModelCount;
             }
             catch (Exception ex)
             {
@@ -97,7 +97,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT PortRegionId FROM dbo.Fn_Adm_GetShareCompany ({PortRegion.CompanyId},{(short)Modules.Master},{(short)Master.PortRegion})) AND PortRegionCode='{PortRegion.PortRegionCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT PortRegionId FROM dbo.Fn_Adm_GetShareCompany ({PortRegion.CompanyId},{(short)Modules.Master},{(short)Master.PortRegion})) AND PortRegionName='{PortRegion.PortRegionName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PortRegion.CompanyId},{(short)Modules.Master},{(short)Master.PortRegion})) AND PortRegionCode='{PortRegion.PortRegionCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT PortRegionId FROM dbo.Fn_Adm_GetShareCompany ({PortRegion.CompanyId},{(short)Modules.Master},{(short)Master.PortRegion})) AND PortRegionName='{PortRegion.PortRegionName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -194,8 +194,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdatePortRegionAsync(string RegId, Int16 CompanyId, M_PortRegion PortRegion, Int32 UserId)
         {
-            int IsActive = PortRegion.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
@@ -203,7 +201,7 @@ namespace AHHA.Infra.Services.Masters
                     if (PortRegion.PortRegionId > 0)
                     {
                         //Check the Name exist or not
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT PortRegionId FROM dbo.Fn_Adm_GetShareCompany ({PortRegion.CompanyId},{(short)Modules.Master},{(short)Master.PortRegion})) AND PortRegionName='{PortRegion.PortRegionName} AND PortRegionId <>{PortRegion.PortRegionId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({PortRegion.CompanyId},{(short)Modules.Master},{(short)Master.PortRegion})) AND PortRegionName='{PortRegion.PortRegionName} AND PortRegionId <>{PortRegion.PortRegionId}'");
 
                         if (StrExist.Count() > 0)
                         {

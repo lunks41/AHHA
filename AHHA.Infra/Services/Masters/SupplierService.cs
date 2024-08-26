@@ -95,7 +95,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Supplier WHERE CompanyId IN (SELECT DISTINCT SupplierId FROM dbo.Fn_Adm_GetShareCompany ({Supplier.CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierCode='{Supplier.SupplierCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Supplier WHERE CompanyId IN (SELECT DISTINCT SupplierId FROM dbo.Fn_Adm_GetShareCompany ({Supplier.CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierName='{Supplier.SupplierName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Supplier WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Supplier.CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierCode='{Supplier.SupplierCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Supplier WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Supplier.CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierName='{Supplier.SupplierName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -192,15 +192,13 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateSupplierAsync(string RegId, Int16 CompanyId, M_Supplier Supplier, Int32 UserId)
         {
-            int IsActive = Supplier.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
                     if (Supplier.SupplierId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Supplier WHERE CompanyId IN (SELECT DISTINCT SupplierId FROM dbo.Fn_Adm_GetShareCompany ({Supplier.CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierName='{Supplier.SupplierName} AND SupplierId <>{Supplier.SupplierId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Supplier WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Supplier.CompanyId},{(short)Modules.Master},{(short)Master.Supplier})) AND SupplierName='{Supplier.SupplierName} AND SupplierId <>{Supplier.SupplierId}'");
 
                         if (StrExist.Count() > 0)
                         {

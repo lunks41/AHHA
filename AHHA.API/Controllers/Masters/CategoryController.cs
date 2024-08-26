@@ -65,7 +65,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<CategoryViewModel>> GetCategoryById(Int16 CategoryId, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var CategoryViewModel = new CategoryViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -74,12 +73,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        CategoryViewModel = _mapper.Map<CategoryViewModel>(await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId));
+                        var categoryViewModel = _mapper.Map<CategoryViewModel>(await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId));
 
-                        if (CategoryViewModel == null)
+                        if (categoryViewModel == null)
                             return NotFound(GenrateMessage.authenticationfailed);
 
-                        return StatusCode(StatusCodes.Status202Accepted, CategoryViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, categoryViewModel);
                     }
                     else
                     {

@@ -28,9 +28,9 @@ namespace AHHA.Infra.Services.Masters
             CurrencyViewModelCount CurrencyViewModelCount = new CurrencyViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Currency WHERE (M_Cou.CurrencyName LIKE '%{searchString}%' OR M_Cou.CurrencyCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CurrencyId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Currency}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Currency M_Cur WHERE (M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.Remarks LIKE '%{searchString}%') AND M_Cur.CurrencyId<>0 AND M_Cur.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Currency}))");
 
-                var result = await _repository.GetQueryAsync<CurrencyViewModel>(RegId, $"SELECT M_Cou.CurrencyId,M_Cou.CurrencyCode,M_Cou.CurrencyName,M_Cou.CompanyId,M_Cou.Remarks,M_Cou.IsActive,M_Cou.CreateById,M_Cou.CreateDate,M_Cou.EditById,M_Cou.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Currency M_Cou LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cou.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cou.EditById WHERE (M_Cou.CurrencyName LIKE '%{searchString}%' OR M_Cou.CurrencyCode LIKE '%{searchString}%' OR M_Cou.Remarks LIKE '%{searchString}%') AND M_Cou.CurrencyId<>0 AND M_Cou.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Currency})) ORDER BY M_Cou.CurrencyName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CurrencyViewModel>(RegId, $"SELECT M_Cur.CurrencyId,M_Cur.CurrencyCode,M_Cur.CurrencyName,M_Cur.IsMultiply,M_Cur.Remarks,M_Cur.IsActive,M_Cur.CreateById,M_Cur.CreateDate,M_Cur.EditById,M_Cur.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_Currency M_Cur LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cur.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cur.EditById WHERE (M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.Remarks LIKE '%{searchString}%') AND M_Cur.CurrencyId<>0 AND M_Cur.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Currency})) ORDER BY M_Cur.CurrencyName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 CurrencyViewModelCount.responseCode = 200;
                 CurrencyViewModelCount.responseMessage = "success";
@@ -195,8 +195,6 @@ namespace AHHA.Infra.Services.Masters
 
         public async Task<SqlResponce> UpdateCurrencyAsync(string RegId, Int16 CompanyId, M_Currency Currency, Int32 UserId)
         {
-            int IsActive = Currency.IsActive == true ? 1 : 0;
-
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
