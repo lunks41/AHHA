@@ -25,7 +25,7 @@ namespace AHHA.API.Mapping
             CreateMap<CustomerGroupCreditLimitViewModel, M_CustomerGroupCreditLimit>().ReverseMap();
             CreateMap<CustomerAddressViewModel, M_CustomerAddress>().ReverseMap();
             CreateMap<CustomerContactViewModel, M_CustomerContact>().ReverseMap();
-            CreateMap<CustomerLookupModel, M_Customer>().ReverseMap();
+            CreateMap<CustomerViewModel, M_Customer>().ReverseMap();
             CreateMap<CustomerCreditLimitViewModel, M_CustomerCreditLimit>().ReverseMap();
             CreateMap<DepartmentViewModel, M_Department>().ReverseMap();
             CreateMap<DesignationViewModel, M_Designation>().ReverseMap();

@@ -113,14 +113,24 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Customer == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Customer ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "No input exist");
+                            else if (Customer.CustomerCode == null || Customer.CustomerCode == string.Empty)
+                                return StatusCode(StatusCodes.Status400BadRequest, "Customer Code null");
 
                             var CustomerEntity = new M_Customer
                             {
-                                CompanyId = Customer.CompanyId,
                                 CustomerCode = Customer.CustomerCode,
-                                CustomerId = Customer.CustomerId,
                                 CustomerName = Customer.CustomerName,
+                                CustomerOtherName = Customer.CustomerOtherName,
+                                CustomerShortName = Customer.CustomerShortName,
+                                CustomerRegNo = Customer.CustomerRegNo,
+                                CurrencyId = Customer.CurrencyId,
+                                CreditTermId = Customer.CreditTermId,
+                                ParentCustomerId = Customer.ParentCustomerId,
+                                IsCustomer = Customer.IsCustomer,
+                                IsVendor = Customer.IsVendor,
+                                IsTrader = Customer.IsTrader,
+                                IsSupplier = Customer.IsSupplier,
                                 CreateById = headerViewModel.UserId,
                                 IsActive = Customer.IsActive,
                                 Remarks = Customer.Remarks
@@ -156,7 +166,6 @@ namespace AHHA.API.Controllers.Masters
         [Authorize]
         public async Task<ActionResult<CustomerViewModel>> UpdateCustomer(Int16 CustomerId, [FromBody] CustomerViewModel Customer, [FromHeader] HeaderViewModel headerViewModel)
         {
-            var CustomerViewModel = new CustomerViewModel();
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
@@ -180,6 +189,16 @@ namespace AHHA.API.Controllers.Masters
                                 CustomerCode = Customer.CustomerCode,
                                 CustomerId = Customer.CustomerId,
                                 CustomerName = Customer.CustomerName,
+                                CustomerOtherName = Customer.CustomerOtherName,
+                                CustomerShortName = Customer.CustomerShortName,
+                                CustomerRegNo = Customer.CustomerRegNo,
+                                CurrencyId = Customer.CurrencyId,
+                                CreditTermId = Customer.CreditTermId,
+                                ParentCustomerId = Customer.ParentCustomerId,
+                                IsCustomer = Customer.IsCustomer,
+                                IsVendor = Customer.IsVendor,
+                                IsTrader = Customer.IsTrader,
+                                IsSupplier = Customer.IsSupplier,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                                 IsActive = Customer.IsActive,
