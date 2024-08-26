@@ -1,0 +1,261 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class PortController : BaseController
+    {
+        private readonly IPortService _PortService;
+        private readonly ILogger<PortController> _logger;
+
+        public PortController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<PortController> logger, IPortService PortService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _PortService = PortService;
+        }
+
+        [HttpGet, Route("GetPort")]
+        [Authorize]
+        public async Task<ActionResult> GetPort([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _PortService.GetPortListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetPortbyid/{PortId}")]
+        [Authorize]
+        public async Task<ActionResult<PortViewModel>> GetPortById(Int16 PortId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var portViewModel = _mapper.Map<PortViewModel>(await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId));
+
+                        if (portViewModel == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, portViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddPort")]
+        [Authorize]
+        public async Task<ActionResult<PortViewModel>> CreatePort(PortViewModel Port, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (Port == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "M_Port ID mismatch");
+
+                            var PortEntity = new M_Port
+                            {
+                                CompanyId = Port.CompanyId,
+                                PortCode = Port.PortCode,
+                                PortId = Port.PortId,
+                                PortName = Port.PortName,
+                                CreateById = headerViewModel.UserId,
+                                IsActive = Port.IsActive,
+                                Remarks = Port.Remarks
+                            };
+
+                            var createdPort = await _PortService.AddPortAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdPort);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Port record");
+            }
+        }
+
+        [HttpPut, Route("UpdatePort/{PortId}")]
+        [Authorize]
+        public async Task<ActionResult<PortViewModel>> UpdatePort(Int16 PortId, [FromBody] PortViewModel Port, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            var PortViewModel = new PortViewModel();
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (PortId != Port.PortId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "M_Port ID mismatch");
+
+                            var PortToUpdate = await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId);
+
+                            if (PortToUpdate == null)
+                                return NotFound($"M_Port with Id = {PortId} not found");
+
+                            var PortEntity = new M_Port
+                            {
+                                PortCode = Port.PortCode,
+                                PortId = Port.PortId,
+                                PortName = Port.PortName,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                                IsActive = Port.IsActive,
+                                Remarks = Port.Remarks
+                            };
+
+                            var sqlResponce = await _PortService.UpdatePortAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeletePort/{PortId}")]
+        [Authorize]
+        public async Task<ActionResult<M_Port>> DeletePort(Int16 PortId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Port, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var PortToDelete = await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId);
+
+                            if (PortToDelete == null)
+                                return NotFound($"M_Port with Id = {PortId} not found");
+
+                            var sqlResponce = await _PortService.DeletePortAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}
