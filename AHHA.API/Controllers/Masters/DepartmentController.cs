@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Department == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Department ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Department ID mismatch");
 
                             var DepartmentEntity = new M_Department
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (DepartmentId != Department.DepartmentId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Department ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Department ID mismatch");
 
                             var DepartmentToUpdate = await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId);
 
                             if (DepartmentToUpdate == null)
-                                return NotFound($"M_Department with Id = {DepartmentId} not found");
+                                return NotFound($"Department with Id = {DepartmentId} not found");
 
                             var DepartmentEntity = new M_Department
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var DepartmentToDelete = await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId);
 
                             if (DepartmentToDelete == null)
-                                return NotFound($"M_Department with Id = {DepartmentId} not found");
+                                return NotFound($"Department with Id = {DepartmentId} not found");
 
                             var sqlResponce = await _DepartmentService.DeleteDepartmentAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentToDelete, headerViewModel.UserId);
 

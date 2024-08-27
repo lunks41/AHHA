@@ -114,7 +114,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (CreditTerm == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CreditTerm ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "CreditTerm ID mismatch");
 
                             var CreditTermEntity = new M_CreditTerm
                             {
@@ -169,13 +169,13 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (CreditTermId != CreditTerm.CreditTermId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CreditTerm ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "CreditTerm ID mismatch");
 
                             //Checking CreditTerm data available or not by using CreditTermId
                             var CreditTermToUpdate = await _CreditTermService.GetCreditTermByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermId, headerViewModel.UserId);
 
                             if (CreditTermToUpdate == null)
-                                return NotFound($"M_CreditTerm with Id = {CreditTermId} not found");
+                                return NotFound($"CreditTerm with Id = {CreditTermId} not found");
 
                             var CreditTermEntity = new M_CreditTerm
                             {
@@ -231,7 +231,7 @@ namespace AHHA.API.Controllers.Masters
                             var CreditTermToDelete = await _CreditTermService.GetCreditTermByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermId, headerViewModel.UserId);
 
                             if (CreditTermToDelete == null)
-                                return NotFound($"M_CreditTerm with Id = {CreditTermId} not found");
+                                return NotFound($"CreditTerm with Id = {CreditTermId} not found");
 
                             var sqlResponce = await _CreditTermService.DeleteCreditTermAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermToDelete, headerViewModel.UserId);
 

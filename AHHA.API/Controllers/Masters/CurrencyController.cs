@@ -114,7 +114,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Currency == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Currency ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Currency ID mismatch");
 
                             var CurrencyEntity = new M_Currency
                             {
@@ -169,13 +169,13 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (CurrencyId != Currency.CurrencyId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Currency ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Currency ID mismatch");
 
                             //Checking Currency data available or not by using CurrencyId
                             var CurrencyToUpdate = await _CurrencyService.GetCurrencyByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, headerViewModel.UserId);
 
                             if (CurrencyToUpdate == null)
-                                return NotFound($"M_Currency with Id = {CurrencyId} not found");
+                                return NotFound($"Currency with Id = {CurrencyId} not found");
 
                             var CurrencyEntity = new M_Currency
                             {
@@ -231,7 +231,7 @@ namespace AHHA.API.Controllers.Masters
                             var CurrencyToDelete = await _CurrencyService.GetCurrencyByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, headerViewModel.UserId);
 
                             if (CurrencyToDelete == null)
-                                return NotFound($"M_Currency with Id = {CurrencyId} not found");
+                                return NotFound($"Currency with Id = {CurrencyId} not found");
 
                             var sqlResponce = await _CurrencyService.DeleteCurrencyAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyToDelete, headerViewModel.UserId);
 

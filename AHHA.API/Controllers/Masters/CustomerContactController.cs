@@ -61,6 +61,43 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
+        [HttpGet, Route("GetCustomerContactbyCustomerId/{CustomerId}")]
+        [Authorize]
+        public async Task<ActionResult> GetCustomerContactByCustomerId(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CustomerContactViewModel = await _CustomerContactService.GetCustomerContactByCustomerIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
+
+                        if (CustomerContactViewModel == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CustomerContactViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
         [HttpGet, Route("GetCustomerContactbyid/{ContactId}")]
         [Authorize]
         public async Task<ActionResult<CustomerContactViewModel>> GetCustomerContactById(Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
@@ -100,7 +137,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddCustomerContact")]
         [Authorize]
-        public async Task<ActionResult<CustomerContactViewModel>> CreateCustomerContact(CustomerContactViewModel CustomerContact, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<CustomerContactViewModel>> CreateCustomerContact(CustomerContactViewModel customerContact, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,26 +149,25 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (CustomerContact == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerContact ID mismatch");
+                            if (customerContact == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "No input exist");
 
                             var CustomerContactEntity = new M_CustomerContact
                             {
-                                ContactId = CustomerContact.ContactId,
-                                CustomerId = CustomerContact.CustomerId,
-                                ContactName = CustomerContact.ContactName,
-                                OtherName = CustomerContact.OtherName,
-                                OffNo = CustomerContact.OffNo,
-                                FaxNo = CustomerContact.FaxNo,
-                                EmailAdd = CustomerContact.EmailAdd,
-                                MessId = CustomerContact.MessId,
-                                ContactMessType = CustomerContact.ContactMessType,
-                                IsDefault = CustomerContact.IsDefault,
-                                IsFinance = CustomerContact.IsFinance,
-                                IsSales = CustomerContact.IsSales,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = CustomerContact.IsActive,
-                                MobileNo = CustomerContact.MobileNo
+                                CustomerId = customerContact.CustomerId,
+                                ContactName = customerContact.ContactName,
+                                OtherName = customerContact.OtherName,
+                                OffNo = customerContact.OffNo,
+                                FaxNo = customerContact.FaxNo,
+                                EmailAdd = customerContact.EmailAdd,
+                                MessId = customerContact.MessId,
+                                ContactMessType = customerContact.ContactMessType,
+                                IsDefault = customerContact.IsDefault,
+                                IsFinance = customerContact.IsFinance,
+                                IsSales = customerContact.IsSales,
+                                IsActive = customerContact.IsActive,
+                                MobileNo = customerContact.MobileNo,
+                                CreateById = headerViewModel.UserId
                             };
 
                             var createdCustomerContact = await _CustomerContactService.AddCustomerContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerContactEntity, headerViewModel.UserId);
@@ -162,7 +198,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateCustomerContact/{ContactId}")]
         [Authorize]
-        public async Task<ActionResult<CustomerContactViewModel>> UpdateCustomerContact(Int16 ContactId, [FromBody] CustomerContactViewModel CustomerContact, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<CustomerContactViewModel>> UpdateCustomerContact(Int16 ContactId, [FromBody] CustomerContactViewModel customerContact, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -174,31 +210,32 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (ContactId != CustomerContact.ContactId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerContact ID mismatch");
+                            if (ContactId != customerContact.ContactId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "CustomerContact ID mismatch");
 
                             var CustomerContactToUpdate = await _CustomerContactService.GetCustomerContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                             if (CustomerContactToUpdate == null)
-                                return NotFound($"M_CustomerContact with Id = {ContactId} not found");
+                                return NotFound($"CustomerContact with Id = {ContactId} not found");
 
                             var CustomerContactEntity = new M_CustomerContact
                             {
-                                ContactId = CustomerContact.ContactId,
-                                CustomerId = CustomerContact.CustomerId,
-                                ContactName = CustomerContact.ContactName,
-                                OtherName = CustomerContact.OtherName,
-                                OffNo = CustomerContact.OffNo,
-                                FaxNo = CustomerContact.FaxNo,
-                                EmailAdd = CustomerContact.EmailAdd,
-                                MessId = CustomerContact.MessId,
-                                ContactMessType = CustomerContact.ContactMessType,
-                                IsDefault = CustomerContact.IsDefault,
-                                IsFinance = CustomerContact.IsFinance,
-                                IsSales = CustomerContact.IsSales,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = CustomerContact.IsActive,
-                                MobileNo = CustomerContact.MobileNo
+                                ContactId = customerContact.ContactId,
+                                CustomerId = customerContact.CustomerId,
+                                ContactName = customerContact.ContactName,
+                                OtherName = customerContact.OtherName,
+                                OffNo = customerContact.OffNo,
+                                FaxNo = customerContact.FaxNo,
+                                EmailAdd = customerContact.EmailAdd,
+                                MessId = customerContact.MessId,
+                                ContactMessType = customerContact.ContactMessType,
+                                IsDefault = customerContact.IsDefault,
+                                IsFinance = customerContact.IsFinance,
+                                IsSales = customerContact.IsSales,
+                                IsActive = customerContact.IsActive,
+                                MobileNo = customerContact.MobileNo,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _CustomerContactService.UpdateCustomerContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerContactEntity, headerViewModel.UserId);
@@ -245,7 +282,7 @@ namespace AHHA.API.Controllers.Masters
                             var CustomerContactToDelete = await _CustomerContactService.GetCustomerContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                             if (CustomerContactToDelete == null)
-                                return NotFound($"M_CustomerContact with Id = {ContactId} not found");
+                                return NotFound($"CustomerContact with Id = {ContactId} not found");
 
                             var sqlResponce = await _CustomerContactService.DeleteCustomerContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerContactToDelete, headerViewModel.UserId);
 

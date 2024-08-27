@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Category == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Category ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Category ID mismatch");
 
                             var CategoryEntity = new M_Category
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (CategoryId != Category.CategoryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Category ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Category ID mismatch");
 
                             var CategoryToUpdate = await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId);
 
                             if (CategoryToUpdate == null)
-                                return NotFound($"M_Category with Id = {CategoryId} not found");
+                                return NotFound($"Category with Id = {CategoryId} not found");
 
                             var CategoryEntity = new M_Category
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var CategoryToDelete = await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId);
 
                             if (CategoryToDelete == null)
-                                return NotFound($"M_Category with Id = {CategoryId} not found");
+                                return NotFound($"Category with Id = {CategoryId} not found");
 
                             var sqlResponce = await _CategoryService.DeleteCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryToDelete, headerViewModel.UserId);
 

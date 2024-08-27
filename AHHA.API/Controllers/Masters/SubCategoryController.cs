@@ -114,7 +114,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (SubCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_SubCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "SubCategory ID mismatch");
 
                             var SubCategoryEntity = new M_SubCategory
                             {
@@ -169,12 +169,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (SubCategoryId != SubCategory.SubCategoryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_SubCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "SubCategory ID mismatch");
 
                             var SubCategoryToUpdate = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
 
                             if (SubCategoryToUpdate == null)
-                                return NotFound($"M_SubCategory with Id = {SubCategoryId} not found");
+                                return NotFound($"SubCategory with Id = {SubCategoryId} not found");
 
                             var SubCategoryEntity = new M_SubCategory
                             {
@@ -230,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             var SubCategoryToDelete = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
 
                             if (SubCategoryToDelete == null)
-                                return NotFound($"M_SubCategory with Id = {SubCategoryId} not found");
+                                return NotFound($"SubCategory with Id = {SubCategoryId} not found");
 
                             var sqlResponce = await _SubCategoryService.DeleteSubCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryToDelete, headerViewModel.UserId);
 

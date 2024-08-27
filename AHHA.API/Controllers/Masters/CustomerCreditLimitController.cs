@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (CustomerCreditLimit == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerCreditLimit ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "CustomerCreditLimit ID mismatch");
 
                             var CustomerCreditLimitEntity = new M_CustomerCreditLimit
                             {
@@ -167,12 +167,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (CustomerId != CustomerCreditLimit.CustomerId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerCreditLimit ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "CustomerCreditLimit ID mismatch");
 
                             var CustomerCreditLimitToUpdate = await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
                             if (CustomerCreditLimitToUpdate == null)
-                                return NotFound($"M_CustomerCreditLimit with Id = {CustomerId} not found");
+                                return NotFound($"CustomerCreditLimit with Id = {CustomerId} not found");
 
                             var CustomerCreditLimitEntity = new M_CustomerCreditLimit
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var CustomerCreditLimitToDelete = await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
                             if (CustomerCreditLimitToDelete == null)
-                                return NotFound($"M_CustomerCreditLimit with Id = {CustomerId} not found");
+                                return NotFound($"CustomerCreditLimit with Id = {CustomerId} not found");
 
                             var sqlResponce = await _CustomerCreditLimitService.DeleteCustomerCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerCreditLimitToDelete, headerViewModel.UserId);
 

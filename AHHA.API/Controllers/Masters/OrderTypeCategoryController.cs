@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (OrderTypeCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_OrderTypeCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "OrderTypeCategory ID mismatch");
 
                             var OrderTypeCategoryEntity = new M_OrderTypeCategory
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (OrderTypeCategoryId != OrderTypeCategory.OrderTypeCategoryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_OrderTypeCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "OrderTypeCategory ID mismatch");
 
                             var OrderTypeCategoryToUpdate = await _OrderTypeCategoryService.GetOrderTypeCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryId, headerViewModel.UserId);
 
                             if (OrderTypeCategoryToUpdate == null)
-                                return NotFound($"M_OrderTypeCategory with Id = {OrderTypeCategoryId} not found");
+                                return NotFound($"OrderTypeCategory with Id = {OrderTypeCategoryId} not found");
 
                             var OrderTypeCategoryEntity = new M_OrderTypeCategory
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var OrderTypeCategoryToDelete = await _OrderTypeCategoryService.GetOrderTypeCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryId, headerViewModel.UserId);
 
                             if (OrderTypeCategoryToDelete == null)
-                                return NotFound($"M_OrderTypeCategory with Id = {OrderTypeCategoryId} not found");
+                                return NotFound($"OrderTypeCategory with Id = {OrderTypeCategoryId} not found");
 
                             var sqlResponce = await _OrderTypeCategoryService.DeleteOrderTypeCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryToDelete, headerViewModel.UserId);
                             // Remove data from cache by key

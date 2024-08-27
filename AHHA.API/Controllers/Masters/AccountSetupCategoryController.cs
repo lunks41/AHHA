@@ -102,7 +102,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddAccountSetupCategory")]
         [Authorize]
-        public async Task<ActionResult<AccountSetupCategoryViewModel>> CreateAccountSetupCategory(AccountSetupCategoryViewModel AccountSetupCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<AccountSetupCategoryViewModel>> CreateAccountSetupCategory(AccountSetupCategoryViewModel accountSetupCategory, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -114,17 +114,19 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (AccountSetupCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_AccountSetupCategory ID mismatch");
+                            if (accountSetupCategory == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "No input exist");
+                            else if (accountSetupCategory.AccSetupCategoryCode == null || accountSetupCategory.AccSetupCategoryCode == string.Empty)
+                                return StatusCode(StatusCodes.Status400BadRequest, "AccountSetupCategory Code null");
 
                             var AccountSetupCategoryEntity = new M_AccountSetupCategory
                             {
-                                AccSetupCategoryId = AccountSetupCategory.AccSetupCategoryId,
-                                AccSetupCategoryCode = AccountSetupCategory.AccSetupCategoryCode,
-                                AccSetupCategoryName = AccountSetupCategory.AccSetupCategoryName,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = AccountSetupCategory.IsActive,
-                                Remarks = AccountSetupCategory.Remarks
+                                AccSetupCategoryId = accountSetupCategory.AccSetupCategoryId,
+                                AccSetupCategoryCode = accountSetupCategory.AccSetupCategoryCode,
+                                AccSetupCategoryName = accountSetupCategory.AccSetupCategoryName,
+                                Remarks = accountSetupCategory.Remarks,
+                                IsActive = accountSetupCategory.IsActive,
+                                CreateById = headerViewModel.UserId
                             };
 
                             var createdAccountSetupCategory = await _AccountSetupCategoryService.AddAccountSetupCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupCategoryEntity, headerViewModel.UserId);
@@ -168,22 +170,22 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (AccSetupCategoryId != AccountSetupCategory.AccSetupCategoryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_AccountSetupCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "AccountSetupCategory ID mismatch");
 
                             var AccountSetupCategoryToUpdate = await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupCategoryId, headerViewModel.UserId);
 
                             if (AccountSetupCategoryToUpdate == null)
-                                return NotFound($"M_AccountSetupCategory with Id = {AccSetupCategoryId} not found");
+                                return NotFound($"AccountSetupCategory with Id = {AccSetupCategoryId} not found");
 
                             var AccountSetupCategoryEntity = new M_AccountSetupCategory
                             {
-                                AccSetupCategoryCode = AccountSetupCategory.AccSetupCategoryCode,
                                 AccSetupCategoryId = AccountSetupCategory.AccSetupCategoryId,
+                                AccSetupCategoryCode = AccountSetupCategory.AccSetupCategoryCode,
                                 AccSetupCategoryName = AccountSetupCategory.AccSetupCategoryName,
-                                EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
+                                Remarks = AccountSetupCategory.Remarks,
                                 IsActive = AccountSetupCategory.IsActive,
-                                Remarks = AccountSetupCategory.Remarks
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _AccountSetupCategoryService.UpdateAccountSetupCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupCategoryEntity, headerViewModel.UserId);
@@ -230,7 +232,7 @@ namespace AHHA.API.Controllers.Masters
                             var AccountSetupCategoryToDelete = await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupCategoryId, headerViewModel.UserId);
 
                             if (AccountSetupCategoryToDelete == null)
-                                return NotFound($"M_AccountSetupCategory with Id = {AccSetupCategoryId} not found");
+                                return NotFound($"AccountSetupCategory with Id = {AccSetupCategoryId} not found");
 
                             var sqlResponce = await _AccountSetupCategoryService.DeleteAccountSetupCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupCategoryToDelete, headerViewModel.UserId);
 

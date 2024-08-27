@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (CustomerGroupCreditLimit == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerGroupCreditLimit ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "CustomerGroupCreditLimit ID mismatch");
 
                             var CustomerGroupCreditLimitEntity = new M_CustomerGroupCreditLimit
                             {
@@ -167,12 +167,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (GroupCreditLimitId != CustomerGroupCreditLimit.GroupCreditLimitId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerGroupCreditLimit ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "CustomerGroupCreditLimit ID mismatch");
 
                             var CustomerGroupCreditLimitToUpdate = await _CustomerGroupCreditLimitService.GetCustomerGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
 
                             if (CustomerGroupCreditLimitToUpdate == null)
-                                return NotFound($"M_CustomerGroupCreditLimit with Id = {GroupCreditLimitId} not found");
+                                return NotFound($"CustomerGroupCreditLimit with Id = {GroupCreditLimitId} not found");
 
                             var CustomerGroupCreditLimitEntity = new M_CustomerGroupCreditLimit
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var CustomerGroupCreditLimitToDelete = await _CustomerGroupCreditLimitService.GetCustomerGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
 
                             if (CustomerGroupCreditLimitToDelete == null)
-                                return NotFound($"M_CustomerGroupCreditLimit with Id = {GroupCreditLimitId} not found");
+                                return NotFound($"CustomerGroupCreditLimit with Id = {GroupCreditLimitId} not found");
 
                             var sqlResponce = await _CustomerGroupCreditLimitService.DeleteCustomerGroupCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerGroupCreditLimitToDelete, headerViewModel.UserId);
 

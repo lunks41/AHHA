@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Barge == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Barge ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Barge ID mismatch");
 
                             var BargeEntity = new M_Barge
                             {
@@ -173,12 +173,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (BargeId != Barge.BargeId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Barge ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Barge ID mismatch");
 
                             var BargeToUpdate = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeId, headerViewModel.UserId);
 
                             if (BargeToUpdate == null)
-                                return NotFound($"M_Barge with Id = {BargeId} not found");
+                                return NotFound($"Barge with Id = {BargeId} not found");
 
                             var BargeEntity = new M_Barge
                             {
@@ -241,7 +241,7 @@ namespace AHHA.API.Controllers.Masters
                             var BargeToDelete = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeId, headerViewModel.UserId);
 
                             if (BargeToDelete == null)
-                                return NotFound($"M_Barge with Id = {BargeId} not found");
+                                return NotFound($"Barge with Id = {BargeId} not found");
 
                             var sqlResponce = await _BargeService.DeleteBargeAsync(headerViewModel.RegId, headerViewModel.CompanyId, BargeToDelete, headerViewModel.UserId);
 

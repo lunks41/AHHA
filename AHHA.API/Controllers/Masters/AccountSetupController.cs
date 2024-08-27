@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (AccountSetup == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_AccountSetup ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "AccountSetup ID mismatch");
 
                             var AccountSetupEntity = new M_AccountSetup
                             {
@@ -169,12 +169,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (AccSetupId != AccountSetup.AccSetupId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_AccountSetup ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "AccountSetup ID mismatch");
 
                             var accountSetupToUpdate = await _AccountSetupService.GetAccountSetupByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupId, headerViewModel.UserId);
 
                             if (accountSetupToUpdate == null)
-                                return NotFound($"M_AccountSetup with Id = {AccSetupId} not found");
+                                return NotFound($"AccountSetup with Id = {AccSetupId} not found");
 
                             var AccountSetupEntity = new M_AccountSetup
                             {
@@ -233,7 +233,7 @@ namespace AHHA.API.Controllers.Masters
                             var AccountSetupToDelete = await _AccountSetupService.GetAccountSetupByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupId, headerViewModel.UserId);
 
                             if (AccountSetupToDelete == null)
-                                return NotFound($"M_AccountSetup with Id = {AccSetupId} not found");
+                                return NotFound($"AccountSetup with Id = {AccSetupId} not found");
 
                             var sqlResponce = await _AccountSetupService.DeleteAccountSetupAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupToDelete, headerViewModel.UserId);
 

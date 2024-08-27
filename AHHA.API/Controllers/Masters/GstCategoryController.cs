@@ -116,7 +116,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (GstCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_GstCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "GstCategory ID mismatch");
 
                             var GstCategoryEntity = new M_GstCategory
                             {
@@ -170,12 +170,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (GstCategoryId != GstCategory.GstCategoryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_GstCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "GstCategory ID mismatch");
 
                             var GstCategoryToUpdate = await _GstCategoryService.GetGstCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryId, headerViewModel.UserId);
 
                             if (GstCategoryToUpdate == null)
-                                return NotFound($"M_GstCategory with Id = {GstCategoryId} not found");
+                                return NotFound($"GstCategory with Id = {GstCategoryId} not found");
 
                             var GstCategoryEntity = new M_GstCategory
                             {
@@ -231,7 +231,7 @@ namespace AHHA.API.Controllers.Masters
                             var GstCategoryToDelete = await _GstCategoryService.GetGstCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryId, headerViewModel.UserId);
 
                             if (GstCategoryToDelete == null)
-                                return NotFound($"M_GstCategory with Id = {GstCategoryId} not found");
+                                return NotFound($"GstCategory with Id = {GstCategoryId} not found");
 
                             var sqlResponce = await _GstCategoryService.DeleteGstCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryToDelete, headerViewModel.UserId);
 

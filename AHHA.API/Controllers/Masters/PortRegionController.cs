@@ -160,12 +160,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (PortRegionId != PortRegion.PortRegionId)
-                                return BadRequest("M_PortRegion ID mismatch");
+                                return BadRequest("PortRegion ID mismatch");
 
                             var PortRegionToUpdate = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
 
                             if (PortRegionToUpdate == null)
-                                return NotFound($"M_PortRegion with Id = {PortRegionId} not found");
+                                return NotFound($"PortRegion with Id = {PortRegionId} not found");
 
                             var PortRegionEntity = new M_PortRegion
                             {
@@ -221,7 +221,7 @@ namespace AHHA.API.Controllers.Masters
                             var PortRegionToDelete = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
 
                             if (PortRegionToDelete == null)
-                                return NotFound($"M_PortRegion with Id = {PortRegionId} not found");
+                                return NotFound($"PortRegion with Id = {PortRegionId} not found");
 
                             var sqlResponce = await _portRegionService.DeletePortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionToDelete, headerViewModel.UserId);
 

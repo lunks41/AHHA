@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (OrderType == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_OrderType ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "OrderType ID mismatch");
 
                             var OrderTypeEntity = new M_OrderType
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (OrderTypeId != OrderType.OrderTypeId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_OrderType ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "OrderType ID mismatch");
 
                             var OrderTypeToUpdate = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
 
                             if (OrderTypeToUpdate == null)
-                                return NotFound($"M_OrderType with Id = {OrderTypeId} not found");
+                                return NotFound($"OrderType with Id = {OrderTypeId} not found");
 
                             var OrderTypeEntity = new M_OrderType
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var OrderTypeToDelete = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
 
                             if (OrderTypeToDelete == null)
-                                return NotFound($"M_OrderType with Id = {OrderTypeId} not found");
+                                return NotFound($"OrderType with Id = {OrderTypeId} not found");
 
                             var sqlResponce = await _OrderTypeService.DeleteOrderTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeToDelete, headerViewModel.UserId);
 

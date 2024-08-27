@@ -115,7 +115,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Voyage == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Voyage ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Voyage ID mismatch");
 
                             var VoyageEntity = new M_Voyage
                             {
@@ -172,12 +172,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (VoyageId != Voyage.VoyageId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Voyage ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Voyage ID mismatch");
 
                             var VoyageToUpdate = await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId);
 
                             if (VoyageToUpdate == null)
-                                return NotFound($"M_Voyage with Id = {VoyageId} not found");
+                                return NotFound($"Voyage with Id = {VoyageId} not found");
 
                             var VoyageEntity = new M_Voyage
                             {
@@ -236,7 +236,7 @@ namespace AHHA.API.Controllers.Masters
                             var VoyageToDelete = await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId);
 
                             if (VoyageToDelete == null)
-                                return NotFound($"M_Voyage with Id = {VoyageId} not found");
+                                return NotFound($"Voyage with Id = {VoyageId} not found");
 
                             var sqlResponce = await _VoyageService.DeleteVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageToDelete, headerViewModel.UserId);
 

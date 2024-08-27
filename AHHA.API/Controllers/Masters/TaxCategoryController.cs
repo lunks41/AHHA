@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (TaxCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_TaxCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "TaxCategory ID mismatch");
 
                             var TaxCategoryEntity = new M_TaxCategory
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (TaxCategoryId != TaxCategory.TaxCategoryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_TaxCategory ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "TaxCategory ID mismatch");
 
                             var TaxCategoryToUpdate = await _TaxCategoryService.GetTaxCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryId, headerViewModel.UserId);
 
                             if (TaxCategoryToUpdate == null)
-                                return NotFound($"M_TaxCategory with Id = {TaxCategoryId} not found");
+                                return NotFound($"TaxCategory with Id = {TaxCategoryId} not found");
 
                             var TaxCategoryEntity = new M_TaxCategory
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var TaxCategoryToDelete = await _TaxCategoryService.GetTaxCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryId, headerViewModel.UserId);
 
                             if (TaxCategoryToDelete == null)
-                                return NotFound($"M_TaxCategory with Id = {TaxCategoryId} not found");
+                                return NotFound($"TaxCategory with Id = {TaxCategoryId} not found");
 
                             var sqlResponce = await _TaxCategoryService.DeleteTaxCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryToDelete, headerViewModel.UserId);
 

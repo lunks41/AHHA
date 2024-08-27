@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (PaymentType == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_PaymentType ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "PaymentType ID mismatch");
 
                             var PaymentTypeEntity = new M_PaymentType
                             {
@@ -167,12 +167,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (PaymentTypeId != PaymentType.PaymentTypeId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_PaymentType ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "PaymentType ID mismatch");
 
                             var PaymentTypeToUpdate = await _PaymentTypeService.GetPaymentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeId, headerViewModel.UserId);
 
                             if (PaymentTypeToUpdate == null)
-                                return NotFound($"M_PaymentType with Id = {PaymentTypeId} not found");
+                                return NotFound($"PaymentType with Id = {PaymentTypeId} not found");
 
                             var PaymentTypeEntity = new M_PaymentType
                             {
@@ -228,7 +228,7 @@ namespace AHHA.API.Controllers.Masters
                             var PaymentTypeToDelete = await _PaymentTypeService.GetPaymentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeId, headerViewModel.UserId);
 
                             if (PaymentTypeToDelete == null)
-                                return NotFound($"M_PaymentType with Id = {PaymentTypeId} not found");
+                                return NotFound($"PaymentType with Id = {PaymentTypeId} not found");
 
                             var sqlResponce = await _PaymentTypeService.DeletePaymentTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeToDelete, headerViewModel.UserId);
 

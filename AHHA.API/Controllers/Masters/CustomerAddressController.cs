@@ -61,6 +61,43 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
+        [HttpGet, Route("GetCustomerAddressbyCustomerId/{CustomerId}")]
+        [Authorize]
+        public async Task<ActionResult> GetCustomerAddressByCustomerId(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var customerAddressViewModel = await _CustomerAddressService.GetCustomerAddressByCustomerIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
+
+                        if (customerAddressViewModel == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, customerAddressViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
         [HttpGet, Route("GetCustomerAddressbyid/{AddressId}")]
         [Authorize]
         public async Task<ActionResult<CustomerAddressViewModel>> GetCustomerAddressById(Int16 AddressId, [FromHeader] HeaderViewModel headerViewModel)
@@ -100,7 +137,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddCustomerAddress")]
         [Authorize]
-        public async Task<ActionResult<CustomerAddressViewModel>> CreateCustomerAddress(CustomerAddressViewModel CustomerAddress, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<CustomerAddressViewModel>> CreateCustomerAddress(CustomerAddressViewModel customerAddress, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,29 +149,28 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (CustomerAddress == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerAddress ID mismatch");
+                            if (customerAddress == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "No input exist");
 
                             var CustomerAddressEntity = new M_CustomerAddress
                             {
-                                CustomerId = CustomerAddress.CustomerId,
-                                AddressId = CustomerAddress.AddressId,
-                                Address1 = CustomerAddress.Address1,
-                                Address2 = CustomerAddress.Address2,
-                                Address3 = CustomerAddress.Address3,
-                                Address4 = CustomerAddress.Address4,
-                                PinCode = CustomerAddress.PinCode,
-                                CountryId = CustomerAddress.CountryId,
-                                PhoneNo = CustomerAddress.PhoneNo,
-                                FaxNo = CustomerAddress.FaxNo,
-                                EmailAdd = CustomerAddress.EmailAdd,
-                                WebUrl = CustomerAddress.WebUrl,
-                                IsDefaultAdd = CustomerAddress.IsDefaultAdd,
-                                IsDeleveryAdd = CustomerAddress.IsDeleveryAdd,
-                                IsFinAdd = CustomerAddress.IsFinAdd,
-                                IsSalesAdd = CustomerAddress.IsSalesAdd,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = CustomerAddress.IsActive,
+                                CustomerId = customerAddress.CustomerId,
+                                Address1 = customerAddress.Address1,
+                                Address2 = customerAddress.Address2,
+                                Address3 = customerAddress.Address3,
+                                Address4 = customerAddress.Address4,
+                                PinCode = customerAddress.PinCode,
+                                CountryId = customerAddress.CountryId,
+                                PhoneNo = customerAddress.PhoneNo,
+                                FaxNo = customerAddress.FaxNo,
+                                EmailAdd = customerAddress.EmailAdd,
+                                WebUrl = customerAddress.WebUrl,
+                                IsDefaultAdd = customerAddress.IsDefaultAdd,
+                                IsDeleveryAdd = customerAddress.IsDeleveryAdd,
+                                IsFinAdd = customerAddress.IsFinAdd,
+                                IsSalesAdd = customerAddress.IsSalesAdd,
+                                IsActive = customerAddress.IsActive,
+                                CreateById = headerViewModel.UserId
                             };
 
                             var createdCustomerAddress = await _CustomerAddressService.AddCustomerAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerAddressEntity, headerViewModel.UserId);
@@ -165,7 +201,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateCustomerAddress/{AddressId}")]
         [Authorize]
-        public async Task<ActionResult<CustomerAddressViewModel>> UpdateCustomerAddress(Int16 AddressId, [FromBody] CustomerAddressViewModel CustomerAddress, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<CustomerAddressViewModel>> UpdateCustomerAddress(Int16 AddressId, [FromBody] CustomerAddressViewModel customerAddress, [FromHeader] HeaderViewModel headerViewModel)
         {
             var CustomerAddressViewModel = new CustomerAddressViewModel();
             try
@@ -178,43 +214,35 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (AddressId != CustomerAddress.AddressId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_CustomerAddress ID mismatch");
-                            //return BadRequest("M_CustomerAddress ID mismatch");
+                            if (AddressId != customerAddress.AddressId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "No input exist");
 
-                            // Attempt to retrieve the CustomerAddress from the cache
-                            if (_memoryCache.TryGetValue($"CustomerAddress_{AddressId}", out CustomerAddressViewModel? cachedProduct))
-                            {
-                                CustomerAddressViewModel = cachedProduct;
-                            }
-                            else
-                            {
-                                var CustomerAddressToUpdate = await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AddressId, headerViewModel.UserId);
+                            var CustomerAddressToUpdate = await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AddressId, headerViewModel.UserId);
 
-                                if (CustomerAddressToUpdate == null)
-                                    return NotFound($"M_CustomerAddress with Id = {AddressId} not found");
-                            }
+                            if (CustomerAddressToUpdate == null)
+                                return NotFound($"CustomerAddress with Id = {AddressId} not found");
 
                             var CustomerAddressEntity = new M_CustomerAddress
                             {
-                                CustomerId = CustomerAddress.CustomerId,
-                                AddressId = CustomerAddress.AddressId,
-                                Address1 = CustomerAddress.Address1,
-                                Address2 = CustomerAddress.Address2,
-                                Address3 = CustomerAddress.Address3,
-                                Address4 = CustomerAddress.Address4,
-                                PinCode = CustomerAddress.PinCode,
-                                CountryId = CustomerAddress.CountryId,
-                                PhoneNo = CustomerAddress.PhoneNo,
-                                FaxNo = CustomerAddress.FaxNo,
-                                EmailAdd = CustomerAddress.EmailAdd,
-                                WebUrl = CustomerAddress.WebUrl,
-                                IsDefaultAdd = CustomerAddress.IsDefaultAdd,
-                                IsDeleveryAdd = CustomerAddress.IsDeleveryAdd,
-                                IsFinAdd = CustomerAddress.IsFinAdd,
-                                IsSalesAdd = CustomerAddress.IsSalesAdd,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = CustomerAddress.IsActive,
+                                CustomerId = customerAddress.CustomerId,
+                                AddressId = customerAddress.AddressId,
+                                Address1 = customerAddress.Address1,
+                                Address2 = customerAddress.Address2,
+                                Address3 = customerAddress.Address3,
+                                Address4 = customerAddress.Address4,
+                                PinCode = customerAddress.PinCode,
+                                CountryId = customerAddress.CountryId,
+                                PhoneNo = customerAddress.PhoneNo,
+                                FaxNo = customerAddress.FaxNo,
+                                EmailAdd = customerAddress.EmailAdd,
+                                WebUrl = customerAddress.WebUrl,
+                                IsDefaultAdd = customerAddress.IsDefaultAdd,
+                                IsDeleveryAdd = customerAddress.IsDeleveryAdd,
+                                IsFinAdd = customerAddress.IsFinAdd,
+                                IsSalesAdd = customerAddress.IsSalesAdd,
+                                IsActive = customerAddress.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _CustomerAddressService.UpdateCustomerAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerAddressEntity, headerViewModel.UserId);
@@ -260,7 +288,7 @@ namespace AHHA.API.Controllers.Masters
                             var CustomerAddressToDelete = await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AddressId, headerViewModel.UserId);
 
                             if (CustomerAddressToDelete == null)
-                                return NotFound($"M_CustomerAddress with Id = {AddressId} not found");
+                                return NotFound($"CustomerAddress with Id = {AddressId} not found");
 
                             var sqlResponce = await _CustomerAddressService.DeleteCustomerAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerAddressToDelete, headerViewModel.UserId);
                             // Remove data from cache by key

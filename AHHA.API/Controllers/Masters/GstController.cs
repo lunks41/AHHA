@@ -115,7 +115,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Gst == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Gst ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Gst ID mismatch");
 
                             var GstEntity = new M_Gst
                             {
@@ -169,12 +169,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (GstId != Gst.GstId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Gst ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Gst ID mismatch");
 
                             var GstToUpdate = await _GstService.GetGstByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstId, headerViewModel.UserId);
 
                             if (GstToUpdate == null)
-                                return NotFound($"M_Gst with Id = {GstId} not found");
+                                return NotFound($"Gst with Id = {GstId} not found");
 
                             var GstEntity = new M_Gst
                             {
@@ -230,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             var GstToDelete = await _GstService.GetGstByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstId, headerViewModel.UserId);
 
                             if (GstToDelete == null)
-                                return NotFound($"M_Gst with Id = {GstId} not found");
+                                return NotFound($"Gst with Id = {GstId} not found");
 
                             var sqlResponce = await _GstService.DeleteGstAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstToDelete, headerViewModel.UserId);
 

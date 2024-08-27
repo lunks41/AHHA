@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Port == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Port ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Port ID mismatch");
 
                             var PortEntity = new M_Port
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (PortId != Port.PortId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Port ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Port ID mismatch");
 
                             var PortToUpdate = await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId);
 
                             if (PortToUpdate == null)
-                                return NotFound($"M_Port with Id = {PortId} not found");
+                                return NotFound($"Port with Id = {PortId} not found");
 
                             var PortEntity = new M_Port
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var PortToDelete = await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId);
 
                             if (PortToDelete == null)
-                                return NotFound($"M_Port with Id = {PortId} not found");
+                                return NotFound($"Port with Id = {PortId} not found");
 
                             var sqlResponce = await _PortService.DeletePortAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortToDelete, headerViewModel.UserId);
 

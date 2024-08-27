@@ -115,7 +115,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Bank == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Bank ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Bank ID mismatch");
 
                             var BankEntity = new M_Bank
                             {
@@ -174,12 +174,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (BankId != Bank.BankId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Bank ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Bank ID mismatch");
 
                             var BankToUpdate = await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId);
 
                             if (BankToUpdate == null)
-                                return NotFound($"M_Bank with Id = {BankId} not found");
+                                return NotFound($"Bank with Id = {BankId} not found");
 
                             var BankEntity = new M_Bank
                             {
@@ -240,7 +240,7 @@ namespace AHHA.API.Controllers.Masters
                             var BankToDelete = await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId);
 
                             if (BankToDelete == null)
-                                return NotFound($"M_Bank with Id = {BankId} not found");
+                                return NotFound($"Bank with Id = {BankId} not found");
 
                             var sqlResponce = await _BankService.DeleteBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankToDelete, headerViewModel.UserId);
 

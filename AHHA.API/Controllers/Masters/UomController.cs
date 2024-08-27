@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Uom == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Uom ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Uom ID mismatch");
 
                             var UomEntity = new M_Uom
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (UomId != Uom.UomId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Uom ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Uom ID mismatch");
 
                             var UomToUpdate = await _UomService.GetUomByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomId, headerViewModel.UserId);
 
                             if (UomToUpdate == null)
-                                return NotFound($"M_Uom with Id = {UomId} not found");
+                                return NotFound($"Uom with Id = {UomId} not found");
 
                             var UomEntity = new M_Uom
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var UomToDelete = await _UomService.GetUomByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomId, headerViewModel.UserId);
 
                             if (UomToDelete == null)
-                                return NotFound($"M_Uom with Id = {UomId} not found");
+                                return NotFound($"Uom with Id = {UomId} not found");
 
                             var sqlResponce = await _UomService.DeleteUomAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomToDelete, headerViewModel.UserId);
 

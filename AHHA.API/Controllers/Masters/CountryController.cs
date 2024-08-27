@@ -128,7 +128,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (country == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Country ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Country ID mismatch");
 
                             var countryEntity = new M_Country
                             {
@@ -183,13 +183,13 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (CountryId != country.CountryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Country ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Country ID mismatch");
 
                             //Checking Country data available or not by using CountryId
                             var CountryToUpdate = await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
 
                             if (CountryToUpdate == null)
-                                return NotFound($"M_Country with Id = {CountryId} not found");
+                                return NotFound($"Country with Id = {CountryId} not found");
 
                             var countryEntity = new M_Country
                             {
@@ -245,7 +245,7 @@ namespace AHHA.API.Controllers.Masters
                             var CountryToDelete = await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
 
                             if (CountryToDelete == null)
-                                return NotFound($"M_Country with Id = {CountryId} not found");
+                                return NotFound($"Country with Id = {CountryId} not found");
 
                             var sqlResponce = await _countryService.DeleteCountryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryToDelete, headerViewModel.UserId);
 

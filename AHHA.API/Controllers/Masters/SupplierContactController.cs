@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (SupplierContact == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_SupplierContact ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "SupplierContact ID mismatch");
 
                             var SupplierContactEntity = new M_SupplierContact
                             {
@@ -176,12 +176,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (ContactId != SupplierContact.ContactId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_SupplierContact ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "SupplierContact ID mismatch");
 
                             var SupplierContactToUpdate = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                             if (SupplierContactToUpdate == null)
-                                return NotFound($"M_SupplierContact with Id = {ContactId} not found");
+                                return NotFound($"SupplierContact with Id = {ContactId} not found");
 
                             var SupplierContactEntity = new M_SupplierContact
                             {
@@ -245,7 +245,7 @@ namespace AHHA.API.Controllers.Masters
                             var SupplierContactToDelete = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                             if (SupplierContactToDelete == null)
-                                return NotFound($"M_SupplierContact with Id = {ContactId} not found");
+                                return NotFound($"SupplierContact with Id = {ContactId} not found");
 
                             var sqlResponce = await _SupplierContactService.DeleteSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactToDelete, headerViewModel.UserId);
 

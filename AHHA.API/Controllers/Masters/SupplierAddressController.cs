@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (SupplierAddress == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_SupplierAddress ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "SupplierAddress ID mismatch");
 
                             var SupplierAddressEntity = new M_SupplierAddress
                             {
@@ -178,12 +178,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (SupplierAddressId != SupplierAddress.AddressId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_SupplierAddress ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "SupplierAddress ID mismatch");
 
                             var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
 
                             if (SupplierAddressToUpdate == null)
-                                return NotFound($"M_SupplierAddress with Id = {SupplierAddressId} not found");
+                                return NotFound($"SupplierAddress with Id = {SupplierAddressId} not found");
 
                             var SupplierAddressEntity = new M_SupplierAddress
                             {
@@ -250,7 +250,7 @@ namespace AHHA.API.Controllers.Masters
                             var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
 
                             if (SupplierAddressToDelete == null)
-                                return NotFound($"M_SupplierAddress with Id = {SupplierAddressId} not found");
+                                return NotFound($"SupplierAddress with Id = {SupplierAddressId} not found");
 
                             var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressToDelete, headerViewModel.UserId);
 

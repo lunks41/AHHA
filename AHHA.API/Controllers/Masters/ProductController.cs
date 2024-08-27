@@ -114,7 +114,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Product == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Product ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Product ID mismatch");
 
                             var ProductEntity = new M_Product
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (ProductId != Product.ProductId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Product ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Product ID mismatch");
 
                             var ProductToUpdate = await _productService.GetProductByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductId, headerViewModel.UserId);
 
                             if (ProductToUpdate == null)
-                                return NotFound($"M_Product with Id = {ProductId} not found");
+                                return NotFound($"Product with Id = {ProductId} not found");
 
                             var ProductEntity = new M_Product
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var ProductToDelete = await _productService.GetProductByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductId, headerViewModel.UserId);
 
                             if (ProductToDelete == null)
-                                return NotFound($"M_Product with Id = {ProductId} not found");
+                                return NotFound($"Product with Id = {ProductId} not found");
 
                             var sqlResponce = await _productService.DeleteProductAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductToDelete, headerViewModel.UserId);
 
@@ -323,12 +323,12 @@ namespace AHHA.API.Controllers.Masters
 //    try
 //    {
 //        if (id != product.ProductId)
-//            return BadRequest("M_Product ID mismatch");
+//            return BadRequest("Product ID mismatch");
 
 //        var productToUpdate = await _productService.GetProductByIdAsync(id);
 
 //        if (productToUpdate == null)
-//            return NotFound($"M_Product with Id = {id} not found");
+//            return NotFound($"Product with Id = {id} not found");
 
 //        await _productService.UpdateProductAsync(product);
 //        return NoContent();
@@ -349,7 +349,7 @@ namespace AHHA.API.Controllers.Masters
 
 //        if (productToDelete == null)
 //        {
-//            return NotFound($"M_Product with Id = {id} not found");
+//            return NotFound($"Product with Id = {id} not found");
 //        }
 
 //        await _productService.DeleteProductAsync(id);

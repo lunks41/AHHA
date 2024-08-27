@@ -112,7 +112,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Vessel == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Vessel ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Vessel ID mismatch");
 
                             var VesselEntity = new M_Vessel
                             {
@@ -172,12 +172,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (VesselId != Vessel.VesselId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Vessel ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Vessel ID mismatch");
 
                             var VesselToUpdate = await _VesselService.GetVesselByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselId, headerViewModel.UserId);
 
                             if (VesselToUpdate == null)
-                                return NotFound($"M_Vessel with Id = {VesselId} not found");
+                                return NotFound($"Vessel with Id = {VesselId} not found");
 
                             var VesselEntity = new M_Vessel
                             {
@@ -239,7 +239,7 @@ namespace AHHA.API.Controllers.Masters
                             var VesselToDelete = await _VesselService.GetVesselByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselId, headerViewModel.UserId);
 
                             if (VesselToDelete == null)
-                                return NotFound($"M_Vessel with Id = {VesselId} not found");
+                                return NotFound($"Vessel with Id = {VesselId} not found");
 
                             var sqlResponce = await _VesselService.DeleteVesselAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselToDelete, headerViewModel.UserId);
 

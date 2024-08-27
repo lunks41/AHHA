@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Employee == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Employee ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Employee ID mismatch");
 
                             var EmployeeEntity = new M_Employee
                             {
@@ -167,12 +167,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (EmployeeId != Employee.EmployeeId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Employee ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Employee ID mismatch");
 
                             var EmployeeToUpdate = await _EmployeeService.GetEmployeeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeId, headerViewModel.UserId);
 
                             if (EmployeeToUpdate == null)
-                                return NotFound($"M_Employee with Id = {EmployeeId} not found");
+                                return NotFound($"Employee with Id = {EmployeeId} not found");
 
                             var EmployeeEntity = new M_Employee
                             {
@@ -228,7 +228,7 @@ namespace AHHA.API.Controllers.Masters
                             var EmployeeToDelete = await _EmployeeService.GetEmployeeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeId, headerViewModel.UserId);
 
                             if (EmployeeToDelete == null)
-                                return NotFound($"M_Employee with Id = {EmployeeId} not found");
+                                return NotFound($"Employee with Id = {EmployeeId} not found");
 
                             var sqlResponce = await _EmployeeService.DeleteEmployeeAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeToDelete, headerViewModel.UserId);
 

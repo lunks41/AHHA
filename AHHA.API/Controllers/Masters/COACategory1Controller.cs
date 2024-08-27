@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (COACategory1 == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_COACategory1 ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "COACategory1 ID mismatch");
 
                             var COACategory1Entity = new M_COACategory1
                             {
@@ -167,12 +167,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (COACategoryId != COACategory1.COACategoryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_COACategory1 ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "COACategory1 ID mismatch");
 
                             var COACategory1ToUpdate = await _COACategory1Service.GetCOACategory1ByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId);
 
                             if (COACategory1ToUpdate == null)
-                                return NotFound($"M_COACategory1 with Id = {COACategoryId} not found");
+                                return NotFound($"COACategory1 with Id = {COACategoryId} not found");
 
                             var COACategory1Entity = new M_COACategory1
                             {
@@ -228,7 +228,7 @@ namespace AHHA.API.Controllers.Masters
                             var COACategory1ToDelete = await _COACategory1Service.GetCOACategory1ByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId);
 
                             if (COACategory1ToDelete == null)
-                                return NotFound($"M_COACategory1 with Id = {COACategoryId} not found");
+                                return NotFound($"COACategory1 with Id = {COACategoryId} not found");
 
                             var sqlResponce = await _COACategory1Service.DeleteCOACategory1Async(headerViewModel.RegId, headerViewModel.CompanyId, COACategory1ToDelete, headerViewModel.UserId);
 

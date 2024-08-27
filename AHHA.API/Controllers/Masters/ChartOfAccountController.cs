@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (ChartOfAccount == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_ChartOfAccount ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "ChartOfAccount ID mismatch");
 
                             var ChartOfAccountEntity = new M_ChartOfAccount
                             {
@@ -175,12 +175,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (GLId != ChartOfAccount.GLId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_ChartOfAccount ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "ChartOfAccount ID mismatch");
 
                             var ChartOfAccountToUpdate = await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId);
 
                             if (ChartOfAccountToUpdate == null)
-                                return NotFound($"M_ChartOfAccount with Id = {GLId} not found");
+                                return NotFound($"ChartOfAccount with Id = {GLId} not found");
 
                             var ChartOfAccountEntity = new M_ChartOfAccount
                             {
@@ -244,7 +244,7 @@ namespace AHHA.API.Controllers.Masters
                             var ChartOfAccountToDelete = await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId);
 
                             if (ChartOfAccountToDelete == null)
-                                return NotFound($"M_ChartOfAccount with Id = {GLId} not found");
+                                return NotFound($"ChartOfAccount with Id = {GLId} not found");
 
                             var sqlResponce = await _ChartOfAccountService.DeleteChartOfAccountAsync(headerViewModel.RegId, headerViewModel.CompanyId, ChartOfAccountToDelete, headerViewModel.UserId);
 

@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Tax == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Tax ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Tax ID mismatch");
 
                             var TaxEntity = new M_Tax
                             {
@@ -168,12 +168,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (TaxId != Tax.TaxId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Tax ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Tax ID mismatch");
 
                             var TaxToUpdate = await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId);
 
                             if (TaxToUpdate == null)
-                                return NotFound($"M_Tax with Id = {TaxId} not found");
+                                return NotFound($"Tax with Id = {TaxId} not found");
 
                             var TaxEntity = new M_Tax
                             {
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var TaxToDelete = await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId);
 
                             if (TaxToDelete == null)
-                                return NotFound($"M_Tax with Id = {TaxId} not found");
+                                return NotFound($"Tax with Id = {TaxId} not found");
 
                             var sqlResponce = await _TaxService.DeleteTaxAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxToDelete, headerViewModel.UserId);
 

@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (Designation == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Designation ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Designation ID mismatch");
 
                             var DesignationEntity = new M_Designation
                             {
@@ -167,12 +167,12 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsEdit)
                         {
                             if (DesignationId != Designation.DesignationId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "M_Designation ID mismatch");
+                                return StatusCode(StatusCodes.Status400BadRequest, "Designation ID mismatch");
 
                             var DesignationToUpdate = await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationId, headerViewModel.UserId);
 
                             if (DesignationToUpdate == null)
-                                return NotFound($"M_Designation with Id = {DesignationId} not found");
+                                return NotFound($"Designation with Id = {DesignationId} not found");
 
                             var DesignationEntity = new M_Designation
                             {
@@ -228,7 +228,7 @@ namespace AHHA.API.Controllers.Masters
                             var DesignationToDelete = await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationId, headerViewModel.UserId);
 
                             if (DesignationToDelete == null)
-                                return NotFound($"M_Designation with Id = {DesignationId} not found");
+                                return NotFound($"Designation with Id = {DesignationId} not found");
 
                             var sqlResponce = await _DesignationService.DeleteDesignationAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationToDelete, headerViewModel.UserId);
 
