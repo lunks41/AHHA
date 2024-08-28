@@ -29,7 +29,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountType WHERE (M_ACC.AccTypeName LIKE '%{searchString}%' OR M_ACC.AccTypeCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccTypeCategoryName LIKE '%{searchString}%' OR M_Accsc.AccTypeCategoryCode LIKE '%{searchString}%') AND M_ACC.AccTypeId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountType}))");
 
-                var result = await _repository.GetQueryAsync<AccountTypeViewModel>(RegId, $"SELECT M_ACC.AccTypeId,M_ACC.AccTypeCode,M_ACC.AccTypeName,M_ACC.CompanyId,M_ACC.AccTypeCategoryId,M_Accsc.AccTypeCategoryCode,M_Accsc.AccTypeCategoryName,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountType M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById INNER JOIN dbo.M_AccountTypeCategory M_Accsc ON M_Accsc.AccTypeCategoryId = M_ACC.AccTypeCategoryId  WHERE (M_ACC.AccTypeName LIKE '%{searchString}%' OR M_ACC.AccTypeCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccTypeCategoryName LIKE '%{searchString}%' OR M_Accsc.AccTypeCategoryCode LIKE '%{searchString}%') AND M_ACC.AccTypeId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) ORDER BY M_ACC.AccTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<AccountTypeViewModel>(RegId, $"SELECT M_ACC.AccTypeId,M_ACC.AccTypeCode,M_ACC.AccTypeName,M_ACC.CompanyId,M_ACC.SeqNo,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountType M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById  WHERE (M_ACC.AccTypeName LIKE '%{searchString}%' OR M_ACC.AccTypeCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%') AND M_ACC.AccTypeId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) ORDER BY M_ACC.AccTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 accountTypeViewModelCount.responseCode = 200;
                 accountTypeViewModelCount.responseMessage = "success";
@@ -64,7 +64,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountType>(RegId, $"SELECT AccountTypeId,AccountTypeCode,AccountTypeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountType WHERE AccountTypeId={AccTypeId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountType>(RegId, $"SELECT AccTypeId,AccTypeCode,AccTypeName,SeqNo,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountType WHERE AccTypeId={AccTypeId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountType}))");
 
                 return result;
             }
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccountTypeCode='{AccountType.AccTypeId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccountTypeName='{AccountType.AccTypeName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccTypeCode='{AccountType.AccTypeId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccTypeName='{AccountType.AccTypeName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -111,7 +111,7 @@ namespace AHHA.Infra.Services.Masters
                     }
 
                     //Take the Missing Id From SQL
-                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AccountTypeId + 1) FROM dbo.M_AccountType WHERE (AccountTypeId + 1) NOT IN (SELECT AccountTypeId FROM dbo.M_AccountType)),1) AS MissId");
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AccTypeId + 1) FROM dbo.M_AccountType WHERE (AccTypeId + 1) NOT IN (SELECT AccTypeId FROM dbo.M_AccountType)),1) AS MissId");
 
                     if (sqlMissingResponce != null)
                     {
@@ -163,7 +163,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "AccountTypeId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccTypeId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -200,7 +200,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (AccountType.AccTypeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccountTypeName='{AccountType.AccTypeName} AND AccountTypeId <>{AccountType.AccTypeId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccTypeName='{AccountType.AccTypeName} AND AccTypeId <>{AccountType.AccTypeId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -252,7 +252,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "AccountTypeId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccTypeId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -321,7 +321,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "AccountTypeId Should be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccTypeId Should be zero" };
                     }
                     return new SqlResponce();
                 }

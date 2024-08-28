@@ -89,11 +89,11 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<M_CustomerContact> GetCustomerContactByIdAsync(string RegId, Int16 CompanyId, Int32 CustomerId, Int32 UserId)
+        public async Task<M_CustomerContact> GetCustomerContactByIdAsync(string RegId, Int16 CompanyId, Int32 ContactId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerContact>(RegId, $"SELECT CustomerId,OtherName,ContactName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerContact WHERE CustomerId={CustomerId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerContact>(RegId, $"SELECT ContactId,CustomerId,ContactName,OtherName,MobileNo,OffNo,FaxNo,EmailAdd,MessId,ContactMessType,IsDefault,IsFinance,IsSales,IsActive,CreateById,CreateDate,EditById,EditDate FROM M_CustomerContact M_CusCon INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusCon.CustomerId WHERE M_CusCon.ContactId={ContactId} AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))");
 
                 return result;
             }
@@ -125,7 +125,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND OtherName='{CustomerContact.OtherName}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND ContactName='{CustomerContact.ContactName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerContact M_CusCon INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusCon.CustomerId WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND OtherName='{CustomerContact.OtherName}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerContact M_CusCon INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusCon.CustomerId WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND ContactName='{CustomerContact.ContactName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -228,7 +228,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (CustomerContact.CustomerId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerContact WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND ContactName='{CustomerContact.ContactName} AND CustomerId <>{CustomerContact.CustomerId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerContact M_CusCon INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusCon.CustomerId WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND ContactName='{CustomerContact.ContactName} AND CustomerId <>{CustomerContact.CustomerId}'");
 
                         if (StrExist.Count() > 0)
                         {

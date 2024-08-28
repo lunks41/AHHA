@@ -63,7 +63,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerCreditLimit>(RegId, $"SELECT M_Cusc.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,M_Cusc.EffectFrom,M_Cusc.EffectUntil,M_Cusc.IsExpires,M_Cusc.CreditLimitAmt,M_Cusc.CreateById,M_Cusc.CreateDate,M_Cusc.EditById,M_Cusc.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerCreditLimit M_Cusc INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_Cusc.CustomerId WHERE M_Cus.CustomerId={CustomerId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerCreditLimit>(RegId, $"SELECT M_Cusc.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,M_Cusc.EffectFrom,M_Cusc.EffectUntil,M_Cusc.IsExpires,M_Cusc.CreditLimitAmt,M_Cusc.CreateById,M_Cusc.CreateDate,M_Cusc.EditById,M_Cusc.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerCreditLimit M_Cusc INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_Cusc.CustomerId WHERE M_Cus.CustomerId={CustomerId} AND M_Cusc.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.CustomerCreditLimit}))");
 
                 return result;
             }

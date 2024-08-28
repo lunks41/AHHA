@@ -28,7 +28,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_COACategory1 M_Catg WHERE (M_Catg.COACategoryName LIKE '%{searchString}%' OR M_Catg.COACategoryCode LIKE '%{searchString}%' OR M_Catg.Remarks LIKE '%{searchString}%') AND M_Catg.COACategoryId<>0 AND M_Catg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1}))");
 
-                var result = await _repository.GetQueryAsync<COACategoryViewModel>(RegId, $"SELECT M_Catg.COACategoryId,M_Catg.COACategoryCode,M_Catg.COACategoryName,M_Catg.CompanyId,M_Catg.Remarks,M_Catg.IsActive,M_Catg.CreateById,M_Catg.CreateDate,M_Catg.EditById,M_Catg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_COACategory1 M_Catg LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Catg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Catg.EditById WHERE (M_Catg.COACategoryName LIKE '%{searchString}%' OR M_Catg.COACategoryCode LIKE '%{searchString}%' OR M_Catg.Remarks LIKE '%{searchString}%') AND M_Catg.COACategoryId<>0 AND M_Catg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) ORDER BY M_Catg.COACategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<COACategoryViewModel>(RegId, $"SELECT M_Catg.COACategoryId,M_Catg.COACategoryCode,M_Catg.COACategoryName,M_Catg.seqNo,M_Catg.CompanyId,M_Catg.Remarks,M_Catg.IsActive,M_Catg.CreateById,M_Catg.CreateDate,M_Catg.EditById,M_Catg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_COACategory1 M_Catg LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Catg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Catg.EditById WHERE (M_Catg.COACategoryName LIKE '%{searchString}%' OR M_Catg.COACategoryCode LIKE '%{searchString}%' OR M_Catg.Remarks LIKE '%{searchString}%') AND M_Catg.COACategoryId<>0 AND M_Catg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) ORDER BY M_Catg.COACategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 cOACategoryViewModelCount.responseCode = 200;
                 cOACategoryViewModelCount.responseMessage = "success";
@@ -63,7 +63,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_COACategory1>(RegId, $"SELECT COACategory1Id,COACategory1Code,COACategory1Name,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_COACategory1 WHERE COACategory1Id={COACategoryId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_COACategory1>(RegId, $"SELECT COACategoryId,COACategoryCode,COACategoryName,seqNo,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_COACategory1 WHERE COACategoryId={COACategoryId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1}))");
 
                 return result;
             }
@@ -95,22 +95,22 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategory1Code='{m_COACategory1.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategory1Name='{m_COACategory1.COACategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategoryCode='{m_COACategory1.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategoryName='{m_COACategory1.COACategoryName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            return new SqlResponce { Result = -1, Message = "COACategory1 Code Exist" };
+                            return new SqlResponce { Result = -1, Message = "COACategory Code Exist" };
                         }
                         else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            return new SqlResponce { Result = -2, Message = "COACategory1 Name Exist" };
+                            return new SqlResponce { Result = -2, Message = "COACategory Name Exist" };
                         }
                     }
 
                     //Take the Missing Id From SQL
-                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (COACategory1Id + 1) FROM dbo.M_COACategory1 WHERE (COACategory1Id + 1) NOT IN (SELECT COACategory1Id FROM dbo.M_COACategory1)),1) AS MissId");
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (COACategoryId + 1) FROM dbo.M_COACategory1 WHERE (COACategoryId + 1) NOT IN (SELECT COACategoryId FROM dbo.M_COACategory1)),1) AS MissId");
                     if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
                     {
                         #region Saving COACategory1
@@ -161,7 +161,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "COACategory1Id Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "COACategoryId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -198,7 +198,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (m_COACategory1.COACategoryId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategory1Name='{m_COACategory1.COACategoryName} AND COACategory1Id <>{m_COACategory1.COACategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategoryName='{m_COACategory1.COACategoryName} AND COACategoryId <>{m_COACategory1.COACategoryId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -250,7 +250,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "COACategory1Id Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "COACategoryId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -318,7 +318,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "COACategory1Id Should be zero" };
+                        return new SqlResponce { Result = -1, Message = "COACategoryId Should be zero" };
                     }
                     return new SqlResponce();
                 }

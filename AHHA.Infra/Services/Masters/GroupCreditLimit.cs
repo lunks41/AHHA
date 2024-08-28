@@ -28,7 +28,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_GroupCreditLimit M_Grp WHERE (M_Grp.GroupCreditLimitName LIKE '%{searchString}%' OR M_Grp.Remarks LIKE '%{searchString}%') AND M_Grp.GroupCreditLimitId<>0 AND M_Grp.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GroupCreditLimit}))");
 
-                var result = await _repository.GetQueryAsync<GroupCreditLimitViewModel>(RegId, $"SELECT M_Grp.GroupCreditLimitId,M_Grp.GroupCreditLimitName,M_Grp.CompanyId,M_Grp.Remarks,M_Grp.IsActive,M_Grp.CreateById,M_Grp.CreateDate,M_Grp.EditById,M_Grp.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_GroupCreditLimit M_Grp LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Grp.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Grp.EditById WHERE (M_Grp.GroupCreditLimitName LIKE '%{searchString}%' OR M_Grp.Remarks LIKE '%{searchString}%') AND M_Grp.GroupCreditLimitId<>0 AND M_Grp.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GroupCreditLimit})) ORDER BY M_Grp.GroupCreditLimitName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<GroupCreditLimitViewModel>(RegId, $"SELECT M_Grp.GroupCreditLimitId,M_Grp.GroupCreditLimitCode,M_Grp.GroupCreditLimitName,M_Grp.CompanyId,M_Grp.Remarks,M_Grp.IsActive,M_Grp.CreateById,M_Grp.CreateDate,M_Grp.EditById,M_Grp.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_GroupCreditLimit M_Grp LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Grp.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Grp.EditById WHERE (M_Grp.GroupCreditLimitName LIKE '%{searchString}%' OR M_Grp.Remarks LIKE '%{searchString}%') AND M_Grp.GroupCreditLimitId<>0 AND M_Grp.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GroupCreditLimit})) ORDER BY M_Grp.GroupCreditLimitName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 GroupCreditLimitViewModelCount.responseCode = 200;
                 GroupCreditLimitViewModelCount.responseMessage = "success";
@@ -63,7 +63,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_GroupCreditLimit>(RegId, $"SELECT GroupCreditLimitId,GroupCreditLimitName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_GroupCreditLimit WHERE GroupCreditLimitId={GroupCreditLimitId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_GroupCreditLimit>(RegId, $"SELECT GroupCreditLimitId,GroupCreditLimitCode,GroupCreditLimitName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_GroupCreditLimit WHERE GroupCreditLimitId={GroupCreditLimitId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.GroupCreditLimit}))");
 
                 return result;
             }

@@ -64,7 +64,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CreditTerm>(RegId, $"SELECT CreditTermId,CreditTermCode,CreditTermName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CreditTerm WHERE CreditTermId={CreditTermId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CreditTerm>(RegId, $"SELECT CreditTermId,CreditTermCode,CreditTermName,CompanyId,NoDays,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CreditTerm WHERE CreditTermId={CreditTermId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.CreditTerms}))");
 
                 return result;
             }

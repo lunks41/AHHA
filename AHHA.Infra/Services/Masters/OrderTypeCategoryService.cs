@@ -63,7 +63,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_OrderTypeCategory>(RegId, $"SELECT OrderTypeCategoryId,OrderTypeCategoryCode,OrderTypeCategoryName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_OrderTypeCategory WHERE OrderTypeCategoryId={OrderTypeCategoryId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_OrderTypeCategory>(RegId, $"SELECT CompanyId,OrderTypeCategoryId,OrderTypeCategoryCode,OrderTypeCategoryName,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_OrderTypeCategory WHERE OrderTypeCategoryId={OrderTypeCategoryId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.OrderTypeCategory}))");
 
                 return result;
             }

@@ -8,12 +8,22 @@ namespace AHHA.Application.IServices.Masters
     {
         public Task<GstViewModelCount> GetGstListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId);
 
-        public Task<M_Gst> GetGstByIdAsync(string RegId, Int16 CompanyId, Int16 COACategoryId, Int32 UserId);
+        public Task<M_Gst> GetGstByIdAsync(string RegId, Int16 CompanyId, Int16 GstId, Int32 UserId);
 
         public Task<SqlResponce> AddGstAsync(string RegId, Int16 CompanyId, M_Gst M_Gst, Int32 UserId);
 
         public Task<SqlResponce> UpdateGstAsync(string RegId, Int16 CompanyId, M_Gst M_Gst, Int32 UserId);
 
         public Task<SqlResponce> DeleteGstAsync(string RegId, Int16 CompanyId, M_Gst M_Gst, Int32 UserId);
+
+        public Task<GstDtViewModelCount> GetGstDtListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId);
+
+        public Task<M_GstDt> GetGstDtByIdAsync(string RegId, Int16 CompanyId, Int16 GstDtId, Int32 UserId);
+
+        public Task<SqlResponce> AddGstDtAsync(string RegId, Int16 CompanyId, M_GstDt M_GstDt, Int32 UserId);
+
+        public Task<SqlResponce> UpdateGstDtAsync(string RegId, Int16 CompanyId, M_GstDt M_GstDt, Int32 UserId);
+
+        public Task<SqlResponce> DeleteGstDtAsync(string RegId, Int16 CompanyId, M_GstDt M_GstDt, Int32 UserId);
     }
 }

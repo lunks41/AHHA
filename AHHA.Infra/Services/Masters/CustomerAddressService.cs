@@ -28,7 +28,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId  WHERE (M_CusAdd.Address1 LIKE '%{searchString}%' OR M_CusAdd.Address2 LIKE '%{searchString}%' OR M_CusAdd.Address3 LIKE '%{searchString}%' OR M_CusAdd.Address4 LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%') AND M_CusAdd.AddressId<>0 AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))");
 
-                var result = await _repository.GetQueryAsync<CustomerAddressViewModel>(RegId, $"SELECT  M_CusAdd.CustomerId,M_CusAdd.AddressId,M_CusAdd.Address1,M_CusAdd.Address2,M_CusAdd.Address3,M_CusAdd.Address4,M_CusAdd.PhoneNo,M_CusAdd.EmailAdd,M_CusAdd.IsDefaultAdd,M_CusAdd.IsDeleveryAdd,M_CusAdd.IsFinAdd,M_CusAdd.IsSalesAdd,M_CusAdd.IsActive,M_Cus.CustomerCode,M_Cus.CustomerName,M_CusAdd.CreateById,M_CusAdd.CreateDate,M_CusAdd.EditById,M_CusAdd.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_CusAdd.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_CusAdd.EditById WHERE (M_CusAdd.Address1 LIKE '%{searchString}%' OR M_CusAdd.Address2 LIKE '%{searchString}%' OR M_CusAdd.Address3 LIKE '%{searchString}%' OR M_CusAdd.Address4 LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%') AND M_CusAdd.AddressId<>0 AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) ORDER BY M_CusAdd.Address1 OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<CustomerAddressViewModel>(RegId, $"SELECT  M_CusAdd.CustomerId,M_CusAdd.AddressId,M_CusAdd.Address1,M_CusAdd.Address2,M_CusAdd.Address3,M_CusAdd.Address4,M_CusAdd.PhoneNo,M_CusAdd.EmailAdd,M_CusAdd.IsDefaultAdd,M_CusAdd.IsDeleveryAdd,M_CusAdd.IsFinAdd,M_CusAdd.IsSalesAdd,M_CusAdd.IsActive,M_Cus.CustomerCode,M_Cus.CustomerName,M_Cou.CountryCode,M_Cou.CountryName,M_CusAdd.CreateById,M_CusAdd.CreateDate,M_CusAdd.EditById,M_CusAdd.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId INNER JOIN dbo.M_Country M_Cou ON M_Cou.CountryId = M_CusAdd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_CusAdd.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_CusAdd.EditById WHERE (M_CusAdd.Address1 LIKE '%{searchString}%' OR M_CusAdd.Address2 LIKE '%{searchString}%' OR M_CusAdd.Address3 LIKE '%{searchString}%' OR M_CusAdd.Address4 LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%') AND M_CusAdd.AddressId<>0 AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) ORDER BY M_CusAdd.Address1 OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 customerAddressViewModelCount.responseCode = 200;
                 customerAddressViewModelCount.responseMessage = "success";
@@ -63,7 +63,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQueryAsync<CustomerAddressViewModel>(RegId, $"SELECT M_CusAdd.CustomerId,M_CusAdd.AddressId,M_CusAdd.Address1,M_CusAdd.Address2,M_CusAdd.Address3,M_CusAdd.Address4,M_CusAdd.PhoneNo,M_CusAdd.EmailAdd,M_CusAdd.IsDefaultAdd,M_CusAdd.IsDeleveryAdd,M_CusAdd.IsFinAdd,M_CusAdd.IsSalesAdd,M_CusAdd.IsActive,M_Cus.CustomerCode,M_Cus.CustomerName,M_CusAdd.CreateById,M_CusAdd.CreateDate,M_CusAdd.EditById,M_CusAdd.EditDate FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId WHERE M_CusAdd.CustomerId = {CustomerId} AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))");
+                var result = await _repository.GetQueryAsync<CustomerAddressViewModel>(RegId, $"SELECT  M_CusAdd.CustomerId,M_CusAdd.AddressId,M_CusAdd.Address1,M_CusAdd.Address2,M_CusAdd.Address3,M_CusAdd.Address4,M_CusAdd.PhoneNo,M_CusAdd.EmailAdd,M_CusAdd.IsDefaultAdd,M_CusAdd.IsDeleveryAdd,M_CusAdd.IsFinAdd,M_CusAdd.IsSalesAdd,M_CusAdd.IsActive,M_Cus.CustomerCode,M_Cus.CustomerName,M_Cou.CountryCode,M_Cou.CountryName,M_CusAdd.CreateById,M_CusAdd.CreateDate,M_CusAdd.EditById,M_CusAdd.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId INNER JOIN dbo.M_Country M_Cou ON M_Cou.CountryId = M_CusAdd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_CusAdd.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_CusAdd.EditById WHERE M_CusAdd.CustomerId = {CustomerId} AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))");
 
                 return result;
             }
@@ -93,7 +93,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerAddress>(RegId, $"SELECT AddressId,Address1,CustomerAddressName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerAddress WHERE AddressId={AddressId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerAddress>(RegId, $"SELECT CustomerId,AddressId,Address1,Address2,Address3,Address4,PinCode,CountryId,PhoneNo,FaxNo,EmailAdd,WebUrl,IsDefaultAdd,IsDeleveryAdd,IsFinAdd,IsSalesAdd,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId WHERE AddressId={AddressId} AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))");
 
                 return result;
             }
@@ -125,7 +125,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))  UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId  WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))  UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer}))");
 
                     if (StrExist.Count() > 0)
                     {
@@ -137,9 +137,6 @@ namespace AHHA.Infra.Services.Masters
                         {
                             return new SqlResponce { Result = -2, Message = "CustomerAddress Name Exist" };
                         }
-                    }
-                    else
-                    {
                     }
 
                     //Take the Missing Id From SQL
@@ -231,7 +228,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (CustomerAddress.AddressId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND AddressId <>{CustomerAddress.AddressId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.Customer})) AND AddressId <>{CustomerAddress.AddressId}'");
 
                         if (StrExist.Count() > 0)
                         {

@@ -63,7 +63,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Barge>(RegId, $"SELECT BargeId,CompanyId,BargeCode,BargeName,CallSign,IMOCode,GRT,LicenseNo,BargeType,Flag,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Barge WHERE BargeId={BargeId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Barge>(RegId, $"SELECT BargeId,CompanyId,BargeCode,BargeName,CallSign,IMOCode,GRT,LicenseNo,BargeType,Flag,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Barge WHERE BargeId={BargeId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.Barge}))");
 
                 return result;
             }

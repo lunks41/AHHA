@@ -64,7 +64,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountSetup>(RegId, $"SELECT AccountSetupId,AccountSetupCode,AccountSetupName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountSetup WHERE AccountSetupId={AccSetupId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountSetup>(RegId, $"SELECT AccountSetupId,AccountSetupCode,AccountSetupName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountSetup WHERE AccountSetupId={AccSetupId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountSetup}))");
 
                 return result;
             }

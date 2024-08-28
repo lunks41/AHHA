@@ -24,6 +24,8 @@ namespace AHHA.API.Controllers.Masters
             _GstService = GstService;
         }
 
+        #region GST_HD
+
         [HttpGet, Route("GetGst")]
         [Authorize]
         public async Task<ActionResult> GetGst([FromHeader] HeaderViewModel headerViewModel)
@@ -258,5 +260,240 @@ namespace AHHA.API.Controllers.Masters
                     "Error deleting data");
             }
         }
+
+        #endregion GST_HD
+
+        #region GST_DT
+
+        [HttpGet, Route("GetGstDt")]
+        [Authorize]
+        public async Task<ActionResult> GetGstDt([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GstDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
+
+                        var cacheData = await _GstService.GetGstDtListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetGstDtbyid/{GstDtId}")]
+        [Authorize]
+        public async Task<ActionResult<GstDtViewModel>> GetGstDtById(Int16 GstDtId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GstDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var GstDtViewModel = _mapper.Map<GstDtViewModel>(await _GstService.GetGstDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtId, headerViewModel.UserId));
+
+                        if (GstDtViewModel == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, GstDtViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddGstDt")]
+        [Authorize]
+        public async Task<ActionResult<GstDtViewModel>> CreateGstDt(GstDtViewModel GstDt, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GstDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (GstDt == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "mismatch");
+
+                            var GstDtEntity = new M_GstDt
+                            {
+                                GstId = GstDt.GstId,
+                                CompanyId = headerViewModel.CompanyId,
+                                GstPercentahge = GstDt.GstPercentahge,
+                                ValidFrom = GstDt.ValidFrom,
+                                CreateById = headerViewModel.UserId
+                            };
+
+                            var createdGstDt = await _GstService.AddGstDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdGstDt);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new GstDt record");
+            }
+        }
+
+        [HttpPut, Route("UpdateGstDt/{GstDtId}")]
+        [Authorize]
+        public async Task<ActionResult<GstDtViewModel>> UpdateGstDt(Int16 GstDtId, [FromBody] GstDtViewModel GstDt, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GstDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            var GstDtToUpdate = await _GstService.GetGstDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtId, headerViewModel.UserId);
+
+                            if (GstDtToUpdate == null)
+                                return NotFound($"GstDt with Id = {GstDtId} not found");
+
+                            var GstDtEntity = new M_GstDt
+                            {
+                                GstId = GstDt.GstId,
+                                CompanyId = headerViewModel.CompanyId,
+                                GstPercentahge = GstDt.GstPercentahge,
+                                ValidFrom = GstDt.ValidFrom,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
+                            };
+
+                            var sqlResponce = await _GstService.UpdateGstDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteGstDt/{GstDtId}")]
+        [Authorize]
+        public async Task<ActionResult<M_GstDt>> DeleteGstDt(Int16 GstDtId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.GstDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var GstDtToDelete = await _GstService.GetGstDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtId, headerViewModel.UserId);
+
+                            if (GstDtToDelete == null)
+                                return NotFound($"GstDt with Id = {GstDtId} not found");
+
+                            var sqlResponce = await _GstService.DeleteGstDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+
+        #endregion GST_DT
     }
 }

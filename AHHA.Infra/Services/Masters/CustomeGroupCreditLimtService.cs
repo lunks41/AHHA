@@ -63,7 +63,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerGroupCreditLimit>(RegId, $"SELECT GroupCreditLimitId,GroupCreditLimitCode,GroupCreditLimitName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerGroupCreditLimit WHERE GroupCreditLimitId={GroupCreditLimitId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerGroupCreditLimit>(RegId, $"SELECT GroupCreditLimitId,GroupCreditLimitCode,GroupCreditLimitName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerGroupCreditLimit WHERE GroupCreditLimitId={GroupCreditLimitId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.CustomerGroupCreditLimit}))");
 
                 return result;
             }
@@ -108,9 +108,7 @@ namespace AHHA.Infra.Services.Masters
                             return new SqlResponce { Result = -2, Message = "CustomerGroupCreditLimit Name Exist" };
                         }
                     }
-                    else
-                    {
-                    }
+                   
 
                     //Take the Missing Id From SQL
                     var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (GroupCreditLimitId + 1) FROM dbo.M_CustomerGroupCreditLimit WHERE (GroupCreditLimitId + 1) NOT IN (SELECT GroupCreditLimitId FROM dbo.M_CustomerGroupCreditLimit)),1) AS MissId");

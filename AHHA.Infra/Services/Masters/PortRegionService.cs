@@ -65,7 +65,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_PortRegion>(RegId, $"SELECT PortRegionId,PortRegionCode,PortRegionName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_PortRegion WHERE PortRegionId={PortRegionId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_PortRegion>(RegId, $"SELECT PortRegionId,PortRegionCode,CountryId,PortRegionName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_PortRegion WHERE PortRegionId={PortRegionId} AND CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.PortRegion}))");
 
                 return result;
             }

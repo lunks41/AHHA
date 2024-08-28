@@ -27,9 +27,9 @@ namespace AHHA.Infra.Services.Masters
             AccountGroupViewModelCount accountGroupViewModelCount = new AccountGroupViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountGroup WHERE (M_ACC.AccGroupName LIKE '%{searchString}%' OR M_ACC.AccGroupCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccGroupCategoryName LIKE '%{searchString}%' OR M_Accsc.AccGroupCategoryCode LIKE '%{searchString}%') AND M_ACC.AccGroupId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountGroup WHERE (M_ACC.AccGroupName LIKE '%{searchString}%' OR M_ACC.AccGroupCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' ) AND M_ACC.AccGroupId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup}))");
 
-                var result = await _repository.GetQueryAsync<AccountGroupViewModel>(RegId, $"SELECT M_ACC.AccGroupId,M_ACC.AccGroupCode,M_ACC.AccGroupName,M_ACC.CompanyId,M_ACC.AccGroupCategoryId,M_Accsc.AccGroupCategoryCode,M_Accsc.AccGroupCategoryName,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountGroup M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById INNER JOIN dbo.M_AccountGroupCategory M_Accsc ON M_Accsc.AccGroupCategoryId = M_ACC.AccGroupCategoryId  WHERE (M_ACC.AccGroupName LIKE '%{searchString}%' OR M_ACC.AccGroupCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccGroupCategoryName LIKE '%{searchString}%' OR M_Accsc.AccGroupCategoryCode LIKE '%{searchString}%') AND M_ACC.AccGroupId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) ORDER BY M_ACC.AccGroupName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<AccountGroupViewModel>(RegId, $"SELECT M_ACC.AccGroupId,M_ACC.AccGroupCode,M_ACC.AccGroupName,M_ACC.SeqNo,M_ACC.CompanyId,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountGroup M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById WHERE (M_ACC.AccGroupName LIKE '%{searchString}%' OR M_ACC.AccGroupCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%') AND M_ACC.AccGroupId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) ORDER BY M_ACC.AccGroupName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 accountGroupViewModelCount.responseCode = 200;
                 accountGroupViewModelCount.responseMessage = "success";
@@ -64,7 +64,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountGroup>(RegId, $"SELECT AccountGroupId,AccountGroupCode,AccountGroupName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountGroup WHERE AccountGroupId={AccGroupId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountGroup>(RegId, $"SELECT AccGroupId,AccGroupCode,AccGroupName,CompanyId,SeqNo,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountGroup WHERE AccGroupId={AccGroupId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup}))");
 
                 return result;
             }
@@ -96,7 +96,7 @@ namespace AHHA.Infra.Services.Masters
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountGroup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) AND AccountGroupCode='{AccountGroup.AccGroupId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountGroup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) AND AccountGroupName='{AccountGroup.AccGroupName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountGroup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) AND AccGroupCode='{AccountGroup.AccGroupId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountGroup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) AND AccGroupName='{AccountGroup.AccGroupName}'");
 
                     if (StrExist.Count() > 0)
                     {
@@ -111,7 +111,7 @@ namespace AHHA.Infra.Services.Masters
                     }
 
                     //Take the Missing Id From SQL
-                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AccountGroupId + 1) FROM dbo.M_AccountGroup WHERE (AccountGroupId + 1) NOT IN (SELECT AccountGroupId FROM dbo.M_AccountGroup)),1) AS MissId");
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AccGroupId + 1) FROM dbo.M_AccountGroup WHERE (AccGroupId + 1) NOT IN (SELECT AccGroupId FROM dbo.M_AccountGroup)),1) AS MissId");
 
                     if (sqlMissingResponce != null)
                     {
@@ -163,7 +163,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "AccountGroupId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccGroupId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -200,7 +200,7 @@ namespace AHHA.Infra.Services.Masters
                 {
                     if (AccountGroup.AccGroupId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountGroup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) AND AccountGroupName='{AccountGroup.AccGroupName} AND AccountGroupId <>{AccountGroup.AccGroupId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountGroup WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) AND AccGroupName='{AccountGroup.AccGroupName} AND AccGroupId <>{AccountGroup.AccGroupId}'");
 
                         if (StrExist.Count() > 0)
                         {
@@ -252,7 +252,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "AccountGroupId Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccGroupId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -321,7 +321,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "AccountGroupId Should be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccGroupId Should be zero" };
                     }
                     return new SqlResponce();
                 }

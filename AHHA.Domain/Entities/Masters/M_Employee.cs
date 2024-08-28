@@ -15,6 +15,8 @@ namespace AHHA.Core.Entities.Masters
         public string EmployeePhoto { get; set; }
         public string EmployeeSignature { get; set; }
         public Int32 DepartmentId { get; set; }
+        public string DepartmentCode { get; set; }
+        public string DepartmentName { get; set; }
         public string EmployeeSex { get; set; }
         public string MartialStatus { get; set; }
         public DateTime EmployeeDOB { get; set; }
