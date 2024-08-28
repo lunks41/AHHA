@@ -77,6 +77,62 @@ namespace AHHA.API.Controllers
             }
         }
 
+        [HttpGet, Route("GetAccountGroupLookup")]
+        [Authorize]
+        public async Task<ActionResult> AccountGroupLookup([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    //enable the cache from appsetting...
+                    //cache use into only MasterLookup
+
+                    var cacheData = await _MasterLookupService.GetAccountGroupLookupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                    return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetAccountTypeLookup")]
+        [Authorize]
+        public async Task<ActionResult> AccountTypeLookup([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    //enable the cache from appsetting...
+                    //cache use into only MasterLookup
+
+                    var cacheData = await _MasterLookupService.GetAccountTypeLookupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                    return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
         [HttpGet, Route("GetCountryLookup")]
         [Authorize]
         public async Task<ActionResult> CountryLookup([FromHeader] HeaderViewModel headerViewModel)

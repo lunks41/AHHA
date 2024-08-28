@@ -16,7 +16,7 @@ namespace AHHA.Infra.Services
     //Harshad
     public class AuthService : IAuthService
     {
-        private ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
 
         public AuthService(ApplicationDbContext context, IConfiguration configuration)
@@ -42,7 +42,6 @@ namespace AHHA.Infra.Services
 
             if (identityUser is null || (IsAuthenticated(user.userName, user.userPassword, identityUser.UserPassword)) == false)
             {
-                //return new dynamic { "User Not Exist" };
                 return new LoginResponse { token = "User Not Exist", refreshToken = "" };
             }
 
@@ -62,7 +61,7 @@ namespace AHHA.Infra.Services
             entity.Property(b => b.IsActive).IsModified = false;
             entity.Property(b => b.UserGroupId).IsModified = false;
 
-            var counToUpdate = _context.SaveChanges();
+            _context.SaveChanges();
 
             return response;
         }

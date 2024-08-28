@@ -8,6 +8,10 @@ namespace AHHA.Application.IServices
 
         public Task<IEnumerable<AccountSetupLookupModel>> GetAccountSetupLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId);
 
+        public Task<IEnumerable<AccountGroupLookupModel>> GetAccountGroupLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId);
+
+        public Task<IEnumerable<AccountTypeLookupModel>> GetAccountTypeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId);
+
         public Task<IEnumerable<BankLookupModel>> GetBankLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId);
 
         public Task<IEnumerable<CategoryLookupModel>> GetCategoryLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId);

@@ -5,37 +5,38 @@ using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
 using AHHA.Infra.Data;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 namespace AHHA.Infra.Services.Masters
 {
-    public sealed class COACategory1Service : ICOACategory1Service
+    public sealed class AccountTypeService : IAccountTypeService
     {
-        private readonly IRepository<M_COACategory1> _repository;
-        private readonly ApplicationDbContext _context;
+        private readonly IRepository<M_AccountType> _repository;
+        private ApplicationDbContext _context;
 
-        public COACategory1Service(IRepository<M_COACategory1> repository, ApplicationDbContext context)
+        public AccountTypeService(IRepository<M_AccountType> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        public async Task<COACategoryViewModelCount> GetCOACategory1ListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
+        public async Task<AccountTypeViewModelCount> GetAccountTypeListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int32 UserId)
         {
-            COACategoryViewModelCount cOACategoryViewModelCount = new COACategoryViewModelCount();
+            AccountTypeViewModelCount accountTypeViewModelCount = new AccountTypeViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_COACategory1 M_Catg WHERE (M_Catg.COACategoryName LIKE '%{searchString}%' OR M_Catg.COACategoryCode LIKE '%{searchString}%' OR M_Catg.Remarks LIKE '%{searchString}%') AND M_Catg.COACategoryId<>0 AND M_Catg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_AccountType WHERE (M_ACC.AccTypeName LIKE '%{searchString}%' OR M_ACC.AccTypeCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccTypeCategoryName LIKE '%{searchString}%' OR M_Accsc.AccTypeCategoryCode LIKE '%{searchString}%') AND M_ACC.AccTypeId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountType}))");
 
-                var result = await _repository.GetQueryAsync<COACategoryViewModel>(RegId, $"SELECT M_Catg.COACategoryId,M_Catg.COACategoryCode,M_Catg.COACategoryName,M_Catg.CompanyId,M_Catg.Remarks,M_Catg.IsActive,M_Catg.CreateById,M_Catg.CreateDate,M_Catg.EditById,M_Catg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_COACategory1 M_Catg LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Catg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Catg.EditById WHERE (M_Catg.COACategoryName LIKE '%{searchString}%' OR M_Catg.COACategoryCode LIKE '%{searchString}%' OR M_Catg.Remarks LIKE '%{searchString}%') AND M_Catg.COACategoryId<>0 AND M_Catg.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) ORDER BY M_Catg.COACategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<AccountTypeViewModel>(RegId, $"SELECT M_ACC.AccTypeId,M_ACC.AccTypeCode,M_ACC.AccTypeName,M_ACC.CompanyId,M_ACC.AccTypeCategoryId,M_Accsc.AccTypeCategoryCode,M_Accsc.AccTypeCategoryName,M_ACC.Remarks,M_ACC.IsActive,M_ACC.CreateById,M_ACC.CreateDate,M_ACC.EditById,M_ACC.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_AccountType M_ACC  LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ACC.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ACC.EditById INNER JOIN dbo.M_AccountTypeCategory M_Accsc ON M_Accsc.AccTypeCategoryId = M_ACC.AccTypeCategoryId  WHERE (M_ACC.AccTypeName LIKE '%{searchString}%' OR M_ACC.AccTypeCode LIKE '%{searchString}%' OR M_ACC.Remarks LIKE '%{searchString}%' OR M_Accsc.AccTypeCategoryName LIKE '%{searchString}%' OR M_Accsc.AccTypeCategoryCode LIKE '%{searchString}%') AND M_ACC.AccTypeId<>0 AND M_ACC.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) ORDER BY M_ACC.AccTypeName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
-                cOACategoryViewModelCount.responseCode = 200;
-                cOACategoryViewModelCount.responseMessage = "success";
-                cOACategoryViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
-                cOACategoryViewModelCount.data = result == null ? null : result.ToList();
+                accountTypeViewModelCount.responseCode = 200;
+                accountTypeViewModelCount.responseMessage = "success";
+                accountTypeViewModelCount.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                accountTypeViewModelCount.data = result == null ? null : result.ToList();
 
-                return cOACategoryViewModelCount;
+                return accountTypeViewModelCount;
             }
             catch (Exception ex)
             {
@@ -43,10 +44,10 @@ namespace AHHA.Infra.Services.Masters
                 {
                     CompanyId = CompanyId,
                     ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.COACategory1,
+                    TransactionId = (short)Master.AccountType,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "M_COACategory1",
+                    TblName = "M_AccountType",
                     ModeId = (short)Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId
@@ -59,11 +60,11 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<M_COACategory1> GetCOACategory1ByIdAsync(string RegId, Int16 CompanyId, Int16 COACategoryId, Int32 UserId)
+        public async Task<M_AccountType> GetAccountTypeByIdAsync(string RegId, Int16 CompanyId, Int16 AccTypeId, Int32 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_COACategory1>(RegId, $"SELECT COACategory1Id,COACategory1Code,COACategory1Name,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_COACategory1 WHERE COACategory1Id={COACategoryId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_AccountType>(RegId, $"SELECT AccountTypeId,AccountTypeCode,AccountTypeName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_AccountType WHERE AccountTypeId={AccTypeId}");
 
                 return result;
             }
@@ -73,10 +74,10 @@ namespace AHHA.Infra.Services.Masters
                 {
                     CompanyId = CompanyId,
                     ModuleId = (short)Modules.Master,
-                    TransactionId = (short)Master.COACategory1,
+                    TransactionId = (short)Master.AccountType,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "M_COACategory1",
+                    TblName = "M_AccountType",
                     ModeId = (short)Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId,
@@ -89,56 +90,57 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> AddCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 m_COACategory1, Int32 UserId)
+        public async Task<SqlResponce> AddAccountTypeAsync(string RegId, Int16 CompanyId, M_AccountType AccountType, Int32 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategory1Code='{m_COACategory1.COACategoryId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategory1Name='{m_COACategory1.COACategoryName}'");
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccountTypeCode='{AccountType.AccTypeId}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccountTypeName='{AccountType.AccTypeName}'");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            return new SqlResponce { Result = -1, Message = "COACategory1 Code Exist" };
+                            return new SqlResponce { Result = -1, Message = "AccountType Code Exist" };
                         }
                         else if (StrExist.ToList()[0].IsExist == 2)
                         {
-                            return new SqlResponce { Result = -2, Message = "COACategory1 Name Exist" };
+                            return new SqlResponce { Result = -2, Message = "AccountType Name Exist" };
                         }
                     }
 
                     //Take the Missing Id From SQL
-                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (COACategory1Id + 1) FROM dbo.M_COACategory1 WHERE (COACategory1Id + 1) NOT IN (SELECT COACategory1Id FROM dbo.M_COACategory1)),1) AS MissId");
-                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AccountTypeId + 1) FROM dbo.M_AccountType WHERE (AccountTypeId + 1) NOT IN (SELECT AccountTypeId FROM dbo.M_AccountType)),1) AS MissId");
+
+                    if (sqlMissingResponce != null)
                     {
-                        #region Saving COACategory1
+                        #region Saving AccountType
 
-                        m_COACategory1.COACategoryId = Convert.ToInt16(sqlMissingResponce.MissId);
+                        AccountType.AccTypeId = Convert.ToInt16(sqlMissingResponce.MissId);
 
-                        var entity = _context.Add(m_COACategory1);
+                        var entity = _context.Add(AccountType);
                         entity.Property(b => b.EditDate).IsModified = false;
 
-                        var COACategory1ToSave = _context.SaveChanges();
+                        var AccountTypeToSave = _context.SaveChanges();
 
-                        #endregion Saving COACategory1
+                        #endregion Saving AccountType
 
                         #region Save AuditLog
 
-                        if (COACategory1ToSave > 0)
+                        if (AccountTypeToSave > 0)
                         {
                             //Saving Audit log
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.COACategory1,
-                                DocumentId = m_COACategory1.COACategoryId,
-                                DocumentNo = m_COACategory1.COACategoryCode,
-                                TblName = "M_COACategory1",
+                                TransactionId = (short)Master.AccountType,
+                                DocumentId = AccountType.AccTypeId,
+                                DocumentNo = AccountType.AccTypeCode,
+                                TblName = "M_AccountType",
                                 ModeId = (short)Mode.Create,
-                                Remarks = "Category Save Successfully",
+                                Remarks = "AccountType Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -161,7 +163,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "COACategory1Id Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccountTypeId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -174,10 +176,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.COACategory1,
+                        TransactionId = (short)Master.AccountType,
                         DocumentId = 0,
-                        DocumentNo = m_COACategory1.COACategoryCode,
-                        TblName = "M_COACategory1",
+                        DocumentNo = AccountType.AccTypeCode,
+                        TblName = "M_AccountType",
                         ModeId = (short)Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId
@@ -190,35 +192,35 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> UpdateCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 m_COACategory1, Int32 UserId)
+        public async Task<SqlResponce> UpdateAccountTypeAsync(string RegId, Int16 CompanyId, M_AccountType AccountType, Int32 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    if (m_COACategory1.COACategoryId > 0)
+                    if (AccountType.AccTypeId > 0)
                     {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_COACategory1 WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.COACategory1})) AND COACategory1Name='{m_COACategory1.COACategoryName} AND COACategory1Id <>{m_COACategory1.COACategoryId}'");
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_AccountType WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) AND AccountTypeName='{AccountType.AccTypeName} AND AccountTypeId <>{AccountType.AccTypeId}'");
 
                         if (StrExist.Count() > 0)
                         {
                             if (StrExist.ToList()[0].IsExist == 2)
                             {
-                                return new SqlResponce { Result = -2, Message = "COACategory1 Name Exist" };
+                                return new SqlResponce { Result = -2, Message = "AccountType Name Exist" };
                             }
                         }
 
-                        #region Update COACategory1
+                        #region Update AccountType
 
-                        var entity = _context.Update(m_COACategory1);
+                        var entity = _context.Update(AccountType);
 
                         entity.Property(b => b.CreateById).IsModified = false;
-                        entity.Property(b => b.COACategoryCode).IsModified = false;
+                        entity.Property(b => b.AccTypeCode).IsModified = false;
                         entity.Property(b => b.CompanyId).IsModified = false;
 
                         var counToUpdate = _context.SaveChanges();
 
-                        #endregion Update COACategory1
+                        #endregion Update AccountType
 
                         if (counToUpdate > 0)
                         {
@@ -226,12 +228,12 @@ namespace AHHA.Infra.Services.Masters
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.COACategory1,
-                                DocumentId = m_COACategory1.COACategoryId,
-                                DocumentNo = m_COACategory1.COACategoryCode,
-                                TblName = "M_COACategory1",
+                                TransactionId = (short)Master.AccountType,
+                                DocumentId = AccountType.AccTypeId,
+                                DocumentNo = AccountType.AccTypeCode,
+                                TblName = "M_AccountType",
                                 ModeId = (short)Mode.Update,
-                                Remarks = "COACategory1 Update Successfully",
+                                Remarks = "AccountType Update Successfully",
                                 CreateById = UserId
                             };
                             _context.Add(auditLog);
@@ -250,7 +252,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "COACategory1Id Should not be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccountTypeId Should not be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -263,10 +265,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.COACategory1,
-                        DocumentId = m_COACategory1.COACategoryId,
-                        DocumentNo = m_COACategory1.COACategoryCode,
-                        TblName = "M_COACategory1",
+                        TransactionId = (short)Master.AccountType,
+                        DocumentId = AccountType.AccTypeId,
+                        DocumentNo = AccountType.AccTypeCode,
+                        TblName = "M_AccountType",
                         ModeId = (short)Mode.Update,
                         Remarks = ex.Message,
                         CreateById = UserId
@@ -279,32 +281,33 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponce> DeleteCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 COACategory1, Int32 UserId)
+        public async Task<SqlResponce> DeleteAccountTypeAsync(string RegId, Int16 CompanyId, M_AccountType AccountType, Int32 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    if (COACategory1.COACategoryId > 0)
+                    if (AccountType.AccTypeId > 0)
                     {
-                        var COACategory1ToRemove = _context.M_COACategory1.Where(x => x.COACategoryId == COACategory1.COACategoryId).ExecuteDelete();
+                        var AccountTypeToRemove = _context.M_AccountType.Where(x => x.AccTypeId == AccountType.AccTypeId).ExecuteDelete();
 
-                        if (COACategory1ToRemove > 0)
+                        if (AccountTypeToRemove > 0)
                         {
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)Modules.Master,
-                                TransactionId = (short)Master.COACategory1,
-                                DocumentId = COACategory1.COACategoryId,
-                                DocumentNo = COACategory1.COACategoryCode,
-                                TblName = "M_COACategory1",
+                                TransactionId = (short)Master.AccountType,
+                                DocumentId = AccountType.AccTypeId,
+                                DocumentNo = AccountType.AccTypeCode,
+                                TblName = "M_AccountType",
                                 ModeId = (short)Mode.Delete,
-                                Remarks = "COACategory1 Delete Successfully",
+                                Remarks = "AccountType Delete Successfully",
                                 CreateById = UserId
                             };
                             _context.Add(auditLog);
                             var auditLogSave = await _context.SaveChangesAsync();
+
                             if (auditLogSave > 0)
                             {
                                 transaction.Commit();
@@ -318,7 +321,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "COACategory1Id Should be zero" };
+                        return new SqlResponce { Result = -1, Message = "AccountTypeId Should be zero" };
                     }
                     return new SqlResponce();
                 }
@@ -330,10 +333,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)Modules.Master,
-                        TransactionId = (short)Master.COACategory1,
+                        TransactionId = (short)Master.AccountType,
                         DocumentId = 0,
                         DocumentNo = "",
-                        TblName = "M_COACategory1",
+                        TblName = "M_AccountType",
                         ModeId = (short)Mode.Delete,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId,

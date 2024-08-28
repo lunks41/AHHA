@@ -10,10 +10,10 @@ namespace AHHA.Application.IServices.Masters
 
         public Task<M_COACategory1> GetCOACategory1ByIdAsync(string RegId, Int16 CompanyId, Int16 COACategoryId, Int32 UserId);
 
-        public Task<SqlResponce> AddCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 M_COACategory1, Int32 UserId);
+        public Task<SqlResponce> AddCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 m_COACategory1, Int32 UserId);
 
-        public Task<SqlResponce> UpdateCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 M_COACategory1, Int32 UserId);
+        public Task<SqlResponce> UpdateCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 m_COACategory1, Int32 UserId);
 
-        public Task<SqlResponce> DeleteCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 M_COACategory1, Int32 UserId);
+        public Task<SqlResponce> DeleteCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 m_COACategory1, Int32 UserId);
     }
 }

@@ -78,6 +78,66 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
+        public async Task<IEnumerable<AccountTypeLookupModel>> GetAccountTypeLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<AccountTypeLookupModel>(RegId, $"select AccTypeId,AccTypeCode,AccTypeName from M_AccountType where AccTypeId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountType})) order by AccTypeName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountType,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_AccountType",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<AccountGroupLookupModel>> GetAccountGroupLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<AccountGroupLookupModel>(RegId, $"select AccGroupId,AccGroupCode,AccGroupName from M_AccountGroup where AccGroupId<>0 And IsActive=1 And CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)Modules.Master},{(short)Master.AccountGroup})) order by AccGroupName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)Modules.Master,
+                    TransactionId = (short)Master.AccountGroup,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_AccountGroup",
+                    ModeId = (short)Mode.Lookup,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
         public async Task<IEnumerable<BankLookupModel>> GetBankLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
             try
@@ -317,7 +377,6 @@ namespace AHHA.Infra.Services.Masters
                 throw new Exception(ex.ToString());
             }
         }
-
 
         public async Task<IEnumerable<CurrencyLookupModel>> GetCurrencyLookupListAsync(string RegId, Int16 CompanyId, Int32 UserId)
         {
