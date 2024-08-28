@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AHHA.Core.Entities.Admin
+namespace AHHA.Core.Entities.Masters
 {
-    public class AccountType
+    public class M_AccountType
     {
         [Key]
         public Int16 AccTypeId { get; set; }

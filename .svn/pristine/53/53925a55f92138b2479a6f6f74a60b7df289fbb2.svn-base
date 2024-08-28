@@ -1,0 +1,261 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class CategoryController : BaseController
+    {
+        private readonly ICategoryService _CategoryService;
+        private readonly ILogger<CategoryController> _logger;
+
+        public CategoryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CategoryController> logger, ICategoryService CategoryService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CategoryService = CategoryService;
+        }
+
+        [HttpGet, Route("GetCategory")]
+        [Authorize]
+        public async Task<ActionResult> GetCategory([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _CategoryService.GetCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCategorybyid/{CategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<CategoryViewModel>> GetCategoryById(Int16 CategoryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var categoryViewModel = _mapper.Map<CategoryViewModel>(await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId));
+
+                        if (categoryViewModel == null)
+                            return NotFound(GenrateMessage.authenticationfailed);
+
+                        return StatusCode(StatusCodes.Status202Accepted, categoryViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddCategory")]
+        [Authorize]
+        public async Task<ActionResult<CategoryViewModel>> CreateCategory(CategoryViewModel Category, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (Category == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "Category ID mismatch");
+
+                            var CategoryEntity = new M_Category
+                            {
+                                CompanyId = Category.CompanyId,
+                                CategoryCode = Category.CategoryCode,
+                                CategoryId = Category.CategoryId,
+                                CategoryName = Category.CategoryName,
+                                CreateById = headerViewModel.UserId,
+                                IsActive = Category.IsActive,
+                                Remarks = Category.Remarks
+                            };
+
+                            var createdCategory = await _CategoryService.AddCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdCategory);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Category record");
+            }
+        }
+
+        [HttpPut, Route("UpdateCategory/{CategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<CategoryViewModel>> UpdateCategory(Int16 CategoryId, [FromBody] CategoryViewModel Category, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            var CategoryViewModel = new CategoryViewModel();
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (CategoryId != Category.CategoryId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "Category ID mismatch");
+
+                            var CategoryToUpdate = await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId);
+
+                            if (CategoryToUpdate == null)
+                                return NotFound($"Category with Id = {CategoryId} not found");
+
+                            var CategoryEntity = new M_Category
+                            {
+                                CategoryCode = Category.CategoryCode,
+                                CategoryId = Category.CategoryId,
+                                CategoryName = Category.CategoryName,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                                IsActive = Category.IsActive,
+                                Remarks = Category.Remarks
+                            };
+
+                            var sqlResponce = await _CategoryService.UpdateCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCategory/{CategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<M_Category>> DeleteCategory(Int16 CategoryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Category, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CategoryToDelete = await _CategoryService.GetCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryId, headerViewModel.UserId);
+
+                            if (CategoryToDelete == null)
+                                return NotFound($"Category with Id = {CategoryId} not found");
+
+                            var sqlResponce = await _CategoryService.DeleteCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CategoryToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

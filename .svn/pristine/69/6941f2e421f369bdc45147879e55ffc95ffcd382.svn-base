@@ -1,0 +1,264 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class AccountSetupCategoryController : BaseController
+    {
+        private readonly IAccountSetupCategoryService _AccountSetupCategoryService;
+        private readonly ILogger<AccountSetupCategoryController> _logger;
+
+        public AccountSetupCategoryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<AccountSetupCategoryController> logger, IAccountSetupCategoryService AccountSetupCategoryService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _AccountSetupCategoryService = AccountSetupCategoryService;
+        }
+
+        [HttpGet, Route("GetAccountSetupCategory")]
+        [Authorize]
+        public async Task<ActionResult> GetAccountSetupCategory([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var AccountSetupCategoryData = await _AccountSetupCategoryService.GetAccountSetupCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (AccountSetupCategoryData == null)
+                            return NotFound();
+
+                        return StatusCode(StatusCodes.Status202Accepted, AccountSetupCategoryData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetAccountSetupCategorybyid/{AccSetupCategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<AccountSetupCategoryViewModel>> GetAccountSetupCategoryById(Int16 AccSetupCategoryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+
+                    _logger.LogInformation("Check the ValidateScrren");
+
+                    if (userGroupRight != null)
+                    {
+                        var accountSetupCategoryViewModel = _mapper.Map<AccountSetupCategoryViewModel>(await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupCategoryId, headerViewModel.UserId));
+
+                        if (accountSetupCategoryViewModel == null)
+                            return NotFound();
+
+                        return StatusCode(StatusCodes.Status202Accepted, accountSetupCategoryViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddAccountSetupCategory")]
+        [Authorize]
+        public async Task<ActionResult<AccountSetupCategoryViewModel>> CreateAccountSetupCategory(AccountSetupCategoryViewModel accountSetupCategory, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (accountSetupCategory == null)
+                                return StatusCode(StatusCodes.Status400BadRequest, "No input exist");
+                            else if (accountSetupCategory.AccSetupCategoryCode == null || accountSetupCategory.AccSetupCategoryCode == string.Empty)
+                                return StatusCode(StatusCodes.Status400BadRequest, "AccountSetupCategory Code null");
+
+                            var AccountSetupCategoryEntity = new M_AccountSetupCategory
+                            {
+                                AccSetupCategoryId = accountSetupCategory.AccSetupCategoryId,
+                                AccSetupCategoryCode = accountSetupCategory.AccSetupCategoryCode,
+                                AccSetupCategoryName = accountSetupCategory.AccSetupCategoryName,
+                                Remarks = accountSetupCategory.Remarks,
+                                IsActive = accountSetupCategory.IsActive,
+                                CreateById = headerViewModel.UserId
+                            };
+
+                            var createdAccountSetupCategory = await _AccountSetupCategoryService.AddAccountSetupCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupCategoryEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdAccountSetupCategory);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new AccountSetupCategory record");
+            }
+        }
+
+        [HttpPut, Route("UpdateAccountSetupCategory/{AccSetupCategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<AccountSetupCategoryViewModel>> UpdateAccountSetupCategory(Int16 AccSetupCategoryId, [FromBody] AccountSetupCategoryViewModel AccountSetupCategory, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (AccSetupCategoryId != AccountSetupCategory.AccSetupCategoryId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "AccountSetupCategory ID mismatch");
+
+                            var AccountSetupCategoryToUpdate = await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupCategoryId, headerViewModel.UserId);
+
+                            if (AccountSetupCategoryToUpdate == null)
+                                return NotFound($"AccountSetupCategory with Id = {AccSetupCategoryId} not found");
+
+                            var AccountSetupCategoryEntity = new M_AccountSetupCategory
+                            {
+                                AccSetupCategoryId = AccountSetupCategory.AccSetupCategoryId,
+                                AccSetupCategoryCode = AccountSetupCategory.AccSetupCategoryCode,
+                                AccSetupCategoryName = AccountSetupCategory.AccSetupCategoryName,
+                                Remarks = AccountSetupCategory.Remarks,
+                                IsActive = AccountSetupCategory.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
+                            };
+
+                            var sqlResponce = await _AccountSetupCategoryService.UpdateAccountSetupCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupCategoryEntity, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteAccountSetupCategory/{AccSetupCategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<M_AccountSetupCategory>> DeleteAccountSetupCategory(Int16 AccSetupCategoryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.AccountSetupCategory, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var AccountSetupCategoryToDelete = await _AccountSetupCategoryService.GetAccountSetupCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupCategoryId, headerViewModel.UserId);
+
+                            if (AccountSetupCategoryToDelete == null)
+                                return NotFound($"AccountSetupCategory with Id = {AccSetupCategoryId} not found");
+
+                            var sqlResponce = await _AccountSetupCategoryService.DeleteAccountSetupCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupCategoryToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

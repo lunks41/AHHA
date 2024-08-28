@@ -10,9 +10,7 @@ namespace AHHA.API.Mapping
         {
             #region Masters
 
-            CreateMap<AccountGroupViewModel, M_AccountGroup>().ReverseMap();
             CreateMap<AccountSetupCategoryViewModel, M_AccountSetupCategory>().ReverseMap();
-            CreateMap<AccountTypeViewModel, M_AccountType>().ReverseMap();
             CreateMap<AccountSetupViewModel, M_AccountSetup>().ReverseMap();
             CreateMap<BankViewModel, M_Bank>().ReverseMap();
             CreateMap<BargeViewModel, M_Barge>().ReverseMap();
@@ -52,7 +50,8 @@ namespace AHHA.API.Mapping
             CreateMap<VesselViewModel, M_Vessel>().ReverseMap();
             CreateMap<VoyageViewModel, M_Voyage>().ReverseMap();
 
-            #endregion Masters
+            #endregion
+
         }
     }
 }
