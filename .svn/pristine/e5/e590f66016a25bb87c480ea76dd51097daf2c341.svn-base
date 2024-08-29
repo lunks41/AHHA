@@ -1,0 +1,213 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Admin;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Admin;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace AHHA.Infra.Services.Admin
+{
+    public sealed class UserRightsService : IUserRightsService
+    {
+        private readonly IRepository<AdmUserRights> _repository;
+        private ApplicationDbContext _context;
+
+        public UserRightsService(IRepository<AdmUserRights> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<SqlResponce> AddUserRightsAsync(string RegId, short CompanyId, AdmUserRights UserRights, int UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.AdmUserRights WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Admins.UserRights})) AND UserId='{UserRights.UserId}' UNION ALL SELECT 2 AS IsExist FROM dbo.AdmUserRights WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Admins.UserRights})) AND UserId='{UserRights.UserId}'");
+
+                    if (StrExist.Count() > 0)
+                    {
+                        if (StrExist.ToList()[0].IsExist == 1)
+                        {
+                            return new SqlResponce { Result = -1, Message = "UserRights Code Exist" };
+                        }
+                        else if (StrExist.ToList()[0].IsExist == 2)
+                        {
+                            return new SqlResponce { Result = -2, Message = "UserRights Name Exist" };
+                        }
+                    }
+
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (UserId + 1) FROM dbo.AdmUserRights WHERE (UserId + 1) NOT IN (SELECT UserId FROM dbo.AdmUserRights)),1) AS MissId");
+
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
+                    {
+                        #region Saving UserRights
+
+                        UserRights.UserId = Convert.ToInt16(sqlMissingResponce.MissId);
+
+                        var entity = _context.Add(UserRights);
+
+                        var UserRightsToSave = _context.SaveChanges();
+
+                        #endregion Saving UserRights
+
+                        #region Save AuditLog
+
+                        if (UserRightsToSave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Admins.UserRights,
+                                DocumentId = UserRights.UserId,
+                                DocumentNo = "",
+                                TblName = "AdmUserRights",
+                                ModeId = (short)Mode.Create,
+                                Remarks = "UserRights Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "UserId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Admins.UserRights,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "AdmUserRights",
+                        ModeId = (short)Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> UpdateUserRightsAsync(string RegId, short CompanyId, AdmUserRights UserRights, int UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (UserRights.UserId > 0)
+                    {
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.AdmUserRights WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)Modules.Master},{(short)Admins.UserRights})) AND UserId='{UserRights.UserId} AND UserId <>{UserRights.UserId}'");
+
+                        if (StrExist.Count() > 0)
+                        {
+                            if (StrExist.ToList()[0].IsExist == 2)
+                            {
+                                return new SqlResponce { Result = -2, Message = "UserRights Name Exist" };
+                            }
+                        }
+
+                        #region Update UserRights
+
+                        var entity = _context.Update(UserRights);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update UserRights
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)Modules.Master,
+                                TransactionId = (short)Admins.UserRights,
+                                DocumentId = UserRights.UserId,
+                                DocumentNo = "",
+                                TblName = "AdmUserRights",
+                                ModeId = (short)Mode.Update,
+                                Remarks = "UserRights Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "UserId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)Modules.Master,
+                        TransactionId = (short)Admins.UserRights,
+                        DocumentId = UserRights.UserId,
+                        DocumentNo = "",
+                        TblName = "AdmUserRights",
+                        ModeId = (short)Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}
