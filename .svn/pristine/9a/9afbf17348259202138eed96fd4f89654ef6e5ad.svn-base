@@ -1,11 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace AHHA.Core.Entities.Admin
+﻿namespace AHHA.Core.Models.Admin
 {
-    public class UserGroup
+    public class UserGroupViewModel
     {
-        [Key]
-        public Int32 UserGroupId { get; set; }
+        public Int16 UserGroupId { get; set; }
 
         public string UserGroupCode { get; set; }
         public string UserGroupName { get; set; }
@@ -15,5 +12,7 @@ namespace AHHA.Core.Entities.Admin
         public DateTime CreateDate { get; set; }
         public Int32? EditById { get; set; }
         public DateTime? EditDate { get; set; }
+        public string CreateBy { get; set; }
+        public string EditBy { get; set; }
     }
 }

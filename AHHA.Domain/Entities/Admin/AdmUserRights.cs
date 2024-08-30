@@ -11,13 +11,13 @@ namespace AHHA.Core.Entities.Admin
         public Int16 CompanyId { get; set; }
 
         [Key]
-        public Int32 UserId { get; set; }
+        public Int16 UserId { get; set; }
 
         public Int32 CreateById { get; set; }
 
         [NotMapped]
         public DateTime CreateDate { get; set; }
 
-        public Int32 UserGroupId { get; set; }
+        public Int16 UserGroupId { get; set; }
     }
 }

@@ -112,7 +112,7 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (portViewModel == null)
+                            if (Port == null)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Port ID mismatch");
 
                             var PortEntity = new M_Port
