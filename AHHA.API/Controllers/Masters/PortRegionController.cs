@@ -69,7 +69,7 @@ namespace AHHA.API.Controllers.Masters
                         var portRegionViewModel = _mapper.Map<PortRegionViewModel>(await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId));
 
                         if (portRegionViewModel == null)
-                            return NotFound();
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, portRegionViewModel);
                     }
@@ -105,18 +105,18 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (portRegionViewModel == null)
-                                return BadRequest();
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var PortRegionEntity = new M_PortRegion
                             {
-                                CompanyId = headerViewModel.CompanyId,
                                 PortRegionId = portRegionViewModel.PortRegionId,
+                                CompanyId = headerViewModel.CompanyId,
                                 PortRegionCode = portRegionViewModel.PortRegionCode,
                                 PortRegionName = portRegionViewModel.PortRegionName,
                                 CountryId = portRegionViewModel.CountryId,
-                                CreateById = headerViewModel.UserId,
+                                Remarks = portRegionViewModel.Remarks,
                                 IsActive = portRegionViewModel.IsActive,
-                                Remarks = portRegionViewModel.Remarks
+                                CreateById = headerViewModel.UserId,
                             };
 
                             var createdPortRegion = await _portRegionService.AddPortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
@@ -165,18 +165,19 @@ namespace AHHA.API.Controllers.Masters
                             var PortRegionToUpdate = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
 
                             if (PortRegionToUpdate == null)
-                                return NotFound($"PortRegion with Id = {PortRegionId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var PortRegionEntity = new M_PortRegion
                             {
-                                PortRegionCode = portRegionViewModel.PortRegionCode,
                                 PortRegionId = portRegionViewModel.PortRegionId,
+                                CompanyId = headerViewModel.CompanyId,
+                                PortRegionCode = portRegionViewModel.PortRegionCode,
                                 PortRegionName = portRegionViewModel.PortRegionName,
-                                EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                                IsActive = portRegionViewModel.IsActive,
+                                CountryId = portRegionViewModel.CountryId,
                                 Remarks = portRegionViewModel.Remarks,
-                                CountryId = portRegionViewModel.CountryId
+                                IsActive = portRegionViewModel.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _portRegionService.UpdatePortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
@@ -221,7 +222,7 @@ namespace AHHA.API.Controllers.Masters
                             var PortRegionToDelete = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
 
                             if (PortRegionToDelete == null)
-                                return NotFound($"PortRegion with Id = {PortRegionId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _portRegionService.DeletePortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionToDelete, headerViewModel.UserId);
 

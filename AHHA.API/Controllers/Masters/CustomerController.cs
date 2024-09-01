@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _CustomerService.GetCustomerListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var CustomerViewModel = _mapper.Map<CustomerViewModel>(await _CustomerService.GetCustomerByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId));
 
                         if (CustomerViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, CustomerViewModel);
                     }
@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         var CustomerViewModel = _mapper.Map<CustomerViewModel>(await _CustomerService.GetCustomerByCodeAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerCode, headerViewModel.UserId));
 
                         if (CustomerViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, CustomerViewModel);
                     }
@@ -137,7 +137,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddCustomer")]
         [Authorize]
-        public async Task<ActionResult<CustomerViewModel>> CreateCustomer(CustomerViewModel Customer, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<CustomerViewModel>> CreateCustomer(CustomerViewModel customerViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -149,28 +149,29 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Customer == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "No input exist");
-                            else if (Customer.CustomerCode == null || Customer.CustomerCode == string.Empty)
+                            if (customerViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+                            else if (customerViewModel.CustomerCode == null || customerViewModel.CustomerCode == string.Empty)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Customer Code null");
 
                             var CustomerEntity = new M_Customer
                             {
+                                CustomerId = customerViewModel.CustomerId,
                                 CompanyId = headerViewModel.CompanyId,
-                                CustomerCode = Customer.CustomerCode,
-                                CustomerName = Customer.CustomerName,
-                                CustomerOtherName = Customer.CustomerOtherName,
-                                CustomerShortName = Customer.CustomerShortName,
-                                CustomerRegNo = Customer.CustomerRegNo,
-                                CurrencyId = Customer.CurrencyId,
-                                CreditTermId = Customer.CreditTermId,
-                                ParentCustomerId = Customer.ParentCustomerId,
-                                IsCustomer = Customer.IsCustomer,
-                                IsVendor = Customer.IsVendor,
-                                IsTrader = Customer.IsTrader,
-                                IsSupplier = Customer.IsSupplier,
-                                Remarks = Customer.Remarks,
-                                IsActive = Customer.IsActive,
+                                CustomerCode = customerViewModel.CustomerCode,
+                                CustomerName = customerViewModel.CustomerName,
+                                CustomerOtherName = customerViewModel.CustomerOtherName,
+                                CustomerShortName = customerViewModel.CustomerShortName,
+                                CustomerRegNo = customerViewModel.CustomerRegNo,
+                                CurrencyId = customerViewModel.CurrencyId,
+                                CreditTermId = customerViewModel.CreditTermId,
+                                ParentCustomerId = customerViewModel.ParentCustomerId,
+                                IsCustomer = customerViewModel.IsCustomer,
+                                IsVendor = customerViewModel.IsVendor,
+                                IsTrader = customerViewModel.IsTrader,
+                                IsSupplier = customerViewModel.IsSupplier,
+                                Remarks = customerViewModel.Remarks,
+                                IsActive = customerViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
                             };
 
@@ -202,7 +203,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateCustomer/{CustomerId}")]
         [Authorize]
-        public async Task<ActionResult<CustomerViewModel>> UpdateCustomer(Int16 CustomerId, [FromBody] CustomerViewModel Customer, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<CustomerViewModel>> UpdateCustomer(Int16 CustomerId, [FromBody] CustomerViewModel customerViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -214,31 +215,32 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (CustomerId != Customer.CustomerId)
+                            if (CustomerId != customerViewModel.CustomerId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Customer ID mismatch");
 
                             var CustomerToUpdate = await _CustomerService.GetCustomerByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
                             if (CustomerToUpdate == null)
-                                return NotFound($"Customer with Id = {CustomerId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var CustomerEntity = new M_Customer
                             {
-                                CustomerCode = Customer.CustomerCode,
-                                CustomerId = Customer.CustomerId,
-                                CustomerName = Customer.CustomerName,
-                                CustomerOtherName = Customer.CustomerOtherName,
-                                CustomerShortName = Customer.CustomerShortName,
-                                CustomerRegNo = Customer.CustomerRegNo,
-                                CurrencyId = Customer.CurrencyId,
-                                CreditTermId = Customer.CreditTermId,
-                                ParentCustomerId = Customer.ParentCustomerId,
-                                IsCustomer = Customer.IsCustomer,
-                                IsVendor = Customer.IsVendor,
-                                IsTrader = Customer.IsTrader,
-                                IsSupplier = Customer.IsSupplier,
-                                Remarks = Customer.Remarks,
-                                IsActive = Customer.IsActive,
+                                CustomerId = customerViewModel.CustomerId,
+                                CompanyId = headerViewModel.CompanyId,
+                                CustomerCode = customerViewModel.CustomerCode,
+                                CustomerName = customerViewModel.CustomerName,
+                                CustomerOtherName = customerViewModel.CustomerOtherName,
+                                CustomerShortName = customerViewModel.CustomerShortName,
+                                CustomerRegNo = customerViewModel.CustomerRegNo,
+                                CurrencyId = customerViewModel.CurrencyId,
+                                CreditTermId = customerViewModel.CreditTermId,
+                                ParentCustomerId = customerViewModel.ParentCustomerId,
+                                IsCustomer = customerViewModel.IsCustomer,
+                                IsVendor = customerViewModel.IsVendor,
+                                IsTrader = customerViewModel.IsTrader,
+                                IsSupplier = customerViewModel.IsSupplier,
+                                Remarks = customerViewModel.Remarks,
+                                IsActive = customerViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now
                             };
@@ -286,7 +288,7 @@ namespace AHHA.API.Controllers.Masters
                             var CustomerToDelete = await _CustomerService.GetCustomerByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
                             if (CustomerToDelete == null)
-                                return NotFound($"Customer with Id = {CustomerId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _CustomerService.DeleteCustomerAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerToDelete, headerViewModel.UserId);
 

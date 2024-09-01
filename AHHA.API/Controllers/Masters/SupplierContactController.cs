@@ -3,6 +3,7 @@ using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,24 +25,24 @@ namespace AHHA.API.Controllers.Masters
             _SupplierContactService = SupplierContactService;
         }
 
-        [HttpGet, Route("GetSupplierContact")]
+        [HttpGet, Route("GetSupplierContactbySupplierId/{SupplierId}")]
         [Authorize]
-        public async Task<ActionResult> GetSupplierContact([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetSupplierContactBySupplierId(Int16 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.SupplierContact, headerViewModel.UserId);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Master.Supplier, headerViewModel.UserId);
 
                     if (userGroupRight != null)
                     {
-                        var voyageData = await _SupplierContactService.GetSupplierContactListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+                        var SupplierContactViewModel = await _SupplierContactService.GetSupplierContactBySupplierIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
 
-                        if (voyageData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                        if (SupplierContactViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
 
-                        return StatusCode(StatusCodes.Status202Accepted, voyageData);
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierContactViewModel);
                     }
                     else
                     {
@@ -50,14 +51,14 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                    return NotFound(GenrateMessage.authenticationfailed);
+                    return NoContent();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                 "Error retrieving data from the database");
+                    "Error retrieving data from the database");
             }
         }
 
@@ -76,7 +77,7 @@ namespace AHHA.API.Controllers.Masters
                         var supplierContactViewModel = _mapper.Map<SupplierContactViewModel>(await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId));
 
                         if (supplierContactViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, supplierContactViewModel);
                     }
@@ -100,7 +101,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddSupplierContact")]
         [Authorize]
-        public async Task<ActionResult<SupplierContactViewModel>> CreateSupplierContact(SupplierContactViewModel SupplierContact, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierContactViewModel>> CreateSupplierContact(SupplierContactViewModel supplierContactViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,26 +113,26 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (SupplierContact == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "SupplierContact ID mismatch");
+                            if (supplierContactViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var SupplierContactEntity = new M_SupplierContact
                             {
-                                ContactId = SupplierContact.ContactId,
-                                SupplierId = SupplierContact.SupplierId,
-                                ContactName = SupplierContact.ContactName,
-                                OtherName = SupplierContact.OtherName,
-                                MobileNo = SupplierContact.MobileNo,
-                                OffNo = SupplierContact.OffNo,
-                                FaxNo = SupplierContact.FaxNo,
-                                EmailAdd = SupplierContact.EmailAdd,
-                                MessId = SupplierContact.MessId,
-                                ContactMessType = SupplierContact.ContactMessType,
-                                IsDefault = SupplierContact.IsDefault,
-                                IsFinance = SupplierContact.IsFinance,
-                                IsSales = SupplierContact.IsSales,
+                                ContactId = supplierContactViewModel.ContactId,
+                                SupplierId = supplierContactViewModel.SupplierId,
+                                ContactName = supplierContactViewModel.ContactName,
+                                OtherName = supplierContactViewModel.OtherName,
+                                MobileNo = supplierContactViewModel.MobileNo,
+                                OffNo = supplierContactViewModel.OffNo,
+                                FaxNo = supplierContactViewModel.FaxNo,
+                                EmailAdd = supplierContactViewModel.EmailAdd,
+                                MessId = supplierContactViewModel.MessId,
+                                ContactMessType = supplierContactViewModel.ContactMessType,
+                                IsDefault = supplierContactViewModel.IsDefault,
+                                IsFinance = supplierContactViewModel.IsFinance,
+                                IsSales = supplierContactViewModel.IsSales,
+                                IsActive = supplierContactViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = SupplierContact.IsActive
                             };
 
                             var createdSupplierContact = await _SupplierContactService.AddSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactEntity, headerViewModel.UserId);
@@ -162,7 +163,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateSupplierContact/{ContactId}")]
         [Authorize]
-        public async Task<ActionResult<SupplierContactViewModel>> UpdateSupplierContact(Int16 ContactId, [FromBody] SupplierContactViewModel SupplierContact, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierContactViewModel>> UpdateSupplierContact(Int16 ContactId, [FromBody] SupplierContactViewModel supplierContactViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             var SupplierContactViewModel = new SupplierContactViewModel();
             try
@@ -175,31 +176,32 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (ContactId != SupplierContact.ContactId)
+                            if (ContactId != supplierContactViewModel.ContactId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "SupplierContact ID mismatch");
 
                             var SupplierContactToUpdate = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                             if (SupplierContactToUpdate == null)
-                                return NotFound($"SupplierContact with Id = {ContactId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var SupplierContactEntity = new M_SupplierContact
                             {
-                                ContactId = SupplierContact.ContactId,
-                                SupplierId = SupplierContact.SupplierId,
-                                ContactName = SupplierContact.ContactName,
-                                OtherName = SupplierContact.OtherName,
-                                MobileNo = SupplierContact.MobileNo,
-                                OffNo = SupplierContact.OffNo,
-                                FaxNo = SupplierContact.FaxNo,
-                                EmailAdd = SupplierContact.EmailAdd,
-                                MessId = SupplierContact.MessId,
-                                ContactMessType = SupplierContact.ContactMessType,
-                                IsDefault = SupplierContact.IsDefault,
-                                IsFinance = SupplierContact.IsFinance,
-                                IsSales = SupplierContact.IsSales,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = SupplierContact.IsActive
+                                ContactId = supplierContactViewModel.ContactId,
+                                SupplierId = supplierContactViewModel.SupplierId,
+                                ContactName = supplierContactViewModel.ContactName,
+                                OtherName = supplierContactViewModel.OtherName,
+                                MobileNo = supplierContactViewModel.MobileNo,
+                                OffNo = supplierContactViewModel.OffNo,
+                                FaxNo = supplierContactViewModel.FaxNo,
+                                EmailAdd = supplierContactViewModel.EmailAdd,
+                                MessId = supplierContactViewModel.MessId,
+                                ContactMessType = supplierContactViewModel.ContactMessType,
+                                IsDefault = supplierContactViewModel.IsDefault,
+                                IsFinance = supplierContactViewModel.IsFinance,
+                                IsSales = supplierContactViewModel.IsSales,
+                                IsActive = supplierContactViewModel.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
                             };
 
                             var sqlResponce = await _SupplierContactService.UpdateSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactEntity, headerViewModel.UserId);
@@ -245,7 +247,7 @@ namespace AHHA.API.Controllers.Masters
                             var SupplierContactToDelete = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ContactId, headerViewModel.UserId);
 
                             if (SupplierContactToDelete == null)
-                                return NotFound($"SupplierContact with Id = {ContactId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _SupplierContactService.DeleteSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactToDelete, headerViewModel.UserId);
 

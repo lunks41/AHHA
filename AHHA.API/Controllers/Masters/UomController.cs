@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var UomData = await _UomService.GetUomListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (UomData == null)
-                            return NotFound();
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, UomData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var uomViewModel = _mapper.Map<UomViewModel>(await _UomService.GetUomByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomId, headerViewModel.UserId));
 
                         if (uomViewModel == null)
-                            return NotFound();
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, uomViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddUom")]
         [Authorize]
-        public async Task<ActionResult<UomViewModel>> CreateUom(UomViewModel Uom, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<UomViewModel>> CreateUom(UomViewModel uomViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Uom == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Uom ID mismatch");
+                            if (uomViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var UomEntity = new M_Uom
                             {
-                                CompanyId = Uom.CompanyId,
-                                UomCode = Uom.UomCode,
-                                UomId = Uom.UomId,
-                                UomName = Uom.UomName,
+                                UomId = uomViewModel.UomId,
+                                CompanyId = headerViewModel.CompanyId,
+                                UomCode = uomViewModel.UomCode,
+                                UomName = uomViewModel.UomName,
+                                Remarks = uomViewModel.Remarks,
+                                IsActive = uomViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Uom.IsActive,
-                                Remarks = Uom.Remarks
                             };
 
                             var createdUom = await _UomService.AddUomAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateUom/{UomId}")]
         [Authorize]
-        public async Task<ActionResult<UomViewModel>> UpdateUom(Int16 UomId, [FromBody] UomViewModel Uom, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<UomViewModel>> UpdateUom(Int16 UomId, [FromBody] UomViewModel uomViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             var UomViewModel = new UomViewModel();
             try
@@ -167,23 +167,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (UomId != Uom.UomId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Uom ID mismatch");
+                            if (UomId != uomViewModel.UomId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "Uom mismatch");
 
                             var UomToUpdate = await _UomService.GetUomByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomId, headerViewModel.UserId);
 
                             if (UomToUpdate == null)
-                                return NotFound($"Uom with Id = {UomId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var UomEntity = new M_Uom
                             {
-                                UomCode = Uom.UomCode,
-                                UomId = Uom.UomId,
-                                UomName = Uom.UomName,
+                                UomId = uomViewModel.UomId,
+                                CompanyId = headerViewModel.CompanyId,
+                                UomCode = uomViewModel.UomCode,
+                                UomName = uomViewModel.UomName,
+                                Remarks = uomViewModel.Remarks,
+                                IsActive = uomViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = Uom.IsActive,
-                                Remarks = Uom.Remarks
                             };
 
                             var sqlResponce = await _UomService.UpdateUomAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomEntity, headerViewModel.UserId);
@@ -229,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             var UomToDelete = await _UomService.GetUomByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomId, headerViewModel.UserId);
 
                             if (UomToDelete == null)
-                                return NotFound($"Uom with Id = {UomId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _UomService.DeleteUomAsync(headerViewModel.RegId, headerViewModel.CompanyId, UomToDelete, headerViewModel.UserId);
 

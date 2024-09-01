@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _SubCategoryService.GetSubCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var subCategoryViewModel = _mapper.Map<SubCategoryViewModel>(await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId));
 
                         if (subCategoryViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, subCategoryViewModel);
                     }
@@ -101,7 +101,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddSubCategory")]
         [Authorize]
-        public async Task<ActionResult<SubCategoryViewModel>> CreateSubCategory(SubCategoryViewModel SubCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SubCategoryViewModel>> CreateSubCategory(SubCategoryViewModel subCategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -113,18 +113,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (SubCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "SubCategory ID mismatch");
+                            if (subCategoryViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var SubCategoryEntity = new M_SubCategory
                             {
-                                CompanyId = SubCategory.CompanyId,
-                                SubCategoryCode = SubCategory.SubCategoryCode,
-                                SubCategoryId = SubCategory.SubCategoryId,
-                                SubCategoryName = SubCategory.SubCategoryName,
+                                SubCategoryId = subCategoryViewModel.SubCategoryId,
+                                CompanyId = headerViewModel.CompanyId,
+                                SubCategoryCode = subCategoryViewModel.SubCategoryCode,
+                                SubCategoryName = subCategoryViewModel.SubCategoryName,
+                                Remarks = subCategoryViewModel.Remarks,
+                                IsActive = subCategoryViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = SubCategory.IsActive,
-                                Remarks = SubCategory.Remarks
                             };
 
                             var createdSubCategory = await _SubCategoryService.AddSubCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryEntity, headerViewModel.UserId);
@@ -155,7 +155,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateSubCategory/{SubCategoryId}")]
         [Authorize]
-        public async Task<ActionResult<SubCategoryViewModel>> UpdateSubCategory(Int16 SubCategoryId, [FromBody] SubCategoryViewModel SubCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SubCategoryViewModel>> UpdateSubCategory(Int16 SubCategoryId, [FromBody] SubCategoryViewModel subCategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             var SubCategoryViewModel = new SubCategoryViewModel();
             try
@@ -168,23 +168,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (SubCategoryId != SubCategory.SubCategoryId)
+                            if (SubCategoryId != subCategoryViewModel.SubCategoryId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "SubCategory ID mismatch");
 
                             var SubCategoryToUpdate = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
 
                             if (SubCategoryToUpdate == null)
-                                return NotFound($"SubCategory with Id = {SubCategoryId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var SubCategoryEntity = new M_SubCategory
                             {
-                                SubCategoryCode = SubCategory.SubCategoryCode,
-                                SubCategoryId = SubCategory.SubCategoryId,
-                                SubCategoryName = SubCategory.SubCategoryName,
+                                SubCategoryId = subCategoryViewModel.SubCategoryId,
+                                CompanyId = headerViewModel.CompanyId,
+                                SubCategoryCode = subCategoryViewModel.SubCategoryCode,
+                                SubCategoryName = subCategoryViewModel.SubCategoryName,
+                                Remarks = subCategoryViewModel.Remarks,
+                                IsActive = subCategoryViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = SubCategory.IsActive,
-                                Remarks = SubCategory.Remarks
                             };
 
                             var sqlResponce = await _SubCategoryService.UpdateSubCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryEntity, headerViewModel.UserId);
@@ -230,7 +231,7 @@ namespace AHHA.API.Controllers.Masters
                             var SubCategoryToDelete = await _SubCategoryService.GetSubCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryId, headerViewModel.UserId);
 
                             if (SubCategoryToDelete == null)
-                                return NotFound($"SubCategory with Id = {SubCategoryId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _SubCategoryService.DeleteSubCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, SubCategoryToDelete, headerViewModel.UserId);
 

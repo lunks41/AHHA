@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _productService.GetProductListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var productViewModel = _mapper.Map<ProductViewModel>(await _productService.GetProductByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductId, headerViewModel.UserId));
 
                         if (productViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, productViewModel);
                     }
@@ -101,7 +101,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddProduct")]
         [Authorize]
-        public async Task<ActionResult<ProductViewModel>> CreateProduct(ProductViewModel Product, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<ProductViewModel>> CreateProduct(ProductViewModel productViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -113,18 +113,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Product == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Product ID mismatch");
+                            if (productViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var ProductEntity = new M_Product
                             {
-                                CompanyId = Product.CompanyId,
-                                ProductCode = Product.ProductCode,
-                                ProductId = Product.ProductId,
-                                ProductName = Product.ProductName,
+                                ProductId = productViewModel.ProductId,
+                                CompanyId = headerViewModel.CompanyId,
+                                ProductCode = productViewModel.ProductCode,
+                                ProductName = productViewModel.ProductName,
+                                Remarks = productViewModel.Remarks,
+                                IsActive = productViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Product.IsActive,
-                                Remarks = Product.Remarks
                             };
 
                             var createdProduct = await _productService.AddProductAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductEntity, headerViewModel.UserId);
@@ -155,7 +155,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateProduct/{ProductId}")]
         [Authorize]
-        public async Task<ActionResult<ProductViewModel>> UpdateProduct(Int16 ProductId, [FromBody] ProductViewModel Product, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<ProductViewModel>> UpdateProduct(Int16 ProductId, [FromBody] ProductViewModel productViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -167,23 +167,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (ProductId != Product.ProductId)
+                            if (ProductId != productViewModel.ProductId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Product ID mismatch");
 
                             var ProductToUpdate = await _productService.GetProductByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductId, headerViewModel.UserId);
 
                             if (ProductToUpdate == null)
-                                return NotFound($"Product with Id = {ProductId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var ProductEntity = new M_Product
                             {
-                                ProductCode = Product.ProductCode,
-                                ProductId = Product.ProductId,
-                                ProductName = Product.ProductName,
+                                ProductId = productViewModel.ProductId,
+                                CompanyId = headerViewModel.CompanyId,
+                                ProductCode = productViewModel.ProductCode,
+                                ProductName = productViewModel.ProductName,
+                                Remarks = productViewModel.Remarks,
+                                IsActive = productViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                                IsActive = Product.IsActive,
-                                Remarks = Product.Remarks
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _productService.UpdateProductAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductEntity, headerViewModel.UserId);
@@ -229,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             var ProductToDelete = await _productService.GetProductByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductId, headerViewModel.UserId);
 
                             if (ProductToDelete == null)
-                                return NotFound($"Product with Id = {ProductId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _productService.DeleteProductAsync(headerViewModel.RegId, headerViewModel.CompanyId, ProductToDelete, headerViewModel.UserId);
 

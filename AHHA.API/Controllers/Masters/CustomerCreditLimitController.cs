@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _CustomerCreditLimitService.GetCustomerCreditLimitListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var customerCreditLimitViewModel = _mapper.Map<CustomerCreditLimitViewModel>(await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId));
 
                         if (customerCreditLimitViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, customerCreditLimitViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddCustomerCreditLimit")]
         [Authorize]
-        public async Task<ActionResult<CustomerCreditLimitViewModel>> CreateCustomerCreditLimit(CustomerCreditLimitViewModel CustomerCreditLimit, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<CustomerCreditLimitViewModel>> CreateCustomerCreditLimit(CustomerCreditLimitViewModel customerCreditLimitViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (CustomerCreditLimit == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "CustomerCreditLimit ID mismatch");
+                            if (customerCreditLimitViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var CustomerCreditLimitEntity = new M_CustomerCreditLimit
                             {
-                                CompanyId = CustomerCreditLimit.CompanyId,
-                                EffectFrom = CustomerCreditLimit.EffectFrom,
-                                CustomerId = CustomerCreditLimit.CustomerId,
-                                EffectUntil = CustomerCreditLimit.EffectUntil,
-                                CreateById = headerViewModel.UserId,
-                                IsExpires = CustomerCreditLimit.IsExpires,
-                                CreditLimitAmt = CustomerCreditLimit.CreditLimitAmt
+                                CustomerId = customerCreditLimitViewModel.CustomerId,
+                                CompanyId = headerViewModel.CompanyId,
+                                EffectFrom = customerCreditLimitViewModel.EffectFrom,
+                                EffectUntil = customerCreditLimitViewModel.EffectUntil,
+                                IsExpires = customerCreditLimitViewModel.IsExpires,
+                                CreditLimitAmt = customerCreditLimitViewModel.CreditLimitAmt,
+                                CreateById = headerViewModel.UserId
                             };
 
                             var createdCustomerCreditLimit = await _CustomerCreditLimitService.AddCustomerCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerCreditLimitEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateCustomerCreditLimit/{CustomerId}")]
         [Authorize]
-        public async Task<ActionResult<CustomerCreditLimitViewModel>> UpdateCustomerCreditLimit(Int16 CustomerId, [FromBody] CustomerCreditLimitViewModel CustomerCreditLimit, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<CustomerCreditLimitViewModel>> UpdateCustomerCreditLimit(Int16 CustomerId, [FromBody] CustomerCreditLimitViewModel customerCreditLimitViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -166,22 +166,22 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (CustomerId != CustomerCreditLimit.CustomerId)
+                            if (CustomerId != customerCreditLimitViewModel.CustomerId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "CustomerCreditLimit ID mismatch");
 
                             var CustomerCreditLimitToUpdate = await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
                             if (CustomerCreditLimitToUpdate == null)
-                                return NotFound($"CustomerCreditLimit with Id = {CustomerId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var CustomerCreditLimitEntity = new M_CustomerCreditLimit
                             {
-                                CompanyId = CustomerCreditLimit.CompanyId,
-                                CustomerId = CustomerCreditLimit.CustomerId,
-                                EffectFrom = CustomerCreditLimit.EffectFrom,
-                                EffectUntil = CustomerCreditLimit.EffectUntil,
-                                IsExpires = CustomerCreditLimit.IsExpires,
-                                CreditLimitAmt = CustomerCreditLimit.CreditLimitAmt,
+                                CustomerId = customerCreditLimitViewModel.CustomerId,
+                                CompanyId = headerViewModel.CompanyId,
+                                EffectFrom = customerCreditLimitViewModel.EffectFrom,
+                                EffectUntil = customerCreditLimitViewModel.EffectUntil,
+                                IsExpires = customerCreditLimitViewModel.IsExpires,
+                                CreditLimitAmt = customerCreditLimitViewModel.CreditLimitAmt,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now
                             };
@@ -229,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var CustomerCreditLimitToDelete = await _CustomerCreditLimitService.GetCustomerCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
 
                             if (CustomerCreditLimitToDelete == null)
-                                return NotFound($"CustomerCreditLimit with Id = {CustomerId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _CustomerCreditLimitService.DeleteCustomerCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerCreditLimitToDelete, headerViewModel.UserId);
 

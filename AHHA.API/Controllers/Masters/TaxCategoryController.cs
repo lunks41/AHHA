@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _TaxCategoryService.GetTaxCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var taxCategoryViewModel = _mapper.Map<TaxCategoryViewModel>(await _TaxCategoryService.GetTaxCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryId, headerViewModel.UserId));
 
                         if (taxCategoryViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, taxCategoryViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddTaxCategory")]
         [Authorize]
-        public async Task<ActionResult<TaxCategoryViewModel>> CreateTaxCategory(TaxCategoryViewModel TaxCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<TaxCategoryViewModel>> CreateTaxCategory(TaxCategoryViewModel taxCategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (TaxCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "TaxCategory ID mismatch");
+                            if (taxCategoryViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var TaxCategoryEntity = new M_TaxCategory
                             {
-                                CompanyId = TaxCategory.CompanyId,
-                                TaxCategoryCode = TaxCategory.TaxCategoryCode,
-                                TaxCategoryId = TaxCategory.TaxCategoryId,
-                                TaxCategoryName = TaxCategory.TaxCategoryName,
+                                TaxCategoryId = taxCategoryViewModel.TaxCategoryId,
+                                CompanyId = headerViewModel.CompanyId,
+                                TaxCategoryCode = taxCategoryViewModel.TaxCategoryCode,
+                                TaxCategoryName = taxCategoryViewModel.TaxCategoryName,
+                                Remarks = taxCategoryViewModel.Remarks,
+                                IsActive = taxCategoryViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = TaxCategory.IsActive,
-                                Remarks = TaxCategory.Remarks
                             };
 
                             var createdTaxCategory = await _TaxCategoryService.AddTaxCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateTaxCategory/{TaxCategoryId}")]
         [Authorize]
-        public async Task<ActionResult<TaxCategoryViewModel>> UpdateTaxCategory(Int16 TaxCategoryId, [FromBody] TaxCategoryViewModel TaxCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<TaxCategoryViewModel>> UpdateTaxCategory(Int16 TaxCategoryId, [FromBody] TaxCategoryViewModel taxCategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             var TaxCategoryViewModel = new TaxCategoryViewModel();
             try
@@ -167,23 +167,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (TaxCategoryId != TaxCategory.TaxCategoryId)
+                            if (TaxCategoryId != taxCategoryViewModel.TaxCategoryId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "TaxCategory ID mismatch");
 
                             var TaxCategoryToUpdate = await _TaxCategoryService.GetTaxCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryId, headerViewModel.UserId);
 
                             if (TaxCategoryToUpdate == null)
-                                return NotFound($"TaxCategory with Id = {TaxCategoryId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var TaxCategoryEntity = new M_TaxCategory
                             {
-                                TaxCategoryCode = TaxCategory.TaxCategoryCode,
-                                TaxCategoryId = TaxCategory.TaxCategoryId,
-                                TaxCategoryName = TaxCategory.TaxCategoryName,
+                                TaxCategoryId = taxCategoryViewModel.TaxCategoryId,
+                                CompanyId = headerViewModel.CompanyId,
+                                TaxCategoryCode = taxCategoryViewModel.TaxCategoryCode,
+                                TaxCategoryName = taxCategoryViewModel.TaxCategoryName,
+                                Remarks = taxCategoryViewModel.Remarks,
+                                IsActive = taxCategoryViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = TaxCategory.IsActive,
-                                Remarks = TaxCategory.Remarks
                             };
 
                             var sqlResponce = await _TaxCategoryService.UpdateTaxCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryEntity, headerViewModel.UserId);
@@ -229,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             var TaxCategoryToDelete = await _TaxCategoryService.GetTaxCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryId, headerViewModel.UserId);
 
                             if (TaxCategoryToDelete == null)
-                                return NotFound($"TaxCategory with Id = {TaxCategoryId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _TaxCategoryService.DeleteTaxCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxCategoryToDelete, headerViewModel.UserId);
 

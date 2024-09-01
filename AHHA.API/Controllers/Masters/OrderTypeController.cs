@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _OrderTypeService.GetOrderTypeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var orderTypeViewModel = _mapper.Map<OrderTypeViewModel>(await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId));
 
                         if (orderTypeViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, orderTypeViewModel);
                     }
@@ -113,16 +113,17 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (orderTypeViewModel == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "OrderType ID mismatch");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var OrderTypeEntity = new M_OrderType
                             {
                                 CompanyId = headerViewModel.CompanyId,
+                                OrderTypeId = orderTypeViewModel.OrderTypeId,
                                 OrderTypeCode = orderTypeViewModel.OrderTypeCode,
                                 OrderTypeName = orderTypeViewModel.OrderTypeName,
                                 OrderTypeCategoryId = orderTypeViewModel.OrderTypeCategoryId,
-                                IsActive = orderTypeViewModel.IsActive,
                                 Remarks = orderTypeViewModel.Remarks,
+                                IsActive = orderTypeViewModel.IsActive,
                                 CreateById = headerViewModel.UserId
                             };
 
@@ -173,16 +174,17 @@ namespace AHHA.API.Controllers.Masters
                             var OrderTypeToUpdate = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
 
                             if (OrderTypeToUpdate == null)
-                                return NotFound($"OrderType with Id = {OrderTypeId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var OrderTypeEntity = new M_OrderType
                             {
                                 CompanyId = headerViewModel.CompanyId,
+                                OrderTypeId = orderTypeViewModel.OrderTypeId,
                                 OrderTypeCode = orderTypeViewModel.OrderTypeCode,
                                 OrderTypeName = orderTypeViewModel.OrderTypeName,
                                 OrderTypeCategoryId = orderTypeViewModel.OrderTypeCategoryId,
-                                IsActive = orderTypeViewModel.IsActive,
                                 Remarks = orderTypeViewModel.Remarks,
+                                IsActive = orderTypeViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now
                             };
@@ -230,7 +232,7 @@ namespace AHHA.API.Controllers.Masters
                             var OrderTypeToDelete = await _OrderTypeService.GetOrderTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeId, headerViewModel.UserId);
 
                             if (OrderTypeToDelete == null)
-                                return NotFound($"OrderType with Id = {OrderTypeId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _OrderTypeService.DeleteOrderTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeToDelete, headerViewModel.UserId);
 

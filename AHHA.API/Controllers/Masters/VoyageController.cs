@@ -41,7 +41,7 @@ namespace AHHA.API.Controllers.Masters
                         var voyageData = await _VoyageService.GetVoyageListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (voyageData == null)
-                            return NotFound();
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, voyageData);
                     }
@@ -78,7 +78,7 @@ namespace AHHA.API.Controllers.Masters
                         var VoyageViewModel = _mapper.Map<VoyageViewModel>(await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId));
 
                         if (VoyageViewModel == null)
-                            return NotFound();
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, VoyageViewModel);
                     }
@@ -102,7 +102,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddVoyage")]
         [Authorize]
-        public async Task<ActionResult<VoyageViewModel>> CreateVoyage(VoyageViewModel Voyage, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<VoyageViewModel>> CreateVoyage(VoyageViewModel voyageViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -114,20 +114,20 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Voyage == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Voyage ID mismatch");
+                            if (voyageViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var VoyageEntity = new M_Voyage
                             {
-                                CompanyId = Voyage.CompanyId,
-                                VoyageNo = Voyage.VoyageNo,
-                                VoyageId = Voyage.VoyageId,
-                                ReferenceNo = Voyage.ReferenceNo,
-                                VesselId = Voyage.VesselId,
-                                BargeId = Voyage.BargeId,
+                                CompanyId = headerViewModel.CompanyId,
+                                VoyageId = voyageViewModel.VoyageId,
+                                VoyageNo = voyageViewModel.VoyageNo,
+                                ReferenceNo = voyageViewModel.ReferenceNo,
+                                VesselId = voyageViewModel.VesselId,
+                                BargeId = voyageViewModel.BargeId,
+                                Remarks = voyageViewModel.Remarks,
+                                IsActive = voyageViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Voyage.IsActive,
-                                Remarks = Voyage.Remarks
                             };
 
                             var createdVoyage = await _VoyageService.AddVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageEntity, headerViewModel.UserId);
@@ -158,7 +158,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateVoyage/{VoyageId}")]
         [Authorize]
-        public async Task<ActionResult<VoyageViewModel>> UpdateVoyage(Int16 VoyageId, [FromBody] VoyageViewModel Voyage, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<VoyageViewModel>> UpdateVoyage(Int16 VoyageId, [FromBody] VoyageViewModel voyageViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             var VoyageViewModel = new VoyageViewModel();
             try
@@ -171,26 +171,26 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (VoyageId != Voyage.VoyageId)
+                            if (VoyageId != voyageViewModel.VoyageId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Voyage ID mismatch");
 
                             var VoyageToUpdate = await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId);
 
                             if (VoyageToUpdate == null)
-                                return NotFound($"Voyage with Id = {VoyageId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var VoyageEntity = new M_Voyage
                             {
-                                CompanyId = Voyage.CompanyId,
-                                VoyageNo = Voyage.VoyageNo,
-                                VoyageId = Voyage.VoyageId,
-                                ReferenceNo = Voyage.ReferenceNo,
-                                VesselId = Voyage.VesselId,
-                                BargeId = Voyage.BargeId,
+                                CompanyId = headerViewModel.CompanyId,
+                                VoyageId = voyageViewModel.VoyageId,
+                                VoyageNo = voyageViewModel.VoyageNo,
+                                ReferenceNo = voyageViewModel.ReferenceNo,
+                                VesselId = voyageViewModel.VesselId,
+                                BargeId = voyageViewModel.BargeId,
+                                Remarks = voyageViewModel.Remarks,
+                                IsActive = voyageViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = Voyage.IsActive,
-                                Remarks = Voyage.Remarks
                             };
 
                             var sqlResponce = await _VoyageService.UpdateVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageEntity, headerViewModel.UserId);
@@ -236,7 +236,7 @@ namespace AHHA.API.Controllers.Masters
                             var VoyageToDelete = await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId);
 
                             if (VoyageToDelete == null)
-                                return NotFound($"Voyage with Id = {VoyageId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _VoyageService.DeleteVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageToDelete, headerViewModel.UserId);
 

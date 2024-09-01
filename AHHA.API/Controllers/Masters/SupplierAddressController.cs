@@ -3,6 +3,7 @@ using AHHA.Application.IServices.Masters;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Masters;
 using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,9 +25,9 @@ namespace AHHA.API.Controllers.Masters
             _SupplierAddressService = SupplierAddressService;
         }
 
-        [HttpGet, Route("GetSupplierAddress")]
+        [HttpGet, Route("GetSupplierAddressbySupplierId/{SupplierId}")]
         [Authorize]
-        public async Task<ActionResult> GetSupplierAddress([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetSupplierAddressBySupplierId(Int16 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -36,12 +37,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var cacheData = await _SupplierAddressService.GetSupplierAddressListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+                        var SupplierAddressViewModel = await _SupplierAddressService.GetSupplierAddressBySupplierIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
 
-                        if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                        if (SupplierAddressViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
 
-                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierAddressViewModel);
                     }
                     else
                     {
@@ -50,14 +51,14 @@ namespace AHHA.API.Controllers.Masters
                 }
                 else
                 {
-                    return NotFound(GenrateMessage.authenticationfailed);
+                    return NoContent();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                 "Error retrieving data from the database");
+                    "Error retrieving data from the database");
             }
         }
 
@@ -76,7 +77,7 @@ namespace AHHA.API.Controllers.Masters
                         var supplierAddressViewModel = _mapper.Map<SupplierAddressViewModel>(await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId));
 
                         if (supplierAddressViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, supplierAddressViewModel);
                     }
@@ -100,7 +101,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddSupplierAddress")]
         [Authorize]
-        public async Task<ActionResult<SupplierAddressViewModel>> CreateSupplierAddress(SupplierAddressViewModel SupplierAddress, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierAddressViewModel>> CreateSupplierAddress(SupplierAddressViewModel supplierAddressViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,29 +113,29 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (SupplierAddress == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "SupplierAddress ID mismatch");
+                            if (supplierAddressViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var SupplierAddressEntity = new M_SupplierAddress
                             {
-                                SupplierId = SupplierAddress.SupplierId,
-                                AddressId = SupplierAddress.AddressId,
-                                Address1 = SupplierAddress.Address1,
-                                Address2 = SupplierAddress.Address2,
-                                Address3 = SupplierAddress.Address3,
-                                Address4 = SupplierAddress.Address4,
-                                PinCode = SupplierAddress.PinCode,
-                                CountryId = SupplierAddress.CountryId,
-                                PhoneNo = SupplierAddress.PhoneNo,
-                                FaxNo = SupplierAddress.FaxNo,
-                                EmailAdd = SupplierAddress.EmailAdd,
-                                WebUrl = SupplierAddress.WebUrl,
-                                IsDefaultAdd = SupplierAddress.IsDefaultAdd,
-                                IsDeliveryAdd = SupplierAddress.IsDeliveryAdd,
-                                IsFinAdd = SupplierAddress.IsFinAdd,
-                                IsSalesAdd = SupplierAddress.IsSalesAdd,
+                                SupplierId = supplierAddressViewModel.SupplierId,
+                                AddressId = supplierAddressViewModel.AddressId,
+                                Address1 = supplierAddressViewModel.Address1,
+                                Address2 = supplierAddressViewModel.Address2,
+                                Address3 = supplierAddressViewModel.Address3,
+                                Address4 = supplierAddressViewModel.Address4,
+                                PinCode = supplierAddressViewModel.PinCode,
+                                CountryId = supplierAddressViewModel.CountryId,
+                                PhoneNo = supplierAddressViewModel.PhoneNo,
+                                FaxNo = supplierAddressViewModel.FaxNo,
+                                EmailAdd = supplierAddressViewModel.EmailAdd,
+                                WebUrl = supplierAddressViewModel.WebUrl,
+                                IsDefaultAdd = supplierAddressViewModel.IsDefaultAdd,
+                                IsDeliveryAdd = supplierAddressViewModel.IsDeliveryAdd,
+                                IsFinAdd = supplierAddressViewModel.IsFinAdd,
+                                IsSalesAdd = supplierAddressViewModel.IsSalesAdd,
+                                IsActive = supplierAddressViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = SupplierAddress.IsActive,
                             };
 
                             var createdSupplierAddress = await _SupplierAddressService.AddSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
@@ -165,7 +166,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateSupplierAddress/{SupplierAddressId}")]
         [Authorize]
-        public async Task<ActionResult<SupplierAddressViewModel>> UpdateSupplierAddress(Int16 SupplierAddressId, [FromBody] SupplierAddressViewModel SupplierAddress, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierAddressViewModel>> UpdateSupplierAddress(Int16 SupplierAddressId, [FromBody] SupplierAddressViewModel supplierAddressViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -177,34 +178,35 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (SupplierAddressId != SupplierAddress.AddressId)
+                            if (SupplierAddressId != supplierAddressViewModel.AddressId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "SupplierAddress ID mismatch");
 
                             var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
 
                             if (SupplierAddressToUpdate == null)
-                                return NotFound($"SupplierAddress with Id = {SupplierAddressId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var SupplierAddressEntity = new M_SupplierAddress
                             {
-                                SupplierId = SupplierAddress.SupplierId,
-                                AddressId = SupplierAddress.AddressId,
-                                Address1 = SupplierAddress.Address1,
-                                Address2 = SupplierAddress.Address2,
-                                Address3 = SupplierAddress.Address3,
-                                Address4 = SupplierAddress.Address4,
-                                PinCode = SupplierAddress.PinCode,
-                                CountryId = SupplierAddress.CountryId,
-                                PhoneNo = SupplierAddress.PhoneNo,
-                                FaxNo = SupplierAddress.FaxNo,
-                                EmailAdd = SupplierAddress.EmailAdd,
-                                WebUrl = SupplierAddress.WebUrl,
-                                IsDefaultAdd = SupplierAddress.IsDefaultAdd,
-                                IsDeliveryAdd = SupplierAddress.IsDeliveryAdd,
-                                IsFinAdd = SupplierAddress.IsFinAdd,
-                                IsSalesAdd = SupplierAddress.IsSalesAdd,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = SupplierAddress.IsActive,
+                                SupplierId = supplierAddressViewModel.SupplierId,
+                                AddressId = supplierAddressViewModel.AddressId,
+                                Address1 = supplierAddressViewModel.Address1,
+                                Address2 = supplierAddressViewModel.Address2,
+                                Address3 = supplierAddressViewModel.Address3,
+                                Address4 = supplierAddressViewModel.Address4,
+                                PinCode = supplierAddressViewModel.PinCode,
+                                CountryId = supplierAddressViewModel.CountryId,
+                                PhoneNo = supplierAddressViewModel.PhoneNo,
+                                FaxNo = supplierAddressViewModel.FaxNo,
+                                EmailAdd = supplierAddressViewModel.EmailAdd,
+                                WebUrl = supplierAddressViewModel.WebUrl,
+                                IsDefaultAdd = supplierAddressViewModel.IsDefaultAdd,
+                                IsDeliveryAdd = supplierAddressViewModel.IsDeliveryAdd,
+                                IsFinAdd = supplierAddressViewModel.IsFinAdd,
+                                IsSalesAdd = supplierAddressViewModel.IsSalesAdd,
+                                IsActive = supplierAddressViewModel.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
                             };
 
                             var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
@@ -250,7 +252,7 @@ namespace AHHA.API.Controllers.Masters
                             var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
 
                             if (SupplierAddressToDelete == null)
-                                return NotFound($"SupplierAddress with Id = {SupplierAddressId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressToDelete, headerViewModel.UserId);
 

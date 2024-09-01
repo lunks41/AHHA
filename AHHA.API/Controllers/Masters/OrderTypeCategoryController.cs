@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _OrderTypeCategoryService.GetOrderTypeCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var orderTypeCategoryViewModel = _mapper.Map<OrderTypeCategoryViewModel>(await _OrderTypeCategoryService.GetOrderTypeCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryId, headerViewModel.UserId));
 
                         if (orderTypeCategoryViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, orderTypeCategoryViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddOrderTypeCategory")]
         [Authorize]
-        public async Task<ActionResult<OrderTypeCategoryViewModel>> CreateOrderTypeCategory(OrderTypeCategoryViewModel OrderTypeCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<OrderTypeCategoryViewModel>> CreateOrderTypeCategory(OrderTypeCategoryViewModel orderTypeCategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (OrderTypeCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "OrderTypeCategory ID mismatch");
+                            if (orderTypeCategoryViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var OrderTypeCategoryEntity = new M_OrderTypeCategory
                             {
-                                CompanyId = OrderTypeCategory.CompanyId,
-                                OrderTypeCategoryCode = OrderTypeCategory.OrderTypeCategoryCode,
-                                OrderTypeCategoryId = OrderTypeCategory.OrderTypeCategoryId,
-                                OrderTypeCategoryName = OrderTypeCategory.OrderTypeCategoryName,
+                                CompanyId = headerViewModel.CompanyId,
+                                OrderTypeCategoryId = orderTypeCategoryViewModel.OrderTypeCategoryId,
+                                OrderTypeCategoryCode = orderTypeCategoryViewModel.OrderTypeCategoryCode,
+                                OrderTypeCategoryName = orderTypeCategoryViewModel.OrderTypeCategoryName,
+                                Remarks = orderTypeCategoryViewModel.Remarks,
+                                IsActive = orderTypeCategoryViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = OrderTypeCategory.IsActive,
-                                Remarks = OrderTypeCategory.Remarks
                             };
 
                             var createdOrderTypeCategory = await _OrderTypeCategoryService.AddOrderTypeCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateOrderTypeCategory/{OrderTypeCategoryId}")]
         [Authorize]
-        public async Task<ActionResult<OrderTypeCategoryViewModel>> UpdateOrderTypeCategory(Int16 OrderTypeCategoryId, [FromBody] OrderTypeCategoryViewModel OrderTypeCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<OrderTypeCategoryViewModel>> UpdateOrderTypeCategory(Int16 OrderTypeCategoryId, [FromBody] OrderTypeCategoryViewModel orderTypeCategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             var OrderTypeCategoryViewModel = new OrderTypeCategoryViewModel();
             try
@@ -167,23 +167,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (OrderTypeCategoryId != OrderTypeCategory.OrderTypeCategoryId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "OrderTypeCategory ID mismatch");
+                            if (OrderTypeCategoryId != orderTypeCategoryViewModel.OrderTypeCategoryId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "OrderTypeCategory mismatch");
 
                             var OrderTypeCategoryToUpdate = await _OrderTypeCategoryService.GetOrderTypeCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryId, headerViewModel.UserId);
 
                             if (OrderTypeCategoryToUpdate == null)
-                                return NotFound($"OrderTypeCategory with Id = {OrderTypeCategoryId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var OrderTypeCategoryEntity = new M_OrderTypeCategory
                             {
-                                OrderTypeCategoryCode = OrderTypeCategory.OrderTypeCategoryCode,
-                                OrderTypeCategoryId = OrderTypeCategory.OrderTypeCategoryId,
-                                OrderTypeCategoryName = OrderTypeCategory.OrderTypeCategoryName,
+                                CompanyId = headerViewModel.CompanyId,
+                                OrderTypeCategoryId = orderTypeCategoryViewModel.OrderTypeCategoryId,
+                                OrderTypeCategoryCode = orderTypeCategoryViewModel.OrderTypeCategoryCode,
+                                OrderTypeCategoryName = orderTypeCategoryViewModel.OrderTypeCategoryName,
+                                Remarks = orderTypeCategoryViewModel.Remarks,
+                                IsActive = orderTypeCategoryViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                                IsActive = OrderTypeCategory.IsActive,
-                                Remarks = OrderTypeCategory.Remarks
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _OrderTypeCategoryService.UpdateOrderTypeCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryEntity, headerViewModel.UserId);
@@ -229,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             var OrderTypeCategoryToDelete = await _OrderTypeCategoryService.GetOrderTypeCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryId, headerViewModel.UserId);
 
                             if (OrderTypeCategoryToDelete == null)
-                                return NotFound($"OrderTypeCategory with Id = {OrderTypeCategoryId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _OrderTypeCategoryService.DeleteOrderTypeCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, OrderTypeCategoryToDelete, headerViewModel.UserId);
                             // Remove data from cache by key

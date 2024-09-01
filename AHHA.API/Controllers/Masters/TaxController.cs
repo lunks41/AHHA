@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _TaxService.GetTaxListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var taxViewModel = _mapper.Map<TaxViewModel>(await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId));
 
                         if (taxViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, taxViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddTax")]
         [Authorize]
-        public async Task<ActionResult<TaxViewModel>> CreateTax(TaxViewModel Tax, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<TaxViewModel>> CreateTax(TaxViewModel taxViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Tax == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Tax ID mismatch");
+                            if (taxViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var TaxEntity = new M_Tax
                             {
-                                CompanyId = Tax.CompanyId,
-                                TaxCode = Tax.TaxCode,
-                                TaxId = Tax.TaxId,
-                                TaxName = Tax.TaxName,
+                                TaxId = taxViewModel.TaxId,
+                                CompanyId = headerViewModel.CompanyId,
+                                TaxCode = taxViewModel.TaxCode,
+                                TaxName = taxViewModel.TaxName,
+                                Remarks = taxViewModel.Remarks,
+                                IsActive = taxViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Tax.IsActive,
-                                Remarks = Tax.Remarks
                             };
 
                             var createdTax = await _TaxService.AddTaxAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateTax/{TaxId}")]
         [Authorize]
-        public async Task<ActionResult<TaxViewModel>> UpdateTax(Int16 TaxId, [FromBody] TaxViewModel Tax, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<TaxViewModel>> UpdateTax(Int16 TaxId, [FromBody] TaxViewModel taxViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             var TaxViewModel = new TaxViewModel();
             try
@@ -167,23 +167,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (TaxId != Tax.TaxId)
+                            if (TaxId != taxViewModel.TaxId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Tax ID mismatch");
 
                             var TaxToUpdate = await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId);
 
                             if (TaxToUpdate == null)
-                                return NotFound($"Tax with Id = {TaxId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var TaxEntity = new M_Tax
                             {
-                                TaxCode = Tax.TaxCode,
-                                TaxId = Tax.TaxId,
-                                TaxName = Tax.TaxName,
+                                TaxId = taxViewModel.TaxId,
+                                CompanyId = headerViewModel.CompanyId,
+                                TaxCode = taxViewModel.TaxCode,
+                                TaxName = taxViewModel.TaxName,
+                                Remarks = taxViewModel.Remarks,
+                                IsActive = taxViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = Tax.IsActive,
-                                Remarks = Tax.Remarks
                             };
 
                             var sqlResponce = await _TaxService.UpdateTaxAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxEntity, headerViewModel.UserId);
@@ -229,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             var TaxToDelete = await _TaxService.GetTaxByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxId, headerViewModel.UserId);
 
                             if (TaxToDelete == null)
-                                return NotFound($"Tax with Id = {TaxId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _TaxService.DeleteTaxAsync(headerViewModel.RegId, headerViewModel.CompanyId, TaxToDelete, headerViewModel.UserId);
 

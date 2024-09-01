@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _PaymentTypeService.GetPaymentTypeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var paymentTypeViewModel = _mapper.Map<PaymentTypeViewModel>(await _PaymentTypeService.GetPaymentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeId, headerViewModel.UserId));
 
                         if (paymentTypeViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, paymentTypeViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddPaymentType")]
         [Authorize]
-        public async Task<ActionResult<PaymentTypeViewModel>> CreatePaymentType(PaymentTypeViewModel PaymentType, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<PaymentTypeViewModel>> CreatePaymentType(PaymentTypeViewModel paymentTypeViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (PaymentType == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "PaymentType ID mismatch");
+                            if (paymentTypeViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var PaymentTypeEntity = new M_PaymentType
                             {
-                                CompanyId = PaymentType.CompanyId,
-                                PaymentTypeCode = PaymentType.PaymentTypeCode,
-                                PaymentTypeId = PaymentType.PaymentTypeId,
-                                PaymentTypeName = PaymentType.PaymentTypeName,
+                                PaymentTypeId = paymentTypeViewModel.PaymentTypeId,
+                                CompanyId = paymentTypeViewModel.CompanyId,
+                                PaymentTypeCode = paymentTypeViewModel.PaymentTypeCode,
+                                PaymentTypeName = paymentTypeViewModel.PaymentTypeName,
+                                Remarks = paymentTypeViewModel.Remarks,
+                                IsActive = paymentTypeViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = PaymentType.IsActive,
-                                Remarks = PaymentType.Remarks
                             };
 
                             var createdPaymentType = await _PaymentTypeService.AddPaymentTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdatePaymentType/{PaymentTypeId}")]
         [Authorize]
-        public async Task<ActionResult<PaymentTypeViewModel>> UpdatePaymentType(Int16 PaymentTypeId, [FromBody] PaymentTypeViewModel PaymentType, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<PaymentTypeViewModel>> UpdatePaymentType(Int16 PaymentTypeId, [FromBody] PaymentTypeViewModel paymentTypeViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -166,23 +166,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (PaymentTypeId != PaymentType.PaymentTypeId)
+                            if (PaymentTypeId != paymentTypeViewModel.PaymentTypeId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "PaymentType ID mismatch");
 
                             var PaymentTypeToUpdate = await _PaymentTypeService.GetPaymentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeId, headerViewModel.UserId);
 
                             if (PaymentTypeToUpdate == null)
-                                return NotFound($"PaymentType with Id = {PaymentTypeId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var PaymentTypeEntity = new M_PaymentType
                             {
-                                PaymentTypeCode = PaymentType.PaymentTypeCode,
-                                PaymentTypeId = PaymentType.PaymentTypeId,
-                                PaymentTypeName = PaymentType.PaymentTypeName,
+                                PaymentTypeId = paymentTypeViewModel.PaymentTypeId,
+                                CompanyId = paymentTypeViewModel.CompanyId,
+                                PaymentTypeCode = paymentTypeViewModel.PaymentTypeCode,
+                                PaymentTypeName = paymentTypeViewModel.PaymentTypeName,
+                                Remarks = paymentTypeViewModel.Remarks,
+                                IsActive = paymentTypeViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = PaymentType.IsActive,
-                                Remarks = PaymentType.Remarks
                             };
 
                             var sqlResponce = await _PaymentTypeService.UpdatePaymentTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeEntity, headerViewModel.UserId);
@@ -228,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var PaymentTypeToDelete = await _PaymentTypeService.GetPaymentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeId, headerViewModel.UserId);
 
                             if (PaymentTypeToDelete == null)
-                                return NotFound($"PaymentType with Id = {PaymentTypeId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _PaymentTypeService.DeletePaymentTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, PaymentTypeToDelete, headerViewModel.UserId);
 

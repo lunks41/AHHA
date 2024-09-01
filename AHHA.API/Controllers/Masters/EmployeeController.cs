@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _EmployeeService.GetEmployeeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var EmployeeViewModel = _mapper.Map<EmployeeViewModel>(await _EmployeeService.GetEmployeeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeId, headerViewModel.UserId));
 
                         if (EmployeeViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, EmployeeViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddEmployee")]
         [Authorize]
-        public async Task<ActionResult<EmployeeViewModel>> CreateEmployee(EmployeeViewModel Employee, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<EmployeeViewModel>> CreateEmployee([FromBody] EmployeeViewModel employeeViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,29 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Employee == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Employee ID mismatch");
+                            if (employeeViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var EmployeeEntity = new M_Employee
                             {
-                                CompanyId = Employee.CompanyId,
-                                EmployeeCode = Employee.EmployeeCode,
-                                EmployeeId = Employee.EmployeeId,
-                                EmployeeName = Employee.EmployeeName,
+                                EmployeeId = employeeViewModel.EmployeeId,
+                                CompanyId = headerViewModel.CompanyId,
+                                EmployeeCode = employeeViewModel.EmployeeCode,
+                                EmployeeName = employeeViewModel.EmployeeName,
+                                EmployeeOtherName = employeeViewModel.EmployeeOtherName,
+                                EmployeePhoto = employeeViewModel.EmployeePhoto,
+                                EmployeeSignature = employeeViewModel.EmployeeSignature,
+                                DepartmentId = employeeViewModel.DepartmentId,
+                                EmployeeSex = employeeViewModel.EmployeeSex,
+                                MartialStatus = employeeViewModel.MartialStatus,
+                                EmployeeDOB = employeeViewModel.EmployeeDOB,
+                                EmployeeJoinDate = employeeViewModel.EmployeeJoinDate,
+                                EmployeeLastDate = employeeViewModel.EmployeeLastDate,
+                                EmployeeOffEmailAdd = employeeViewModel.EmployeeOffEmailAdd,
+                                EmployeeOtherEmailAdd = employeeViewModel.EmployeeOtherEmailAdd,
+                                Remarks = employeeViewModel.Remarks,
+                                IsActive = employeeViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Employee.IsActive,
-                                Remarks = Employee.Remarks
                             };
 
                             var createdEmployee = await _EmployeeService.AddEmployeeAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeEntity, headerViewModel.UserId);
@@ -154,7 +165,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateEmployee/{EmployeeId}")]
         [Authorize]
-        public async Task<ActionResult<EmployeeViewModel>> UpdateEmployee(Int16 EmployeeId, [FromBody] EmployeeViewModel Employee, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<EmployeeViewModel>> UpdateEmployee(Int16 EmployeeId, [FromBody] EmployeeViewModel employeeViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -166,23 +177,35 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (EmployeeId != Employee.EmployeeId)
+                            if (EmployeeId != employeeViewModel.EmployeeId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Employee ID mismatch");
 
                             var EmployeeToUpdate = await _EmployeeService.GetEmployeeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeId, headerViewModel.UserId);
 
                             if (EmployeeToUpdate == null)
-                                return NotFound($"Employee with Id = {EmployeeId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var EmployeeEntity = new M_Employee
                             {
-                                EmployeeCode = Employee.EmployeeCode,
-                                EmployeeId = Employee.EmployeeId,
-                                EmployeeName = Employee.EmployeeName,
+                                EmployeeId = employeeViewModel.EmployeeId,
+                                CompanyId = headerViewModel.CompanyId,
+                                EmployeeCode = employeeViewModel.EmployeeCode,
+                                EmployeeName = employeeViewModel.EmployeeName,
+                                EmployeeOtherName = employeeViewModel.EmployeeOtherName,
+                                EmployeePhoto = employeeViewModel.EmployeePhoto,
+                                EmployeeSignature = employeeViewModel.EmployeeSignature,
+                                DepartmentId = employeeViewModel.DepartmentId,
+                                EmployeeSex = employeeViewModel.EmployeeSex,
+                                MartialStatus = employeeViewModel.MartialStatus,
+                                EmployeeDOB = employeeViewModel.EmployeeDOB,
+                                EmployeeJoinDate = employeeViewModel.EmployeeJoinDate,
+                                EmployeeLastDate = employeeViewModel.EmployeeLastDate,
+                                EmployeeOffEmailAdd = employeeViewModel.EmployeeOffEmailAdd,
+                                EmployeeOtherEmailAdd = employeeViewModel.EmployeeOtherEmailAdd,
+                                Remarks = employeeViewModel.Remarks,
+                                IsActive = employeeViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                                IsActive = Employee.IsActive,
-                                Remarks = Employee.Remarks
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _EmployeeService.UpdateEmployeeAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeEntity, headerViewModel.UserId);
@@ -228,7 +251,7 @@ namespace AHHA.API.Controllers.Masters
                             var EmployeeToDelete = await _EmployeeService.GetEmployeeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeId, headerViewModel.UserId);
 
                             if (EmployeeToDelete == null)
-                                return NotFound($"Employee with Id = {EmployeeId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _EmployeeService.DeleteEmployeeAsync(headerViewModel.RegId, headerViewModel.CompanyId, EmployeeToDelete, headerViewModel.UserId);
 

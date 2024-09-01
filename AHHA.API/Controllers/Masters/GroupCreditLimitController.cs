@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _GroupCreditLimitService.GetGroupCreditLimitListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var GroupCreditLimitViewModel = _mapper.Map<GroupCreditLimitViewModel>(await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId));
 
                         if (GroupCreditLimitViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, GroupCreditLimitViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddGroupCreditLimit")]
         [Authorize]
-        public async Task<ActionResult<GroupCreditLimitViewModel>> CreateGroupCreditLimit(GroupCreditLimitViewModel GroupCreditLimit, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<GroupCreditLimitViewModel>> CreateGroupCreditLimit(GroupCreditLimitViewModel groupCreditLimitViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (GroupCreditLimit == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "GroupCreditLimit ID mismatch");
+                            if (groupCreditLimitViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var GroupCreditLimitEntity = new M_GroupCreditLimit
                             {
-                                CompanyId = GroupCreditLimit.CompanyId,
-                                GroupCreditLimitCode = GroupCreditLimit.GroupCreditLimitCode,
-                                GroupCreditLimitId = GroupCreditLimit.GroupCreditLimitId,
-                                GroupCreditLimitName = GroupCreditLimit.GroupCreditLimitName,
+                                CompanyId = headerViewModel.CompanyId,
+                                GroupCreditLimitId = groupCreditLimitViewModel.GroupCreditLimitId,
+                                GroupCreditLimitCode = groupCreditLimitViewModel.GroupCreditLimitCode,
+                                GroupCreditLimitName = groupCreditLimitViewModel.GroupCreditLimitName,
+                                Remarks = groupCreditLimitViewModel.Remarks,
+                                IsActive = groupCreditLimitViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = GroupCreditLimit.IsActive,
-                                Remarks = GroupCreditLimit.Remarks
                             };
 
                             var createdGroupCreditLimit = await _GroupCreditLimitService.AddGroupCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateGroupCreditLimit/{GroupCreditLimitId}")]
         [Authorize]
-        public async Task<ActionResult<GroupCreditLimitViewModel>> UpdateGroupCreditLimit(Int16 GroupCreditLimitId, [FromBody] GroupCreditLimitViewModel GroupCreditLimit, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<GroupCreditLimitViewModel>> UpdateGroupCreditLimit(Int16 GroupCreditLimitId, [FromBody] GroupCreditLimitViewModel groupCreditLimitViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -166,23 +166,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (GroupCreditLimitId != GroupCreditLimit.GroupCreditLimitId)
+                            if (GroupCreditLimitId != groupCreditLimitViewModel.GroupCreditLimitId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "GroupCreditLimit ID mismatch");
 
                             var GroupCreditLimitToUpdate = await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
 
                             if (GroupCreditLimitToUpdate == null)
-                                return NotFound($"GroupCreditLimit with Id = {GroupCreditLimitId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var GroupCreditLimitEntity = new M_GroupCreditLimit
                             {
-                                GroupCreditLimitCode = GroupCreditLimit.GroupCreditLimitCode,
-                                GroupCreditLimitId = GroupCreditLimit.GroupCreditLimitId,
-                                GroupCreditLimitName = GroupCreditLimit.GroupCreditLimitName,
+                                CompanyId = headerViewModel.CompanyId,
+                                GroupCreditLimitId = groupCreditLimitViewModel.GroupCreditLimitId,
+                                GroupCreditLimitCode = groupCreditLimitViewModel.GroupCreditLimitCode,
+                                GroupCreditLimitName = groupCreditLimitViewModel.GroupCreditLimitName,
+                                Remarks = groupCreditLimitViewModel.Remarks,
+                                IsActive = groupCreditLimitViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                                IsActive = GroupCreditLimit.IsActive,
-                                Remarks = GroupCreditLimit.Remarks
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _GroupCreditLimitService.UpdateGroupCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitEntity, headerViewModel.UserId);
@@ -228,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var GroupCreditLimitToDelete = await _GroupCreditLimitService.GetGroupCreditLimitByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitId, headerViewModel.UserId);
 
                             if (GroupCreditLimitToDelete == null)
-                                return NotFound($"GroupCreditLimit with Id = {GroupCreditLimitId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _GroupCreditLimitService.DeleteGroupCreditLimitAsync(headerViewModel.RegId, headerViewModel.CompanyId, GroupCreditLimitToDelete, headerViewModel.UserId);
 

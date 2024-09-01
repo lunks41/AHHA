@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var SupplierData = await _SupplierService.GetSupplierListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (SupplierData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, SupplierData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var supplierViewModel = _mapper.Map<SupplierViewModel>(await _SupplierService.GetSupplierByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId));
 
                         if (supplierViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, supplierViewModel);
                     }
@@ -113,7 +113,7 @@ namespace AHHA.API.Controllers.Masters
                         var supplierViewModel = _mapper.Map<SupplierViewModel>(await _SupplierService.GetSupplierByCodeAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierCode, headerViewModel.UserId));
 
                         if (supplierViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, supplierViewModel);
                     }
@@ -137,7 +137,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddSupplier")]
         [Authorize]
-        public async Task<ActionResult<SupplierViewModel>> CreateSupplier(SupplierViewModel Supplier, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierViewModel>> CreateSupplier(SupplierViewModel supplierViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -149,18 +149,28 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Supplier == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Supplier ID mismatch");
+                            if (supplierViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var SupplierEntity = new M_Supplier
                             {
-                                CompanyId = Supplier.CompanyId,
-                                SupplierCode = Supplier.SupplierCode,
-                                SupplierId = Supplier.SupplierId,
-                                SupplierName = Supplier.SupplierName,
+                                SupplierId = supplierViewModel.SupplierId,
+                                CompanyId = headerViewModel.CompanyId,
+                                SupplierCode = supplierViewModel.SupplierCode,
+                                SupplierName = supplierViewModel.SupplierName,
+                                SupplierOtherName = supplierViewModel.SupplierOtherName,
+                                SupplierShortName = supplierViewModel.SupplierShortName,
+                                SupplierRegNo = supplierViewModel.SupplierRegNo,
+                                CurrencyId = supplierViewModel.CurrencyId,
+                                CreditTermId = supplierViewModel.CreditTermId,
+                                ParentSupplierId = supplierViewModel.ParentSupplierId,
+                                IsCustomer = supplierViewModel.IsCustomer,
+                                IsVendor = supplierViewModel.IsVendor,
+                                IsTrader = supplierViewModel.IsTrader,
+                                IsSupplier = supplierViewModel.IsSupplier,
+                                Remarks = supplierViewModel.Remarks,
+                                IsActive = supplierViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Supplier.IsActive,
-                                Remarks = Supplier.Remarks
                             };
 
                             var createdSupplier = await _SupplierService.AddSupplierAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierEntity, headerViewModel.UserId);
@@ -191,7 +201,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateSupplier/{SupplierId}")]
         [Authorize]
-        public async Task<ActionResult<SupplierViewModel>> UpdateSupplier(Int16 SupplierId, [FromBody] SupplierViewModel Supplier, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierViewModel>> UpdateSupplier(Int16 SupplierId, [FromBody] SupplierViewModel supplierViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -203,23 +213,34 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (SupplierId != Supplier.SupplierId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Supplier ID mismatch");
+                            if (SupplierId != supplierViewModel.SupplierId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "data mismatch");
 
                             var SupplierToUpdate = await _SupplierService.GetSupplierByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
 
                             if (SupplierToUpdate == null)
-                                return NotFound(GenrateMessage.authenticationfailed);
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var SupplierEntity = new M_Supplier
                             {
-                                SupplierCode = Supplier.SupplierCode,
-                                SupplierId = Supplier.SupplierId,
-                                SupplierName = Supplier.SupplierName,
+                                SupplierId = supplierViewModel.SupplierId,
+                                CompanyId = headerViewModel.CompanyId,
+                                SupplierCode = supplierViewModel.SupplierCode,
+                                SupplierName = supplierViewModel.SupplierName,
+                                SupplierOtherName = supplierViewModel.SupplierOtherName,
+                                SupplierShortName = supplierViewModel.SupplierShortName,
+                                SupplierRegNo = supplierViewModel.SupplierRegNo,
+                                CurrencyId = supplierViewModel.CurrencyId,
+                                CreditTermId = supplierViewModel.CreditTermId,
+                                ParentSupplierId = supplierViewModel.ParentSupplierId,
+                                IsCustomer = supplierViewModel.IsCustomer,
+                                IsVendor = supplierViewModel.IsVendor,
+                                IsTrader = supplierViewModel.IsTrader,
+                                IsSupplier = supplierViewModel.IsSupplier,
+                                Remarks = supplierViewModel.Remarks,
+                                IsActive = supplierViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = Supplier.IsActive,
-                                Remarks = Supplier.Remarks
                             };
 
                             var sqlResponce = await _SupplierService.UpdateSupplierAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierEntity, headerViewModel.UserId);
@@ -265,7 +286,7 @@ namespace AHHA.API.Controllers.Masters
                             var SupplierToDelete = await _SupplierService.GetSupplierByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
 
                             if (SupplierToDelete == null)
-                                return NotFound($"Supplier with Id = {SupplierId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _SupplierService.DeleteSupplierAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierToDelete, headerViewModel.UserId);
 

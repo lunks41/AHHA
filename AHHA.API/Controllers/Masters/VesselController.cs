@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var VesselData = await _VesselService.GetVesselListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (VesselData == null)
-                            return NotFound();
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, VesselData);
                     }
@@ -76,7 +76,8 @@ namespace AHHA.API.Controllers.Masters
                         var VesselViewModel = _mapper.Map<VesselViewModel>(await _VesselService.GetVesselByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselId, headerViewModel.UserId));
 
                         if (VesselViewModel == null)
-                            return NotFound();
+                            return NotFound(GenrateMessage.datanotfound);
+
                         return StatusCode(StatusCodes.Status202Accepted, VesselViewModel);
                     }
                     else
@@ -99,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddVessel")]
         [Authorize]
-        public async Task<ActionResult<VesselViewModel>> CreateVessel(VesselViewModel Vessel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<VesselViewModel>> CreateVessel(VesselViewModel vesselViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -111,24 +112,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Vessel == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Vessel ID mismatch");
+                            if (vesselViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var VesselEntity = new M_Vessel
                             {
-                                CompanyId = Vessel.CompanyId,
-                                VesselCode = Vessel.VesselCode,
-                                VesselId = Vessel.VesselId,
-                                VesselName = Vessel.VesselName,
-                                CallSign = Vessel.CallSign,
-                                IMOCode = Vessel.IMOCode,
-                                GRT = Vessel.GRT,
-                                LicenseNo = Vessel.LicenseNo,
-                                VesselType = Vessel.VesselType,
-                                Flag = Vessel.Flag,
+                                VesselId = vesselViewModel.VesselId,
+                                CompanyId = headerViewModel.CompanyId,
+                                VesselCode = vesselViewModel.VesselCode,
+                                VesselName = vesselViewModel.VesselName,
+                                CallSign = vesselViewModel.CallSign,
+                                IMOCode = vesselViewModel.IMOCode,
+                                GRT = vesselViewModel.GRT,
+                                LicenseNo = vesselViewModel.LicenseNo,
+                                VesselType = vesselViewModel.VesselType,
+                                Flag = vesselViewModel.Flag,
+                                Remarks = vesselViewModel.Remarks,
+                                IsActive = vesselViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Vessel.IsActive,
-                                Remarks = Vessel.Remarks
                             };
 
                             var createdVessel = await _VesselService.AddVesselAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselEntity, headerViewModel.UserId);
@@ -159,7 +160,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateVessel/{VesselId}")]
         [Authorize]
-        public async Task<ActionResult<VesselViewModel>> UpdateVessel(Int16 VesselId, [FromBody] VesselViewModel Vessel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<VesselViewModel>> UpdateVessel(Int16 VesselId, [FromBody] VesselViewModel vesselViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -171,29 +172,30 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (VesselId != Vessel.VesselId)
+                            if (VesselId != vesselViewModel.VesselId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Vessel ID mismatch");
 
                             var VesselToUpdate = await _VesselService.GetVesselByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselId, headerViewModel.UserId);
 
                             if (VesselToUpdate == null)
-                                return NotFound($"Vessel with Id = {VesselId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var VesselEntity = new M_Vessel
                             {
-                                CompanyId = Vessel.CompanyId,
-                                VesselCode = Vessel.VesselCode,
-                                VesselId = Vessel.VesselId,
-                                VesselName = Vessel.VesselName,
-                                CallSign = Vessel.CallSign,
-                                IMOCode = Vessel.IMOCode,
-                                GRT = Vessel.GRT,
-                                LicenseNo = Vessel.LicenseNo,
-                                VesselType = Vessel.VesselType,
-                                Flag = Vessel.Flag,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = Vessel.IsActive,
-                                Remarks = Vessel.Remarks
+                                VesselId = vesselViewModel.VesselId,
+                                CompanyId = headerViewModel.CompanyId,
+                                VesselCode = vesselViewModel.VesselCode,
+                                VesselName = vesselViewModel.VesselName,
+                                CallSign = vesselViewModel.CallSign,
+                                IMOCode = vesselViewModel.IMOCode,
+                                GRT = vesselViewModel.GRT,
+                                LicenseNo = vesselViewModel.LicenseNo,
+                                VesselType = vesselViewModel.VesselType,
+                                Flag = vesselViewModel.Flag,
+                                Remarks = vesselViewModel.Remarks,
+                                IsActive = vesselViewModel.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _VesselService.UpdateVesselAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselEntity, headerViewModel.UserId);
@@ -239,7 +241,7 @@ namespace AHHA.API.Controllers.Masters
                             var VesselToDelete = await _VesselService.GetVesselByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselId, headerViewModel.UserId);
 
                             if (VesselToDelete == null)
-                                return NotFound($"Vessel with Id = {VesselId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _VesselService.DeleteVesselAsync(headerViewModel.RegId, headerViewModel.CompanyId, VesselToDelete, headerViewModel.UserId);
 

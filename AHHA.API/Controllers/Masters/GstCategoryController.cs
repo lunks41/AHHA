@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _GstCategoryService.GetGstCategoryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,10 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var gstCategoryViewModel = _mapper.Map<GstCategoryViewModel>(await _GstCategoryService.GetGstCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryId, headerViewModel.UserId));
 
                         if (gstCategoryViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
-                        else
-                            // Cache the GstCategory with an expiration time of 10 minutes
-                            _memoryCache.Set($"GstCategory_{GstCategoryId}", gstCategoryViewModel, TimeSpan.FromMinutes(10));
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, gstCategoryViewModel);
                     }
@@ -103,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddGstCategory")]
         [Authorize]
-        public async Task<ActionResult<GstCategoryViewModel>> CreateGstCategory(GstCategoryViewModel GstCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<GstCategoryViewModel>> CreateGstCategory(GstCategoryViewModel gstCategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -115,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (GstCategory == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "GstCategory ID mismatch");
+                            if (gstCategoryViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var GstCategoryEntity = new M_GstCategory
                             {
-                                CompanyId = GstCategory.CompanyId,
-                                GstCategoryCode = GstCategory.GstCategoryCode,
-                                GstCategoryId = GstCategory.GstCategoryId,
-                                GstCategoryName = GstCategory.GstCategoryName,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = GstCategory.IsActive,
-                                Remarks = GstCategory.Remarks
+                                GstCategoryId = gstCategoryViewModel.GstCategoryId,
+                                CompanyId = headerViewModel.CompanyId,
+                                GstCategoryCode = gstCategoryViewModel.GstCategoryCode,
+                                GstCategoryName = gstCategoryViewModel.GstCategoryName,
+                                Remarks = gstCategoryViewModel.Remarks,
+                                IsActive = gstCategoryViewModel.IsActive,
+                                CreateById = headerViewModel.UserId
                             };
 
                             var createdGstCategory = await _GstCategoryService.AddGstCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryEntity, headerViewModel.UserId);
@@ -157,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateGstCategory/{GstCategoryId}")]
         [Authorize]
-        public async Task<ActionResult<GstCategoryViewModel>> UpdateGstCategory(Int16 GstCategoryId, [FromBody] GstCategoryViewModel GstCategory, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<GstCategoryViewModel>> UpdateGstCategory(Int16 GstCategoryId, [FromBody] GstCategoryViewModel gstCategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -169,23 +166,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (GstCategoryId != GstCategory.GstCategoryId)
+                            if (GstCategoryId != gstCategoryViewModel.GstCategoryId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "GstCategory ID mismatch");
 
                             var GstCategoryToUpdate = await _GstCategoryService.GetGstCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryId, headerViewModel.UserId);
 
                             if (GstCategoryToUpdate == null)
-                                return NotFound($"GstCategory with Id = {GstCategoryId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var GstCategoryEntity = new M_GstCategory
                             {
-                                GstCategoryCode = GstCategory.GstCategoryCode,
-                                GstCategoryId = GstCategory.GstCategoryId,
-                                GstCategoryName = GstCategory.GstCategoryName,
+                                GstCategoryId = gstCategoryViewModel.GstCategoryId,
+                                CompanyId = headerViewModel.CompanyId,
+                                GstCategoryCode = gstCategoryViewModel.GstCategoryCode,
+                                GstCategoryName = gstCategoryViewModel.GstCategoryName,
+                                Remarks = gstCategoryViewModel.Remarks,
+                                IsActive = gstCategoryViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = GstCategory.IsActive,
-                                Remarks = GstCategory.Remarks
                             };
 
                             var sqlResponce = await _GstCategoryService.UpdateGstCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryEntity, headerViewModel.UserId);
@@ -231,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var GstCategoryToDelete = await _GstCategoryService.GetGstCategoryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryId, headerViewModel.UserId);
 
                             if (GstCategoryToDelete == null)
-                                return NotFound($"GstCategory with Id = {GstCategoryId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _GstCategoryService.DeleteGstCategoryAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstCategoryToDelete, headerViewModel.UserId);
 

@@ -43,7 +43,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _GstService.GetGstListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -80,7 +80,7 @@ namespace AHHA.API.Controllers.Masters
                         var gstViewModel = _mapper.Map<GstViewModel>(await _GstService.GetGstByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstId, headerViewModel.UserId));
 
                         if (gstViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, gstViewModel);
                     }
@@ -104,7 +104,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddGst")]
         [Authorize]
-        public async Task<ActionResult<GstViewModel>> CreateGst(GstViewModel Gst, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<GstViewModel>> CreateGst(GstViewModel gstViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -116,18 +116,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Gst == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Gst ID mismatch");
+                            if (gstViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var GstEntity = new M_Gst
                             {
-                                CompanyId = Gst.CompanyId,
-                                GstCode = Gst.GstCode,
-                                GstId = Gst.GstId,
-                                GstName = Gst.GstName,
+                                GstId = gstViewModel.GstId,
+                                CompanyId = headerViewModel.CompanyId,
+                                GstCode = gstViewModel.GstCode,
+                                Remarks = gstViewModel.Remarks,
+                                GstName = gstViewModel.GstName,
+                                IsActive = gstViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Gst.IsActive,
-                                Remarks = Gst.Remarks
                             };
 
                             var createdGst = await _GstService.AddGstAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstEntity, headerViewModel.UserId);
@@ -158,7 +158,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateGst/{GstId}")]
         [Authorize]
-        public async Task<ActionResult<GstViewModel>> UpdateGst(Int16 GstId, [FromBody] GstViewModel Gst, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<GstViewModel>> UpdateGst(Int16 GstId, [FromBody] GstViewModel gstViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -170,23 +170,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (GstId != Gst.GstId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Gst ID mismatch");
+                            if (GstId != gstViewModel.GstId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "Gst mismatch");
 
                             var GstToUpdate = await _GstService.GetGstByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstId, headerViewModel.UserId);
 
                             if (GstToUpdate == null)
-                                return NotFound($"Gst with Id = {GstId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var GstEntity = new M_Gst
                             {
-                                GstCode = Gst.GstCode,
-                                GstId = Gst.GstId,
-                                GstName = Gst.GstName,
+                                GstId = gstViewModel.GstId,
+                                CompanyId = headerViewModel.CompanyId,
+                                GstCode = gstViewModel.GstCode,
+                                Remarks = gstViewModel.Remarks,
+                                GstName = gstViewModel.GstName,
+                                IsActive = gstViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = Gst.IsActive,
-                                Remarks = Gst.Remarks
                             };
 
                             var sqlResponce = await _GstService.UpdateGstAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstEntity, headerViewModel.UserId);
@@ -232,7 +233,7 @@ namespace AHHA.API.Controllers.Masters
                             var GstToDelete = await _GstService.GetGstByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstId, headerViewModel.UserId);
 
                             if (GstToDelete == null)
-                                return NotFound($"Gst with Id = {GstId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _GstService.DeleteGstAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstToDelete, headerViewModel.UserId);
 
@@ -282,7 +283,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _GstService.GetGstDtListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -319,7 +320,7 @@ namespace AHHA.API.Controllers.Masters
                         var GstDtViewModel = _mapper.Map<GstDtViewModel>(await _GstService.GetGstDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtId, headerViewModel.UserId));
 
                         if (GstDtViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, GstDtViewModel);
                     }
@@ -356,7 +357,7 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (GstDt == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "mismatch");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var GstDtEntity = new M_GstDt
                             {
@@ -410,7 +411,7 @@ namespace AHHA.API.Controllers.Masters
                             var GstDtToUpdate = await _GstService.GetGstDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtId, headerViewModel.UserId);
 
                             if (GstDtToUpdate == null)
-                                return NotFound($"GstDt with Id = {GstDtId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var GstDtEntity = new M_GstDt
                             {
@@ -465,7 +466,7 @@ namespace AHHA.API.Controllers.Masters
                             var GstDtToDelete = await _GstService.GetGstDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtId, headerViewModel.UserId);
 
                             if (GstDtToDelete == null)
-                                return NotFound($"GstDt with Id = {GstDtId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _GstService.DeleteGstDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, GstDtToDelete, headerViewModel.UserId);
 

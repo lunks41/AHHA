@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _DesignationService.GetDesignationListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var designationViewModel = _mapper.Map<DesignationViewModel>(await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationId, headerViewModel.UserId));
 
                         if (designationViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, designationViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddDesignation")]
         [Authorize]
-        public async Task<ActionResult<DesignationViewModel>> CreateDesignation(DesignationViewModel Designation, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<DesignationViewModel>> CreateDesignation(DesignationViewModel designationViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Designation == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Designation ID mismatch");
+                            if (designationViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var DesignationEntity = new M_Designation
                             {
-                                CompanyId = Designation.CompanyId,
-                                DesignationCode = Designation.DesignationCode,
-                                DesignationId = Designation.DesignationId,
-                                DesignationName = Designation.DesignationName,
+                                DesignationId = designationViewModel.DesignationId,
+                                CompanyId = headerViewModel.CompanyId,
+                                DesignationCode = designationViewModel.DesignationCode,
+                                DesignationName = designationViewModel.DesignationName,
+                                Remarks = designationViewModel.Remarks,
+                                IsActive = designationViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
-                                IsActive = Designation.IsActive,
-                                Remarks = Designation.Remarks
                             };
 
                             var createdDesignation = await _DesignationService.AddDesignationAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateDesignation/{DesignationId}")]
         [Authorize]
-        public async Task<ActionResult<DesignationViewModel>> UpdateDesignation(Int16 DesignationId, [FromBody] DesignationViewModel Designation, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<DesignationViewModel>> UpdateDesignation(Int16 DesignationId, [FromBody] DesignationViewModel designationViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -166,23 +166,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (DesignationId != Designation.DesignationId)
+                            if (DesignationId != designationViewModel.DesignationId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Designation ID mismatch");
 
                             var DesignationToUpdate = await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationId, headerViewModel.UserId);
 
                             if (DesignationToUpdate == null)
-                                return NotFound($"Designation with Id = {DesignationId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var DesignationEntity = new M_Designation
                             {
-                                DesignationCode = Designation.DesignationCode,
-                                DesignationId = Designation.DesignationId,
-                                DesignationName = Designation.DesignationName,
+                                DesignationId = designationViewModel.DesignationId,
+                                CompanyId = headerViewModel.CompanyId,
+                                DesignationCode = designationViewModel.DesignationCode,
+                                DesignationName = designationViewModel.DesignationName,
+                                Remarks = designationViewModel.Remarks,
+                                IsActive = designationViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                                IsActive = Designation.IsActive,
-                                Remarks = Designation.Remarks
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _DesignationService.UpdateDesignationAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationEntity, headerViewModel.UserId);
@@ -228,7 +229,7 @@ namespace AHHA.API.Controllers.Masters
                             var DesignationToDelete = await _DesignationService.GetDesignationByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationId, headerViewModel.UserId);
 
                             if (DesignationToDelete == null)
-                                return NotFound($"Designation with Id = {DesignationId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _DesignationService.DeleteDesignationAsync(headerViewModel.RegId, headerViewModel.CompanyId, DesignationToDelete, headerViewModel.UserId);
 

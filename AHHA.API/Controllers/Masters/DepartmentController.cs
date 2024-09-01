@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _DepartmentService.GetDepartmentListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var departmentViewModel = _mapper.Map<DepartmentViewModel>(await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId));
 
                         if (departmentViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, departmentViewModel);
                     }
@@ -100,7 +100,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPost, Route("AddDepartment")]
         [Authorize]
-        public async Task<ActionResult<DepartmentViewModel>> CreateDepartment(DepartmentViewModel Department, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<DepartmentViewModel>> CreateDepartment(DepartmentViewModel departmentViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -112,18 +112,18 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (Department == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Department ID mismatch");
+                            if (departmentViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var DepartmentEntity = new M_Department
                             {
-                                CompanyId = Department.CompanyId,
-                                DepartmentCode = Department.DepartmentCode,
-                                DepartmentId = Department.DepartmentId,
-                                DepartmentName = Department.DepartmentName,
-                                CreateById = headerViewModel.UserId,
-                                IsActive = Department.IsActive,
-                                Remarks = Department.Remarks
+                                DepartmentId = departmentViewModel.DepartmentId,
+                                CompanyId = headerViewModel.CompanyId,
+                                DepartmentCode = departmentViewModel.DepartmentCode,
+                                DepartmentName = departmentViewModel.DepartmentName,
+                                Remarks = departmentViewModel.Remarks,
+                                IsActive = departmentViewModel.IsActive,
+                                CreateById = headerViewModel.UserId
                             };
 
                             var createdDepartment = await _DepartmentService.AddDepartmentAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentEntity, headerViewModel.UserId);
@@ -154,7 +154,7 @@ namespace AHHA.API.Controllers.Masters
 
         [HttpPut, Route("UpdateDepartment/{DepartmentId}")]
         [Authorize]
-        public async Task<ActionResult<DepartmentViewModel>> UpdateDepartment(Int16 DepartmentId, [FromBody] DepartmentViewModel Department, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<DepartmentViewModel>> UpdateDepartment(Int16 DepartmentId, [FromBody] DepartmentViewModel departmentViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             var DepartmentViewModel = new DepartmentViewModel();
             try
@@ -167,23 +167,24 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsEdit)
                         {
-                            if (DepartmentId != Department.DepartmentId)
+                            if (DepartmentId != departmentViewModel.DepartmentId)
                                 return StatusCode(StatusCodes.Status400BadRequest, "Department ID mismatch");
 
                             var DepartmentToUpdate = await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId);
 
                             if (DepartmentToUpdate == null)
-                                return NotFound($"Department with Id = {DepartmentId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var DepartmentEntity = new M_Department
                             {
-                                DepartmentCode = Department.DepartmentCode,
-                                DepartmentId = Department.DepartmentId,
-                                DepartmentName = Department.DepartmentName,
+                                DepartmentId = departmentViewModel.DepartmentId,
+                                CompanyId = headerViewModel.CompanyId,
+                                DepartmentCode = departmentViewModel.DepartmentCode,
+                                DepartmentName = departmentViewModel.DepartmentName,
+                                Remarks = departmentViewModel.Remarks,
+                                IsActive = departmentViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                                IsActive = Department.IsActive,
-                                Remarks = Department.Remarks
+                                EditDate = DateTime.Now
                             };
 
                             var sqlResponce = await _DepartmentService.UpdateDepartmentAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentEntity, headerViewModel.UserId);
@@ -229,7 +230,7 @@ namespace AHHA.API.Controllers.Masters
                             var DepartmentToDelete = await _DepartmentService.GetDepartmentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentId, headerViewModel.UserId);
 
                             if (DepartmentToDelete == null)
-                                return NotFound($"Department with Id = {DepartmentId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _DepartmentService.DeleteDepartmentAsync(headerViewModel.RegId, headerViewModel.CompanyId, DepartmentToDelete, headerViewModel.UserId);
 

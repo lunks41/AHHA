@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Masters
                         var cacheData = await _PortService.GetPortListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
 
                         if (cacheData == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, cacheData);
                     }
@@ -76,7 +76,7 @@ namespace AHHA.API.Controllers.Masters
                         var portViewModel = _mapper.Map<PortViewModel>(await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId));
 
                         if (portViewModel == null)
-                            return NotFound(GenrateMessage.authenticationfailed);
+                            return NotFound(GenrateMessage.datanotfound);
 
                         return StatusCode(StatusCodes.Status202Accepted, portViewModel);
                     }
@@ -113,18 +113,18 @@ namespace AHHA.API.Controllers.Masters
                         if (userGroupRight.IsCreate)
                         {
                             if (portViewModel == null)
-                                return StatusCode(StatusCodes.Status400BadRequest, "Port ID mismatch");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var PortEntity = new M_Port
                             {
-                                CompanyId = headerViewModel.CompanyId,
-                                PortCode = portViewModel.PortCode,
                                 PortId = portViewModel.PortId,
-                                PortName = portViewModel.PortName,
+                                CompanyId = headerViewModel.CompanyId,
                                 PortRegionId = portViewModel.PortRegionId,
-                                CreateById = headerViewModel.UserId,
+                                PortCode = portViewModel.PortCode,
+                                PortName = portViewModel.PortName,
+                                Remarks = portViewModel.Remarks,
                                 IsActive = portViewModel.IsActive,
-                                Remarks = portViewModel.Remarks
+                                CreateById = headerViewModel.UserId,
                             };
 
                             var createdPort = await _PortService.AddPortAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortEntity, headerViewModel.UserId);
@@ -174,18 +174,19 @@ namespace AHHA.API.Controllers.Masters
                             var PortToUpdate = await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId);
 
                             if (PortToUpdate == null)
-                                return NotFound($"Port with Id = {PortId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var PortEntity = new M_Port
                             {
-                                PortCode = portViewModel.PortCode,
                                 PortId = portViewModel.PortId,
-                                PortName = portViewModel.PortName,
+                                CompanyId = headerViewModel.CompanyId,
                                 PortRegionId = portViewModel.PortRegionId,
+                                PortCode = portViewModel.PortCode,
+                                PortName = portViewModel.PortName,
+                                Remarks = portViewModel.Remarks,
+                                IsActive = portViewModel.IsActive,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
-                                IsActive = portViewModel.IsActive,
-                                Remarks = portViewModel.Remarks
                             };
 
                             var sqlResponce = await _PortService.UpdatePortAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortEntity, headerViewModel.UserId);
@@ -231,7 +232,7 @@ namespace AHHA.API.Controllers.Masters
                             var PortToDelete = await _PortService.GetPortByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortId, headerViewModel.UserId);
 
                             if (PortToDelete == null)
-                                return NotFound($"Port with Id = {PortId} not found");
+                                return NotFound(GenrateMessage.datanotfound);
 
                             var sqlResponce = await _PortService.DeletePortAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortToDelete, headerViewModel.UserId);
 
