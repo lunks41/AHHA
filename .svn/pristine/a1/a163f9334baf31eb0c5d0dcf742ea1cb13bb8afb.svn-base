@@ -1,5 +1,4 @@
 ﻿using AHHA.Application.CommonServices;
-using AHHA.Application.IServices.Accounts;
 using AHHA.Application.IServices.Accounts.AR;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Accounts.AR;
@@ -7,11 +6,7 @@ using AHHA.Core.Entities.Admin;
 using AHHA.Core.Models.Account.AR;
 using AHHA.Core.Models.Admin;
 using AHHA.Infra.Data;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.Design;
-using System.Data;
-using System.Reflection;
 
 namespace AHHA.Infra.Services.Accounts.AR
 {
@@ -19,13 +14,11 @@ namespace AHHA.Infra.Services.Accounts.AR
     {
         private readonly IRepository<ArInvoiceHd> _repository;
         private ApplicationDbContext _context;
-        private readonly IAccountService _accountService;
 
-        public ARInvoiceService(IRepository<ArInvoiceHd> repository, ApplicationDbContext context, IAccountService accountService)
+        public ARInvoiceService(IRepository<ArInvoiceHd> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
-            _accountService = accountService;
         }
 
         public async Task<ARInvoiceViewModelCount> GetARInvoiceListAsync(string RegId, Int16 CompanyId, short pageSize, short pageNumber, string searchString, Int16 UserId)
@@ -71,12 +64,9 @@ namespace AHHA.Infra.Services.Accounts.AR
             ARInvoiceViewModel aRInvoiceViewModel = new ARInvoiceViewModel();
             try
             {
-                aRInvoiceViewModel = await _repository.GetQuerySingleOrDefaultAsync<ARInvoiceViewModel>(RegId, $"SELECT Invhd.CompanyId,Invhd.InvoiceId,Invhd.InvoiceNo,Invhd.ReferenceNo,Invhd.TrnDate,Invhd.AccountDate,Invhd.DeliveryDate,Invhd.DueDate,Invhd.CustomerId,Invhd.CurrencyId,Invhd.ExhRate,Invhd.CtyExhRate,Invhd.CreditTermId,Invhd.BankId,Invhd.TotAmt,Invhd.TotLocalAmt,Invhd.TotCtyAmt,Invhd.GstClaimDate,Invhd.GstAmt,Invhd.GstLocalAmt,Invhd.GstCtyAmt,Invhd.TotAmtAftGst,Invhd.TotLocalAmtAftGst,Invhd.TotCtyAmtAftGst,Invhd.BalAmt,Invhd.BalLocalAmt,Invhd.PayAmt,Invhd.PayLocalAmt,Invhd.ExGainLoss,Invhd.SalesOrderId,Invhd.SalesOrderNo,Invhd.OperationId,Invhd.OperationNo,Invhd.Remarks,Invhd.Address1,Invhd.Address2,Invhd.Address3,Invhd.Address4,Invhd.PinCode,Invhd.CountryId,Invhd.PhoneNo,Invhd.FaxNo,Invhd.ContactName,Invhd.MobileNo,Invhd.EmailAdd,Invhd.ModuleFrom,Invhd.SupplierName,Invhd.SuppInvoiceNo,Invhd.APInvoiceId,Invhd.APInvoiceNo,Invhd.CreateById,Invhd.CreateDate,Invhd.EditById,Invhd.EditDate,Invhd.CancelById,Invhd.CancelDate FROM dbo.ArInvoiceHd Invhd WHERE (Invhd.InvoiceId={InvoiceId} OR {InvoiceId}=0) AND (Invhd.InvoiceNo='{InvoiceNo}' OR '{InvoiceNo}'='{string.Empty}')");
+                aRInvoiceViewModel = await _repository.GetQuerySingleOrDefaultAsync<ARInvoiceViewModel>(RegId, $"SELECT Invhd.CompanyId,Invhd.InvoiceId,Invhd.InvoiceNo,Invhd.ReferenceNo,Invhd.TrnDate,Invhd.AccountDate,Invhd.DeliveryDate,Invhd.DueDate,Invhd.CustomerId,Invhd.CurrencyId,Invhd.ExhRate,Invhd.CtyExhRate,Invhd.CreditTermId,Invhd.BankId,Invhd.TotAmt,Invhd.TotLocalAmt,Invhd.TotCtyAmt,Invhd.GstClaimDate,Invhd.GstAmt,Invhd.GstLocalAmt,Invhd.GstCtyAmt,Invhd.TotAmtAftGst,Invhd.TotLocalAmtAftGst,Invhd.TotCtyAmtAftGst,Invhd.BalAmt,Invhd.BalLocalAmt,Invhd.PayAmt,Invhd.PayLocalAmt,Invhd.ExGainLoss,Invhd.SalesOrderId,Invhd.SalesOrderNo,Invhd.OperationId,Invhd.OperationNo,Invhd.Remarks,Invhd.Address1,Invhd.Address2,Invhd.Address3,Invhd.Address4,Invhd.PinCode,Invhd.CountryId,Invhd.PhoneNo,Invhd.FaxNo,Invhd.ContactName,Invhd.MobileNo,Invhd.EmailAdd,Invhd.ModuleFrom,Invhd.SupplierName,Invhd.SuppInvoiceNo,Invhd.APInvoiceId,Invhd.APInvoiceNo,Invhd.CreateById,Invhd.CreateDate,Invhd.EditById,Invhd.EditDate,Invhd.CancelById,Invhd.CancelDate FROM dbo.ArInvoiceHd Invhd WHERE (Invhd.InvoiceId={InvoiceId} OR {InvoiceId}=0) AND (Invhd.InvoiceNo='{InvoiceNo}' OR '{InvoiceNo}'='{""}') AND Invhd.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice}))");
 
-                if (aRInvoiceViewModel == null)
-                    return aRInvoiceViewModel;
-
-                var result = await _repository.GetQueryAsync<ARInvoiceDtViewModel>(RegId, $"SELECT InvoiceId,InvoiceNo,ItemNo,SeqNo,DocItemNo,ProductId,GLId,QTY,BillQTY,UomId,UnitPrice,TotAmt,TotLocalAmt,TotCurAmt,Remarks,GstId,GstPercentage,GstAmt,GstLocalAmt,GstCurAmt,DeliveryDate,DepartmentId,EmployeeId,PortId,VesselId,BargeId,VoyageId,OperationId,OperationNo,OPRefNo,SalesOrderId,SalesOrderNo,SupplyDate,SupplierName,SuppInvoiceNo,APInvoiceId,APInvoiceNo FROM dbo.ArInvoiceDt WHERE (InvoiceId={InvoiceId} OR {InvoiceId}=0) AND (InvoiceNo='{InvoiceNo}' OR '{InvoiceNo}'='{string.Empty}')");
+                var result = await _repository.GetQueryAsync<ARInvoiceDtViewModel>(RegId, $"SELECT InvoiceId,InvoiceNo,ItemNo,SeqNo,DocItemNo,ProductId,GLId,QTY,BillQTY,UomId,UnitPrice,TotAmt,TotLocalAmt,TotCurAmt,Remarks,GstId,GstPercentage,GstAmt,GstLocalAmt,GstCurAmt,DeliveryDate,DepartmentId,EmployeeId,PortId,VesselId,BargeId,VoyageId,OperationId,OperationNo,OPRefNo,SalesOrderId,SalesOrderNo,SupplyDate,SupplierName,SuppInvoiceNo,APInvoiceId,APInvoiceNo FROM dbo.ArInvoiceDt WHERE InvoiceId={InvoiceId}");
 
                 aRInvoiceViewModel.data_details = result == null ? null : result.ToList();
 
@@ -108,7 +98,6 @@ namespace AHHA.Infra.Services.Accounts.AR
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
-                var parameters = new DynamicParameters();
                 try
                 {
                     var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.ArInvoiceHd WHERE InvoiceNo='{arInvoiceHd.InvoiceNo}' AND  CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice}))");
@@ -121,16 +110,20 @@ namespace AHHA.Infra.Services.Accounts.AR
                         }
                     }
 
-                    //Document Id Generation
-                    Int64 InvoiceId = await _accountService.GenrateDocumentId(RegId, (short)E_Modules.AR, (short)E_AR.Invoice);
+                    //Take the Missing Id From SQL
+                    Int64 InvoiceId = 0;
+                    string InvoiceNo = string.Empty;
 
-                    //Document Number Generation
-                    string InvoiceNo = await _accountService.GenrateDocumentNumber(RegId, CompanyId, (short)E_Modules.AR, (short)E_AR.Invoice, arInvoiceHd.AccountDate);
+                    var sqlDocumentId = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"S_GENERATE_NUMBER_ID {(short)E_Modules.AR},{(short)E_AR.Invoice})),{InvoiceId}");
 
-                    if (InvoiceId > 0 && InvoiceNo != null)
+                    var sqlDocumentNo = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"exec S_GENERATE_NUMBER {CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice})),{InvoiceNo}");
+
+                    //var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (InvoiceId + 1) FROM dbo.ArInvoiceHd WHERE (InvoiceId + 1) NOT IN (SELECT InvoiceId FROM dbo.ArInvoiceHd)),1) AS MissId");
+
+                    if (sqlDocumentId.DocumentId > 0 && sqlDocumentNo.DocumentNo != null)
                     {
-                        arInvoiceHd.InvoiceId = InvoiceId;
-                        arInvoiceHd.InvoiceNo = InvoiceNo;
+                        arInvoiceHd.InvoiceId = Convert.ToInt16(sqlDocumentId.DocumentId);
+                        arInvoiceHd.InvoiceNo = sqlDocumentNo.DocumentNo;
 
                         #region Saving ARInvoiceHD
 

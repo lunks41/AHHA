@@ -64,9 +64,9 @@ namespace AHHA.API.Controllers.Accounts.AR
         }
 
         //GET ONE ARINVOICE BY INVOICEID
-        [HttpGet, Route("GetARInvoicebyId/{InvoiceId}")]
+        [HttpGet, Route("GetARInvoicebyid/{InvoiceId}/{InvoiceNo}")]
         [Authorize]
-        public async Task<ActionResult<ARInvoiceViewModel>> GetARInvoiceById(Int64 InvoiceId, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<ARInvoiceViewModel>> GetARInvoiceById(Int64 InvoiceId, string InvoiceNo, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -76,45 +76,7 @@ namespace AHHA.API.Controllers.Accounts.AR
 
                     if (userGroupRight != null)
                     {
-                        var ARInvoiceViewModel = await _ARInvoiceService.GetARInvoiceByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, InvoiceId, string.Empty, headerViewModel.UserId);
-
-                        if (ARInvoiceViewModel == null)
-                            return NotFound(GenrateMessage.datanotfound);
-
-                        return StatusCode(StatusCodes.Status202Accepted, ARInvoiceViewModel);
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
-                    return NoContent();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error retrieving data from the database");
-            }
-        }
-
-        //GET ONE ARINVOICE BY INVOICEID
-        [HttpGet, Route("GetARInvoicebyNo/{InvoiceNo}")]
-        [Authorize]
-        public async Task<ActionResult<ARInvoiceViewModel>> GetARInvoiceByNo(string InvoiceNo, [FromHeader] HeaderViewModel headerViewModel)
-        {
-            try
-            {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Invoice, headerViewModel.UserId);
-
-                    if (userGroupRight != null)
-                    {
-                        var ARInvoiceViewModel = await _ARInvoiceService.GetARInvoiceByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, 0, InvoiceNo, headerViewModel.UserId);
+                        var ARInvoiceViewModel = await _ARInvoiceService.GetARInvoiceByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, InvoiceId, InvoiceNo, headerViewModel.UserId);
 
                         if (ARInvoiceViewModel == null)
                             return NotFound(GenrateMessage.datanotfound);

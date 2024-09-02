@@ -1,15 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace AHHA.Core.Entities.Accounts.AR
+namespace AHHA.Core.Models.Account.AR
 {
-    public class ArInvoiceHd
+    public class ARInvoiceViewModel
     {
         public Int16 CompanyId { get; set; }
-
-        [Key]
         public Int64 InvoiceId { get; set; }
-
         public string InvoiceNo { get; set; }
         public string ReferenceNo { get; set; }
         public DateTime TrnDate { get; set; }
@@ -17,11 +17,19 @@ namespace AHHA.Core.Entities.Accounts.AR
         public DateTime DeliveryDate { get; set; }
         public DateTime DueDate { get; set; }
         public Int32 CustomerId { get; set; }
+        public string CustomerCode { get; set; }
+        public string CustomerName { get; set; }
         public Int16 CurrencyId { get; set; }
+        public string CurrencyCode { get; set; }
+        public string CurrencyName { get; set; }
         public decimal ExhRate { get; set; }
         public decimal CtyExhRate { get; set; }
         public Int16 CreditTermId { get; set; }
+        public string CreditTermCode { get; set; }
+        public string CreditTermName { get; set; }
         public Int32 BankId { get; set; }
+        public string BankCode { get; set; }
+        public string BankName { get; set; }
         public decimal TotAmt { get; set; }
         public decimal TotLocalAmt { get; set; }
         public decimal TotCtyAmt { get; set; }
@@ -48,6 +56,8 @@ namespace AHHA.Core.Entities.Accounts.AR
         public string Address4 { get; set; }
         public string PinCode { get; set; }
         public Int32 CountryId { get; set; }
+        public string CountryCode { get; set; }
+        public string CountryName { get; set; }
         public string PhoneNo { get; set; }
         public string FaxNo { get; set; }
         public string ContactName { get; set; }
@@ -59,16 +69,16 @@ namespace AHHA.Core.Entities.Accounts.AR
         public Int64 APInvoiceId { get; set; }
         public string APInvoiceNo { get; set; }
         public Int16 CreateById { get; set; }
-
-        [NotMapped]
         public DateTime CreateDate { get; set; }
-
         public Int16? EditById { get; set; }
         public DateTime? EditDate { get; set; }
         public bool IsCancel { get; set; }
-        public Int32? CancelById { get; set; }
-        public DateTime? CancelDate { get; set; }
+        public Int32 CancelById { get; set; }
+        public DateTime CancelDate { get; set; }
         public string CancelRemarks { get; set; }
-        public byte EditVersion { get; set; }
+        public string CreateBy { get; set; }
+        public string EditBy { get; set; }
+        public string CancelBy { get; set; }
+        public List<ARInvoiceDtViewModel>? data_details { get; set; }
     }
 }

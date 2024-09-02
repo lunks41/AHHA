@@ -23,7 +23,7 @@ namespace AHHA.API.Controllers
         }
 
         [NonAction]
-        public bool ValidateHeaders(string RegId, Int16 CompanyId, Int16 UserId)
+        public bool ValidateHeaders(string RegId, Int16 CompanyId, Int32 UserId)
         {
             //RegID Check from json file
             //proper message for
@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers
         }
 
         [NonAction]
-        public UserGroupRightsViewModel ValidateScreen(string RegId, Int16 CompanyId, Int16 ModuleId, Int32 TransactionId, Int16 UserId)
+        public UserGroupRightsViewModel ValidateScreen(string RegId, Int16 CompanyId, Int16 ModuleId, Int32 TransactionId, Int32 UserId)
         {
             return _baseServices.ValidateScreen(RegId, CompanyId, ModuleId, TransactionId, UserId);
         }
