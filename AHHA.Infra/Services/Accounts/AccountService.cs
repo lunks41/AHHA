@@ -38,5 +38,16 @@ namespace AHHA.Infra.Services.Accounts
             parameters.Add("@OUTPUT_DOC_NO", dbType: DbType.String, direction: ParameterDirection.Output, size: 100);
             return await _repository.ExecuteStoredProcedureAsync<string>(RegId, "S_GENERATE_NUMBER", parameters, "@OUTPUT_DOC_NO");
         }
+
+        //Upsert Transaction
+        public async Task<string> CreateARStatement(string RegId, Int16 CompanyId, Int16 UserId, Int64 DocumentId, Int16 TransactionId)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("@inCompanyId", CompanyId, DbType.Int16);
+            parameters.Add("@inUserId", UserId, DbType.Int32);
+            parameters.Add("@inDocumentId", DocumentId, DbType.Int64);
+            parameters.Add("@inTransactionId", TransactionId, DbType.Int16);
+            return await _repository.ExecuteStoredProcedureAsync<string>(RegId, "FIN_AR_CreateStatement", parameters, "");
+        }
     }
 }

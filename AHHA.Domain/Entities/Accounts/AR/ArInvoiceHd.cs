@@ -70,5 +70,6 @@ namespace AHHA.Core.Entities.Accounts.AR
         public DateTime? CancelDate { get; set; }
         public string CancelRemarks { get; set; }
         public byte EditVersion { get; set; }
+
     }
 }

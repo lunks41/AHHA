@@ -2,6 +2,7 @@
 using AHHA.Application.IServices.Accounts;
 using AHHA.Application.IServices.Accounts.AR;
 using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AP;
 using AHHA.Core.Entities.Accounts.AR;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Models.Account.AR;
@@ -104,90 +105,109 @@ namespace AHHA.Infra.Services.Accounts.AR
             }
         }
 
-        public async Task<SqlResponce> AddARInvoiceAsync(string RegId, Int16 CompanyId, ArInvoiceHd arInvoiceHd, List<ArInvoiceDt> arInvoiceDt, Int16 UserId)
+        public async Task<SqlResponce> SaveARInvoiceAsync(string RegId, Int16 CompanyId, ArInvoiceHd arInvoiceHd, List<ArInvoiceDt> arInvoiceDt, Int16 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
-                var parameters = new DynamicParameters();
                 try
                 {
-                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.ArInvoiceHd WHERE InvoiceNo='{arInvoiceHd.InvoiceNo}' AND  CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice}))");
+                    bool IsEdit = false;
+
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.ArInvoiceHd WHERE (InvoiceId={arInvoiceHd.InvoiceId} OR {arInvoiceHd.InvoiceId}=0) AND (InvoiceNo='{arInvoiceHd.InvoiceNo}' OR '{arInvoiceHd.InvoiceNo}'='{string.Empty}')");
 
                     if (StrExist.Count() > 0)
                     {
                         if (StrExist.ToList()[0].IsExist == 1)
                         {
-                            return new SqlResponce { Result = -1, Message = "Invoice Number Exist" };
+                            IsEdit = true;
                         }
                     }
 
-                    //Document Id Generation
-                    Int64 InvoiceId = await _accountService.GenrateDocumentId(RegId, (short)E_Modules.AR, (short)E_AR.Invoice);
-
-                    //Document Number Generation
-                    string InvoiceNo = await _accountService.GenrateDocumentNumber(RegId, CompanyId, (short)E_Modules.AR, (short)E_AR.Invoice, arInvoiceHd.AccountDate);
-
-                    if (InvoiceId > 0 && InvoiceNo != null)
+                    if (!IsEdit)
                     {
-                        arInvoiceHd.InvoiceId = InvoiceId;
-                        arInvoiceHd.InvoiceNo = InvoiceNo;
+                        var documentIdNo = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec S_GENERATE_NUMBER_NOANDID {CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice},'{arInvoiceHd.AccountDate.Date}'");
+                        if (documentIdNo.ToList()[0].DocumentId > 0 && documentIdNo.ToList()[0].DocumentNo != string.Empty)
+                        {
+                            arInvoiceHd.InvoiceId = documentIdNo.ToList()[0].DocumentId;
+                            arInvoiceHd.InvoiceNo = documentIdNo.ToList()[0].DocumentNo;
+                        }
+                    }
+                    else
+                    {
+                        arInvoiceHd.EditVersion = Convert.ToByte(arInvoiceHd.EditVersion + 1);
+                    }
+                    ////Document Id Generation
+                    //Int64 InvoiceId = await _accountService.GenrateDocumentId(RegId, (short)E_Modules.AR, (short)E_AR.Invoice);
 
-                        #region Saving ARInvoiceHD
+                    ////Document Number Generation
+                    //string InvoiceNo = await _accountService.GenrateDocumentNumber(RegId, CompanyId, (short)E_Modules.AR, (short)E_AR.Invoice, arInvoiceHd.AccountDate);
 
+                    //Saving Header
+                    if (IsEdit)
+                    {
+                        var entityHead = _context.Update(arInvoiceHd);
+                        entityHead.Property(b => b.CreateById).IsModified = false;
+                        entityHead.Property(b => b.CompanyId).IsModified = false;
+                    }
+                    else
+                    {
                         var entityHead = _context.Add(arInvoiceHd);
                         entityHead.Property(b => b.EditDate).IsModified = false;
+                        entityHead.Property(b => b.EditById).IsModified = false;
+                    }
 
-                        var ARInvoiceToSave = _context.SaveChanges();
+                    var SaveHeader = _context.SaveChanges();
 
-                        #endregion Saving ARInvoiceHD
+                    //Saving Details
+                    if (SaveHeader > 0)
+                    {
+                        if (IsEdit)
+                            _context.ArInvoiceDt.Where(x => x.InvoiceId == arInvoiceHd.InvoiceId).ExecuteDelete();
 
-                        #region Saving ARInvoiceDT
-
-                        if (ARInvoiceToSave > 0)
+                        foreach (var item in arInvoiceDt)
                         {
-                            foreach (var item in arInvoiceDt)
-                            {
-                                _context.Add(item);
-                                _context.SaveChanges();
-                            }
-
-                            #endregion Saving ARInvoiceDT
-
-                            #region Save AuditLog
-
-                            if (ARInvoiceToSave > 0)
-                            {
-                                //Saving Audit log
-                                var auditLog = new AdmAuditLog
-                                {
-                                    CompanyId = CompanyId,
-                                    ModuleId = (short)E_Modules.AR,
-                                    TransactionId = (short)E_AR.Invoice,
-                                    DocumentId = arInvoiceHd.InvoiceId,
-                                    DocumentNo = arInvoiceHd.InvoiceNo,
-                                    TblName = "ArInvoiceHd",
-                                    ModeId = (short)E_Mode.Create,
-                                    Remarks = "ARInvoice Save Successfully",
-                                    CreateById = UserId,
-                                    CreateDate = DateTime.Now
-                                };
-
-                                _context.Add(auditLog);
-                                var auditLogSave = _context.SaveChanges();
-
-                                if (auditLogSave > 0)
-                                {
-                                    transaction.Commit();
-                                    return new SqlResponce { Result = 1, Message = "Save Successfully" };
-                                }
-                            }
-                            else
-                            {
-                                return new SqlResponce { Result = 1, Message = "Save Failed" };
-                            }
-
-                            #endregion Save AuditLog
+                            item.InvoiceId = arInvoiceHd.InvoiceId;
+                            item.InvoiceNo = arInvoiceHd.InvoiceNo;
+                            item.EditVersion = arInvoiceHd.EditVersion;
+                            _context.Add(item);
                         }
+
+                        var SaveDetails = _context.SaveChanges();
+
+                        #region Save AuditLog
+
+                        if (SaveDetails > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.AR,
+                                TransactionId = (short)E_AR.Invoice,
+                                DocumentId = arInvoiceHd.InvoiceId,
+                                DocumentNo = arInvoiceHd.InvoiceNo,
+                                TblName = "ArInvoiceHd",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "ARInvoice Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
                     }
                     else
                     {
@@ -210,95 +230,6 @@ namespace AHHA.Infra.Services.Accounts.AR
                         TblName = "ArInvoiceHd",
                         ModeId = (short)E_Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
-                        CreateById = UserId
-                    };
-                    _context.Add(errorLog);
-                    _context.SaveChanges();
-
-                    throw new Exception(ex.ToString());
-                }
-            }
-        }
-
-        public async Task<SqlResponce> UpdateARInvoiceAsync(string RegId, Int16 CompanyId, ArInvoiceHd ARInvoice, Int16 UserId)
-        {
-            using (var transaction = _context.Database.BeginTransaction())
-            {
-                try
-                {
-                    if (ARInvoice.InvoiceId > 0)
-                    {
-                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.ArInvoiceHd WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice})) AND ARInvoiceName='{ARInvoice.InvoiceNo} AND InvoiceId <>{ARInvoice.InvoiceId}'");
-
-                        if (StrExist.Count() > 0)
-                        {
-                            if (StrExist.ToList()[0].IsExist == 2)
-                            {
-                                return new SqlResponce { Result = -2, Message = "ARInvoice Name Exist" };
-                            }
-                        }
-
-                        #region Update ARInvoice
-
-                        var entity = _context.Update(ARInvoice);
-
-                        entity.Property(b => b.CreateById).IsModified = false;
-                        entity.Property(b => b.InvoiceNo).IsModified = false;
-                        entity.Property(b => b.CompanyId).IsModified = false;
-
-                        var counToUpdate = _context.SaveChanges();
-
-                        #endregion Update ARInvoice
-
-                        if (counToUpdate > 0)
-                        {
-                            var auditLog = new AdmAuditLog
-                            {
-                                CompanyId = CompanyId,
-                                ModuleId = (short)E_Modules.AR,
-                                TransactionId = (short)E_AR.Invoice,
-                                DocumentId = ARInvoice.InvoiceId,
-                                DocumentNo = ARInvoice.InvoiceNo,
-                                TblName = "ArInvoiceHd",
-                                ModeId = (short)E_Mode.Update,
-                                Remarks = "ARInvoice Update Successfully",
-                                CreateById = UserId
-                            };
-                            _context.Add(auditLog);
-                            var auditLogSave = await _context.SaveChangesAsync();
-
-                            if (auditLogSave > 0)
-                            {
-                                transaction.Commit();
-                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
-                            }
-                        }
-                        else
-                        {
-                            return new SqlResponce { Result = -1, Message = "Update Failed" };
-                        }
-                    }
-                    else
-                    {
-                        return new SqlResponce { Result = -1, Message = "InvoiceId Should not be zero" };
-                    }
-                    return new SqlResponce();
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    _context.ChangeTracker.Clear();
-
-                    var errorLog = new AdmErrorLog
-                    {
-                        CompanyId = CompanyId,
-                        ModuleId = (short)E_Modules.AR,
-                        TransactionId = (short)E_AR.Invoice,
-                        DocumentId = ARInvoice.InvoiceId,
-                        DocumentNo = ARInvoice.InvoiceNo,
-                        TblName = "ArInvoiceHd",
-                        ModeId = (short)E_Mode.Update,
-                        Remarks = ex.Message,
                         CreateById = UserId
                     };
                     _context.Add(errorLog);

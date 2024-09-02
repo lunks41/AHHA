@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AHHA.Core.Entities.Accounts.AR
@@ -6,8 +7,12 @@ namespace AHHA.Core.Entities.Accounts.AR
     public class ArInvoiceDt
     {
         public Int64 InvoiceId { get; set; }
+
         public string InvoiceNo { get; set; }
+
+        [Key]
         public Int16 ItemNo { get; set; }
+
         public Int16 SeqNo { get; set; }
         public Int16 DocItemNo { get; set; }
         public int ProductId { get; set; }

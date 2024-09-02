@@ -10,9 +10,7 @@ namespace AHHA.Application.IServices.Accounts.AR
 
         public Task<ARInvoiceViewModel> GetARInvoiceByIdAsync(string RegId, Int16 CompanyId, Int64 InvoiceId, string InvoiceNo, Int16 UserId);
 
-        public Task<SqlResponce> AddARInvoiceAsync(string RegId, Int16 CompanyId, ArInvoiceHd arInvoiceHd, List<ArInvoiceDt> arInvoiceDt, Int16 UserId);
-
-        public Task<SqlResponce> UpdateARInvoiceAsync(string RegId, Int16 CompanyId, ArInvoiceHd arInvoiceHd, Int16 UserId);
+        public Task<SqlResponce> SaveARInvoiceAsync(string RegId, Int16 CompanyId, ArInvoiceHd arInvoiceHd, List<ArInvoiceDt> arInvoiceDt, Int16 UserId);
 
         public Task<SqlResponce> DeleteARInvoiceAsync(string RegId, Int16 CompanyId, ARInvoiceViewModel arInvoiceHd, Int16 UserId);
     }

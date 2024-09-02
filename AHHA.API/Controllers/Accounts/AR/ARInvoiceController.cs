@@ -140,9 +140,9 @@ namespace AHHA.API.Controllers.Accounts.AR
         }
 
         //SAVE ONE ARINVOICE BY INVOICEID
-        [HttpPost, Route("AddARInvoice")]
+        [HttpPost, Route("SaveARInvoice")]
         [Authorize]
-        public async Task<ActionResult<ARInvoiceViewModel>> CreateARInvoice(ARInvoiceViewModel aRInvoiceViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<ARInvoiceViewModel>> SaveARInvoice(ARInvoiceViewModel aRInvoiceViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -152,10 +152,22 @@ namespace AHHA.API.Controllers.Accounts.AR
 
                     if (userGroupRight != null)
                     {
-                        if (userGroupRight.IsCreate)
+                        if (userGroupRight.IsCreate || userGroupRight.IsEdit)
                         {
                             if (aRInvoiceViewModel == null)
                                 return NotFound(GenrateMessage.datanotfound);
+
+                            if (aRInvoiceViewModel.InvoiceId > 0)
+                            {
+                                var ARInvoiceToUpdate = await _ARInvoiceService.GetARInvoiceByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, aRInvoiceViewModel.InvoiceId, "", headerViewModel.UserId);
+
+                                if (ARInvoiceToUpdate == null)
+                                    return NotFound(GenrateMessage.datanotfound);
+                            }
+                            else
+                            {
+                                return StatusCode(StatusCodes.Status400BadRequest, "ARInvoice ID mismatch");
+                            }
 
                             //Header Data Mapping
                             var ARInvoiceEntity = new ArInvoiceHd
@@ -210,7 +222,9 @@ namespace AHHA.API.Controllers.Accounts.AR
                                 SuppInvoiceNo = aRInvoiceViewModel.SuppInvoiceNo,
                                 APInvoiceId = aRInvoiceViewModel.APInvoiceId,
                                 APInvoiceNo = aRInvoiceViewModel.APInvoiceNo,
-                                CreateById = headerViewModel.UserId
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
                             };
 
                             //Details Table data mapping
@@ -262,7 +276,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                 arInvoiceDtEntities.Add(arInvoiceDtEntity);
                             }
 
-                            var createdARInvoice = await _ARInvoiceService.AddARInvoiceAsync(headerViewModel.RegId, headerViewModel.CompanyId, ARInvoiceEntity, arInvoiceDtEntities, headerViewModel.UserId);
+                            var createdARInvoice = await _ARInvoiceService.SaveARInvoiceAsync(headerViewModel.RegId, headerViewModel.CompanyId, ARInvoiceEntity, arInvoiceDtEntities, headerViewModel.UserId);
                             return StatusCode(StatusCodes.Status202Accepted, createdARInvoice);
                         }
                         else
@@ -285,64 +299,6 @@ namespace AHHA.API.Controllers.Accounts.AR
                 _logger.LogError(ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Error creating new ARInvoice record");
-            }
-        }
-
-        //UPDATE ONE ARINVOICE BY INVOICEID
-        [HttpPut, Route("UpdateARInvoice/{InvoiceId}")]
-        [Authorize]
-        public async Task<ActionResult<ARInvoiceViewModel>> UpdateARInvoice(Int64 InvoiceId, [FromBody] ARInvoiceViewModel ARInvoice, [FromHeader] HeaderViewModel headerViewModel)
-        {
-            var ARInvoiceViewModel = new ARInvoiceViewModel();
-            try
-            {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Invoice, headerViewModel.UserId);
-
-                    if (userGroupRight != null)
-                    {
-                        if (userGroupRight.IsEdit)
-                        {
-                            if (InvoiceId != ARInvoice.InvoiceId)
-                                return StatusCode(StatusCodes.Status400BadRequest, "ARInvoice ID mismatch");
-
-                            var ARInvoiceToUpdate = await _ARInvoiceService.GetARInvoiceByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, InvoiceId, "", headerViewModel.UserId);
-
-                            if (ARInvoiceToUpdate == null)
-                                return NotFound(GenrateMessage.datanotfound);
-
-                            var ARInvoiceEntity = new ArInvoiceHd
-                            {
-                                InvoiceId = ARInvoice.InvoiceId,
-                                CompanyId = headerViewModel.CompanyId,
-                                EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                            };
-
-                            var sqlResponce = await _ARInvoiceService.UpdateARInvoiceAsync(headerViewModel.RegId, headerViewModel.CompanyId, ARInvoiceEntity, headerViewModel.UserId);
-                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-                        }
-                        else
-                        {
-                            return NotFound(GenrateMessage.authenticationfailed);
-                        }
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
-                    return NoContent();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error updating data");
             }
         }
 
