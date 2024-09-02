@@ -1,0 +1,118 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Admin;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Admin;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Admin
+{
+    [Route("api/Admin")]
+    [ApiController]
+    public class UserLogController : BaseController
+    {
+        private readonly IUserLogService _UserLogService;
+        private readonly ILogger<UserLogController> _logger;
+
+        public UserLogController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<UserLogController> logger, IUserLogService UserLogService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _UserLogService = UserLogService;
+        }
+
+        //getlist  --userid
+        //create  --userid  (Backend function)
+
+        [HttpGet, Route("GetUserLog")]
+        [Authorize]
+        public async Task<ActionResult> GetUserLog([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var UserLogRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Admins.UserRights, headerViewModel.UserId);
+
+                    if (UserLogRight != null)
+                    {
+                        var cacheData = await _UserLogService.GetUserLogListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddUserLog")]
+        [Authorize]
+        public async Task<ActionResult<UserLogViewModel>> AddUserLog(UserLogViewModel userLogViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var UserLogRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Admins.User, headerViewModel.UserId);
+
+                    if (UserLogRight != null)
+                    {
+                        if (UserLogRight.IsCreate)
+                        {
+                            if (userLogViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var UserLogEntity = new AdmUserLog
+                            {
+                                UserId = userLogViewModel.UserId,
+                                IsLogin = userLogViewModel.IsLogin,
+                                LoginDate = userLogViewModel.LoginDate,
+                                Remarks = userLogViewModel.Remarks,
+                            };
+
+                            var createdUserLog = await _UserLogService.AddUserLog(headerViewModel.RegId, headerViewModel.CompanyId, UserLogEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdUserLog);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new UserLog record");
+            }
+        }
+    }
+}

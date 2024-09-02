@@ -1,0 +1,19 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Models.Account.AR;
+
+namespace AHHA.Application.IServices.Accounts.AR
+{
+    public interface IARInvoiceService
+    {
+        public Task<ARInvoiceViewModelCount> GetARInvoiceListAsync(string RegId, short CompanyId, short pageSize, short pageNumber, string searchString, int UserId);
+
+        public Task<ArInvoiceHd> GetARInvoiceByIdAsync(string RegId, short CompanyId, short COACategoryId, int UserId);
+
+        public Task<SqlResponce> AddARInvoiceAsync(string RegId, short CompanyId, ArInvoiceHd arInvoiceHd, int UserId);
+
+        public Task<SqlResponce> UpdateARInvoiceAsync(string RegId, short CompanyId, ArInvoiceHd arInvoiceHd, int UserId);
+
+        public Task<SqlResponce> DeleteARInvoiceAsync(string RegId, short CompanyId, ArInvoiceHd arInvoiceHd, int UserId);
+    }
+}

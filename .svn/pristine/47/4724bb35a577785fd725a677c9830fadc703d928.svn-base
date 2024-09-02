@@ -1,0 +1,341 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class CustomerAddressService : ICustomerAddressService
+    {
+        private readonly IRepository<M_CustomerAddress> _repository;
+        private ApplicationDbContext _context;
+
+        public CustomerAddressService(IRepository<M_CustomerAddress> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<IEnumerable<CustomerAddressViewModel>> GetCustomerAddressByCustomerIdAsync(string RegId, Int16 CompanyId, Int32 CustomerId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<CustomerAddressViewModel>(RegId, $"SELECT  M_CusAdd.CustomerId,M_CusAdd.AddressId,M_CusAdd.Address1,M_CusAdd.Address2,M_CusAdd.Address3,M_CusAdd.Address4,M_CusAdd.PhoneNo,M_CusAdd.EmailAdd,M_CusAdd.IsDefaultAdd,M_CusAdd.IsDeleveryAdd,M_CusAdd.IsFinAdd,M_CusAdd.IsSalesAdd,M_CusAdd.IsActive,M_Cus.CustomerCode,M_Cus.CustomerName,M_Cou.CountryCode,M_Cou.CountryName,M_CusAdd.CreateById,M_CusAdd.CreateDate,M_CusAdd.EditById,M_CusAdd.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId INNER JOIN dbo.M_Country M_Cou ON M_Cou.CountryId = M_CusAdd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_CusAdd.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_CusAdd.EditById WHERE M_CusAdd.CustomerId = {CustomerId} AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Customer}))");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Customer,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_CustomerAddress",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<M_CustomerAddress> GetCustomerAddressByIdAsync(string RegId, Int16 CompanyId, Int32 AddressId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerAddress>(RegId, $"SELECT CustomerId,AddressId,Address1,Address2,Address3,Address4,PinCode,CountryId,PhoneNo,FaxNo,EmailAdd,WebUrl,IsDefaultAdd,IsDeleveryAdd,IsFinAdd,IsSalesAdd,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId WHERE AddressId={AddressId} AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Customer}))");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Customer,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_CustomerAddress",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> AddCustomerAddressAsync(string RegId, Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId  WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Customer}))  UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Customer}))");
+
+                    if (StrExist.Count() > 0)
+                    {
+                        if (StrExist.ToList()[0].IsExist == 1)
+                        {
+                            return new SqlResponce { Result = -1, Message = "CustomerAddress Code Exist" };
+                        }
+                        else if (StrExist.ToList()[0].IsExist == 2)
+                        {
+                            return new SqlResponce { Result = -2, Message = "CustomerAddress Name Exist" };
+                        }
+                    }
+
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AddressId + 1) FROM dbo.M_CustomerAddress WHERE (AddressId + 1) NOT IN (SELECT AddressId FROM dbo.M_CustomerAddress)),1) AS MissId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
+                    {
+                        #region Saving CustomerAddress
+
+                        CustomerAddress.AddressId = Convert.ToInt32(sqlMissingResponce.MissId);
+
+                        var entity = _context.Add(CustomerAddress);
+                        entity.Property(b => b.EditDate).IsModified = false;
+
+                        var CustomerAddressToSave = _context.SaveChanges();
+
+                        #endregion Saving CustomerAddress
+
+                        #region Save AuditLog
+
+                        if (CustomerAddressToSave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Customer,
+                                DocumentId = CustomerAddress.AddressId,
+                                DocumentNo = CustomerAddress.Address1,
+                                TblName = "M_CustomerAddress",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "Customer Address Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AddressId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Customer,
+                        DocumentId = 0,
+                        DocumentNo = CustomerAddress.Address1,
+                        TblName = "M_CustomerAddress",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> UpdateCustomerAddressAsync(string RegId, Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (CustomerAddress.AddressId > 0)
+                    {
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerAddress M_CusAdd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusAdd.CustomerId WHERE M_Cus.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Customer})) AND AddressId <>{CustomerAddress.AddressId}'");
+
+                        if (StrExist.Count() > 0)
+                        {
+                            if (StrExist.ToList()[0].IsExist == 2)
+                            {
+                                return new SqlResponce { Result = -2, Message = "CustomerAddress Name Exist" };
+                            }
+                        }
+
+                        #region Update CustomerAddress
+
+                        var entity = _context.Update(CustomerAddress);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.Address1).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update CustomerAddress
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Customer,
+                                DocumentId = CustomerAddress.AddressId,
+                                DocumentNo = CustomerAddress.Address1,
+                                TblName = "M_CustomerAddress",
+                                ModeId = (short)E_Mode.Update,
+                                Remarks = "CustomerAddress Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AddressId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Customer,
+                        DocumentId = CustomerAddress.AddressId,
+                        DocumentNo = CustomerAddress.Address1,
+                        TblName = "M_CustomerAddress",
+                        ModeId = (short)E_Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> DeleteCustomerAddressAsync(string RegId, Int16 CompanyId, M_CustomerAddress CustomerAddress, Int32 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (CustomerAddress.AddressId > 0)
+                    {
+                        var CustomerAddressToRemove = _context.M_CustomerAddress.Where(x => x.AddressId == CustomerAddress.AddressId).ExecuteDelete();
+
+                        if (CustomerAddressToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Customer,
+                                DocumentId = CustomerAddress.AddressId,
+                                DocumentNo = CustomerAddress.Address1,
+                                TblName = "M_CustomerAddress",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "CustomerAddress Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AddressId Should be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Customer,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_CustomerAddress",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

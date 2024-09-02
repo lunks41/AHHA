@@ -1,0 +1,260 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Admin;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Admin;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Admin
+{
+    [Route("api/Admin")]
+    [ApiController]
+    public class UserGroupController : BaseController
+    {
+        private readonly IUserGroupService _UserGroupService;
+        private readonly ILogger<UserGroupController> _logger;
+
+        public UserGroupController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<UserGroupController> logger, IUserGroupService UserGroupService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _UserGroupService = UserGroupService;
+        }
+
+        [HttpGet, Route("GetUserGroup")]
+        [Authorize]
+        public async Task<ActionResult> GetUserGroup([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Admins.UserGroup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _UserGroupService.GetUserGroupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetUserGroupbyid/{UserGroupId}")]
+        [Authorize]
+        public async Task<ActionResult<UserGroupViewModel>> GetUserGroupById(Int16 UserGroupId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Admins.UserGroup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var UserGroupViewModel = _mapper.Map<UserGroupViewModel>(await _UserGroupService.GetUserGroupByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserGroupId, headerViewModel.UserId));
+
+                        if (UserGroupViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, UserGroupViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddUserGroup")]
+        [Authorize]
+        public async Task<ActionResult<UserGroupViewModel>> CreateUserGroup(UserGroupViewModel UserGroup, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Admins.UserGroup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (UserGroup == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var UserGroupEntity = new AdmUserGroup
+                            {
+                                UserGroupId = UserGroup.UserGroupId,
+                                UserGroupCode = UserGroup.UserGroupCode,
+                                UserGroupName = UserGroup.UserGroupName,
+                                Remarks = UserGroup.Remarks,
+                                IsActive = UserGroup.IsActive,
+                                CreateById = headerViewModel.UserId
+                            };
+
+                            var createdUserGroup = await _UserGroupService.AddUserGroupAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserGroupEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdUserGroup);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new UserGroup record");
+            }
+        }
+
+        [HttpPut, Route("UpdateUserGroup/{UserGroupId}")]
+        [Authorize]
+        public async Task<ActionResult<UserGroupViewModel>> UpdateUserGroup(Int16 UserGroupId, [FromBody] UserGroupViewModel UserGroup, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            var UserGroupViewModel = new UserGroupViewModel();
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Admins.UserGroup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (UserGroupId != UserGroup.UserGroupId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "UserGroup ID mismatch");
+
+                            var UserGroupToUpdate = await _UserGroupService.GetUserGroupByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserGroupId, headerViewModel.UserId);
+
+                            if (UserGroupToUpdate == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var UserGroupEntity = new AdmUserGroup
+                            {
+                                UserGroupId = UserGroup.UserGroupId,
+                                UserGroupCode = UserGroup.UserGroupCode,
+                                UserGroupName = UserGroup.UserGroupName,
+                                Remarks = UserGroup.Remarks,
+                                IsActive = UserGroup.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var sqlResponce = await _UserGroupService.UpdateUserGroupAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserGroupEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteUserGroup/{UserGroupId}")]
+        [Authorize]
+        public async Task<ActionResult<AdmUserGroup>> DeleteUserGroup(Int16 UserGroupId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Admins.UserGroup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var UserGroupToDelete = await _UserGroupService.GetUserGroupByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserGroupId, headerViewModel.UserId);
+
+                            if (UserGroupToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponce = await _UserGroupService.DeleteUserGroupAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserGroupToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

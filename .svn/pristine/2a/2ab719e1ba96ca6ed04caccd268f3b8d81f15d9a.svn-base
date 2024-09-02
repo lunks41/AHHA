@@ -1,0 +1,92 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Admin;
+using AHHA.Infra.Data;
+using Dapper;
+
+namespace AHHA.Infra.Services.Admin
+{
+    public sealed class TransactionService : ITransactionService
+    {
+        private readonly IRepository<TransactionViewModel> _repository;
+        private ApplicationDbContext _context;
+
+        public TransactionService(IRepository<TransactionViewModel> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<IEnumerable<TransactionViewModel>> GetUsersTransactionsAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int32 UserId)
+        {
+            var parameters = new DynamicParameters();
+            try
+            {
+                //var parameter = new List<SqlParameter>();
+                //parameter.Add(new SqlParameter("@CompanyId", CompanyId));
+                //parameter.Add(new SqlParameter("@ModuleId", ModuleId));
+                //parameter.Add(new SqlParameter("@UserId", UserId));
+
+                var productDetails = await _repository.GetQueryAsync<TransactionViewModel>(RegId, $"exec Adm_GetUserTransactions {CompanyId},{ModuleId},{UserId}");
+
+                //var productDetails = await Task.Run(() => _context.AdmTransaction
+                //                .FromSqlRaw(@"exec Adm_GetUserTransactions @CompanyId,@ModuleId,@UserId", parameter.ToArray()).ToListAsync());
+
+                return productDetails;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.Transaction,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "GetUsersTransactionsAsync",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<IEnumerable<TransactionViewModel>> GetUsersTransactionsAllAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            var parameters = new DynamicParameters();
+            try
+            {
+                var productDetails = await _repository.GetQueryAsync<TransactionViewModel>(RegId, $"exec Adm_GetUserTransactions_All {CompanyId},{UserId}");
+
+                return productDetails;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.Transaction,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "GetUsersTransactionsAllAsync",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+    }
+}

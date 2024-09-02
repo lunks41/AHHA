@@ -1,0 +1,128 @@
+﻿using AHHA.API.Controllers.Masters;
+using AHHA.Application.IServices.Masters;
+using AHHA.Application.IServices;
+using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using Microsoft.AspNetCore.Authorization;
+using AHHA.Application.IServices.Setting;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class DecSettingsController : BaseController
+    {
+        private readonly IDecSettingsService _DecSettingsService;
+        private readonly ILogger<DecSettingsController> _logger;
+
+        public DecSettingsController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<DecSettingsController> logger, IDecSettingsService DecSettingsService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _DecSettingsService = DecSettingsService;
+        }
+
+        //decimal screen
+
+        //get --companyid
+        //upsert  --company/model
+
+        [HttpGet, Route("GetDecSetting")]
+        [Authorize]
+        public async Task<ActionResult<DecSettingViewModel>> GetDecSetting([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Setting, (Int32)Settings.DecSetting, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var DecSettingViewModel = _mapper.Map<DecSettingViewModel>(await _DecSettingsService.GetDecSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId));
+
+                        if (DecSettingViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, DecSettingViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("UpsertDecSetting")]
+        [Authorize]
+        public async Task<ActionResult<DecSettingViewModel>> UpsertDecSetting(DecSettingViewModel decSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Setting, (Int32)Settings.DecSetting, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (decSettingViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var FinEntity = new S_DecSettings
+                            {
+                                CompanyId = headerViewModel.CompanyId,
+                                AmtDec = decSettingViewModel.AmtDec,
+                                LocAmtDec = decSettingViewModel.LocAmtDec,
+                                PriceDec = decSettingViewModel.PriceDec,
+                                QtyDec = decSettingViewModel.QtyDec,
+                                ExhRateDec = decSettingViewModel.ExhRateDec,
+                                DateFormat = decSettingViewModel.DateFormat,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var createdFin = await _DecSettingsService.UpsertDecSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdFin);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Fin record");
+            }
+        }
+    }
+}

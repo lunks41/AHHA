@@ -1,0 +1,80 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Admin;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Admin;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Admin
+{
+    [Route("api/Admin")]
+    [ApiController]
+    public class UserRightsController : BaseController
+    {
+        private readonly IUserRightsService _UserRightsService;
+        private readonly ILogger<UserRightsController> _logger;
+
+        public UserRightsController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<UserRightsController> logger, IUserRightsService UserRightsService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _UserRightsService = UserRightsService;
+        }
+
+        //create
+        //update
+        [HttpPost, Route("AddUserRightsAsync")]
+        [Authorize]
+        public async Task<ActionResult<UserViewModel>> AddUserRightsAsync(UserViewModel User, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var UserRightsRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Master, (Int32)Admins.User, headerViewModel.UserId);
+
+                    if (UserRightsRight != null)
+                    {
+                        if (UserRightsRight.IsCreate)
+                        {
+                            if (User == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var UserEntity = new AdmUserRights
+                            {
+                                CompanyId = headerViewModel.CompanyId,
+                                UserId = User.UserId,
+                                CreateById = headerViewModel.UserId,
+                                UserGroupId = User.UserGroupId
+                            };
+
+                            var createdUser = await _UserRightsService.AddUserRightsAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdUser);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new User record");
+            }
+        }
+    }
+}

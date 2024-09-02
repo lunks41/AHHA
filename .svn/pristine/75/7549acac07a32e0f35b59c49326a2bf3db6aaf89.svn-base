@@ -1,0 +1,21 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Admin;
+
+namespace AHHA.Application.IServices.Admin
+{
+    public interface IUserService
+    {
+        public Task<UserViewModelCount> GetUserListAsync(string RegId, short CompanyId, short pageSize, short pageNumber, string searchString, int UserId);
+
+        public Task<AdmUser> GetUserByIdAsync(string RegId, short CompanyId, short Userid, int UserId);
+
+        public Task<SqlResponce> AddUserAsync(string RegId, short CompanyId, AdmUser admUser, int UserId);
+
+        public Task<SqlResponce> UpdateUserAsync(string RegId, short CompanyId, AdmUser admUser, int UserId);
+
+        public Task<SqlResponce> DeleteUserAsync(string RegId, short CompanyId, AdmUser admUser, int UserId);
+
+        public Task<SqlResponce> ResetPasswordAsync(string RegId, short CompanyId, AdmUser admUser, int UserId);
+    }
+}

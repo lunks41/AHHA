@@ -1,0 +1,13 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Admin;
+
+namespace AHHA.Application.IServices.Admin
+{
+    public interface IUserLogService
+    {
+        public Task<UserLogViewModelCount> GetUserLogListAsync(string RegId, short CompanyId, short pageSize, short pageNumber, string searchString, int UserId);
+
+        public Task<SqlResponce> AddUserLog(string RegId, short CompanyId, AdmUserLog admUserLog, int UserId);
+    }
+}

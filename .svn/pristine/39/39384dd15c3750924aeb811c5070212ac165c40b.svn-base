@@ -1,0 +1,296 @@
+﻿using AHHA.API.Controllers.Masters;
+using AHHA.Application.IServices.Masters;
+using AHHA.Application.IServices;
+using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
+using Microsoft.AspNetCore.Authorization;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AHHA.Application.IServices.Setting;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class NumberFormatController : BaseController
+    {
+        private readonly INumberFormatServices _NumberFormatServices;
+        private readonly ILogger<NumberFormatController> _logger;
+
+        public NumberFormatController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<NumberFormatController> logger, INumberFormatServices NumberFormatServices)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _NumberFormatServices = NumberFormatServices;
+        }
+
+        //left side API --
+
+        //get the data by using --numberid
+        //get api by moduleid/transid/companyid
+        //right side menu by using dropdown of year -- yearnumber/numberid
+        //upsert
+
+        //do not create the dt api because we create by using SP when the numberdt not available
+
+        //Left Side menu list
+        [HttpGet, Route("GetNumberFormat")]
+        [Authorize]
+        public async Task<ActionResult> GetNumberFormat([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Setting, (Int32)Settings.NumberFormat, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _NumberFormatServices.GetNumberFormatListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        //While click on menu
+        [HttpGet, Route("GetNumberFormatbyid/{NumberId}")]
+        [Authorize]
+        public async Task<ActionResult<NumberSettingViewModel>> GetNumberFormatById(Int32 NumberId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Setting, (Int32)Settings.NumberFormat, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var NumberSettingViewModel = _mapper.Map<NumberSettingViewModel>(await _NumberFormatServices.GetNumberFormatByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, NumberId, headerViewModel.UserId));
+
+                        if (NumberSettingViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, NumberSettingViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        //While Dropdown selection
+        [HttpGet, Route("GetNumberFormatbyyear/{NumberId}/{NumYear}")]
+        [Authorize]
+        public async Task<ActionResult<NumberSettingDtViewModel>> GetNumberFormatbyyear(Int32 NumberId, Int32 NumYear, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Setting, (Int32)Settings.NumberFormat, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var NumberSettingViewModel = _mapper.Map<NumberSettingDtViewModel>(await _NumberFormatServices.GetNumberFormatByYearAsync(headerViewModel.RegId, headerViewModel.CompanyId, NumberId, NumYear, headerViewModel.UserId));
+
+                        if (NumberSettingViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, NumberSettingViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        //Save the data
+        [HttpPost, Route("AddNumberFormat")]
+        [Authorize]
+        public async Task<ActionResult<NumberSettingViewModel>> AddNumberFormat(NumberSettingViewModel numberSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Setting, (Int32)Settings.NumberFormat, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (numberSettingViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var NumberFormatEntity = new S_NumberFormat
+                            {
+                                NumberId = numberSettingViewModel.NumberId,
+                                CompanyId = headerViewModel.CompanyId,
+                                ModuleId = numberSettingViewModel.ModuleId,
+                                TransactionId = numberSettingViewModel.TransactionId,
+                                Prefix = numberSettingViewModel.Prefix,
+                                PrefixSeq = numberSettingViewModel.PrefixSeq,
+                                PrefixDelimiter = numberSettingViewModel.PrefixDelimiter,
+                                IncludeYear = numberSettingViewModel.IncludeYear,
+                                YearSeq = numberSettingViewModel.YearSeq,
+                                YearFormat = numberSettingViewModel.YearFormat,
+                                YearDelimiter = numberSettingViewModel.YearDelimiter,
+                                IncludeMonth = numberSettingViewModel.IncludeMonth,
+                                MonthSeq = numberSettingViewModel.MonthSeq,
+                                MonthFormat = numberSettingViewModel.MonthFormat,
+                                MonthDelimiter = numberSettingViewModel.MonthDelimiter,
+                                NoDIgits = numberSettingViewModel.NoDIgits,
+                                DIgitSeq = numberSettingViewModel.DIgitSeq,
+                                ResetYearly = numberSettingViewModel.ResetYearly,
+                                CreateById = headerViewModel.UserId
+                            };
+
+                            var createdNumberFormat = await _NumberFormatServices.AddNumberFormatAsync(headerViewModel.RegId, headerViewModel.CompanyId, NumberFormatEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdNumberFormat);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new NumberFormat record");
+            }
+        }
+
+        [HttpPut, Route("UpdateNumberFormat/{NumberId}")]
+        [Authorize]
+        public async Task<ActionResult<NumberSettingViewModel>> UpdateNumberFormat(Int16 NumberId, [FromBody] NumberSettingViewModel numberSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            var NumberSettingViewModel = new NumberSettingViewModel();
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)Modules.Setting, (Int32)Settings.NumberFormat, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (NumberId != NumberSettingViewModel.NumberId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "NumberFormat ID mismatch");
+
+                            var NumberFormatToUpdate = await _NumberFormatServices.GetNumberFormatByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, NumberId, headerViewModel.UserId);
+
+                            if (NumberFormatToUpdate == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var NumberFormatEntity = new S_NumberFormat
+                            {
+                                NumberId = numberSettingViewModel.NumberId,
+                                CompanyId = headerViewModel.CompanyId,
+                                ModuleId = numberSettingViewModel.ModuleId,
+                                TransactionId = numberSettingViewModel.TransactionId,
+                                Prefix = numberSettingViewModel.Prefix,
+                                PrefixSeq = numberSettingViewModel.PrefixSeq,
+                                PrefixDelimiter = numberSettingViewModel.PrefixDelimiter,
+                                IncludeYear = numberSettingViewModel.IncludeYear,
+                                YearSeq = numberSettingViewModel.YearSeq,
+                                YearFormat = numberSettingViewModel.YearFormat,
+                                YearDelimiter = numberSettingViewModel.YearDelimiter,
+                                IncludeMonth = numberSettingViewModel.IncludeMonth,
+                                MonthSeq = numberSettingViewModel.MonthSeq,
+                                MonthFormat = numberSettingViewModel.MonthFormat,
+                                MonthDelimiter = numberSettingViewModel.MonthDelimiter,
+                                NoDIgits = numberSettingViewModel.NoDIgits,
+                                DIgitSeq = numberSettingViewModel.DIgitSeq,
+                                ResetYearly = numberSettingViewModel.ResetYearly,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
+                            };
+
+                            var sqlResponce = await _NumberFormatServices.UpdateNumberFormatAsync(headerViewModel.RegId, headerViewModel.CompanyId, NumberFormatEntity, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+    }
+}

@@ -1,0 +1,313 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Masters;
+using AHHA.Core.Models.Setting;
+using AHHA.Infra.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AHHA.Infra.Services.Setting
+{
+    public sealed class NumberFormatServices : INumberFormatServices
+    {
+        private readonly IRepository<S_NumberFormat> _repository;
+        private ApplicationDbContext _context;
+
+        public NumberFormatServices(IRepository<S_NumberFormat> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        // add the number id
+        public async Task<NumberSettingViewModelCount> GetNumberFormatListAsync(string RegId, Int16 CompanyId, Int32 UserId)
+        {
+            NumberSettingViewModelCount countViewModel = new NumberSettingViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM AdmTransaction AdmTrn INNER JOIN AdmModule AdmMod on AdmMod.ModuleId=AdmTrn.ModuleId where AdmMod.IsActive=1 And AdmTrn.IsActive=1 And AdmTrn.IsNumber=1  ORDER BY AdmMod.SeqNo,AdmTrn.SeqNo");
+
+                var result = await _repository.GetQueryAsync<NumberSettingViewModel>(RegId, $"SELECT AdmMod.ModuleId,AdmMod.ModuleName,AdmTrn.TransactionId,AdmTrn.TransactionName FROM AdmTransaction AdmTrn INNER JOIN AdmModule AdmMod on AdmMod.ModuleId=AdmTrn.ModuleId where AdmMod.IsActive=1 And AdmTrn.IsActive=1 And AdmTrn.IsNumber=1  ORDER BY AdmMod.SeqNo,AdmTrn.SeqNo");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.NumberFormat,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_NumberFormat",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<S_NumberFormat> GetNumberFormatByIdAsync(string RegId, Int16 CompanyId, Int32 NumberId, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<S_NumberFormat>(RegId, $"SELECT NumberId,CompanyId,ModuleId,TransactionId,Prefix,PrefixSeq,PrefixDelimiter,IncludeYear,YearSeq,YearFormat,YearDelimiter,IncludeMonth,MonthFormat,MonthDelimiter,NoDIgits,DIgitSeq,ResetYearly,CreateById,CreateDate,EditById,EditDate FROM dbo.S_NumberFormat WHERE NumberId={NumberId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Admin},{(short)E_Admin.NumberFormat}))");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.NumberFormat,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_NumberFormat",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<S_NumberFormatDt> GetNumberFormatByYearAsync(string RegId, Int16 CompanyId, Int32 NumberId, Int32 NumYear, Int32 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<S_NumberFormatDt>(RegId, $"SELECT NumberId,NumYear,Month1,Month2,Month3,Month4,Month5,Month6,Month7,Month8,Month9,Month10,Month11,Month12,LastNumber FROM dbo.S_NumberFormatDt WHERE NumberId={NumberId} AND NumYear={NumYear}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.NumberFormat,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_NumberFormatDt",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> AddNumberFormatAsync(string RegId, Int16 CompanyId, S_NumberFormat s_NumberFormat, Int32 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.S_NumberFormat WHERE ModuleId={s_NumberFormat.ModuleId} AND TransactionId={s_NumberFormat.TransactionId} AND PrefixSeq='{s_NumberFormat.PrefixSeq}' AND CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Admin},{(short)E_Admin.NumberFormat}))");
+
+                    if (StrExist.Count() > 0)
+                    {
+                        if (StrExist.ToList()[0].IsExist == 1)
+                        {
+                            return new SqlResponce { Result = -1, Message = "NumberFormat Exist" };
+                        }
+                    }
+
+                    //Take the Missing Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (NumberId + 1) FROM dbo.S_NumberFormat WHERE (NumberId + 1) NOT IN (SELECT NumberId FROM dbo.S_NumberFormat)),1) AS MissId");
+
+                    if (sqlMissingResponce != null && sqlMissingResponce.MissId > 0)
+                    {
+                        #region Saving NumberFormat
+
+                        s_NumberFormat.NumberId = Convert.ToInt32(sqlMissingResponce.MissId);
+
+                        var entity = _context.Add(s_NumberFormat);
+                        entity.Property(b => b.EditDate).IsModified = false;
+
+                        var NumberFormatToSave = _context.SaveChanges();
+
+                        #endregion Saving NumberFormat
+
+                        #region Save AuditLog
+
+                        if (NumberFormatToSave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Admin,
+                                TransactionId = (short)E_Admin.NumberFormat,
+                                DocumentId = s_NumberFormat.NumberId,
+                                DocumentNo = "",
+                                TblName = "S_NumberFormat",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "NumberFormat Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "NumberId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Admin,
+                        TransactionId = (short)E_Admin.NumberFormat,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "S_NumberFormat",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> UpdateNumberFormatAsync(string RegId, Int16 CompanyId, S_NumberFormat s_NumberFormat, Int32 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (s_NumberFormat.NumberId > 0)
+                    {
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.S_NumberFormat WHERE ModuleId={s_NumberFormat.ModuleId} AND TransactionId={s_NumberFormat.TransactionId} AND PrefixSeq='{s_NumberFormat.PrefixSeq}' AND NumberId='{s_NumberFormat.NumberId}' AND CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Admin},{(short)E_Admin.NumberFormat}))");
+
+                        if (StrExist.Count() > 0 && StrExist.ToList()[0].IsExist == 1)
+                        {
+                            #region Update NumberFormat
+
+                            var entity = _context.Update(s_NumberFormat);
+
+                            entity.Property(b => b.CreateById).IsModified = false;
+                            entity.Property(b => b.CompanyId).IsModified = false;
+
+                            var counToUpdate = _context.SaveChanges();
+
+                            #endregion Update NumberFormat
+
+                            if (counToUpdate > 0)
+                            {
+                                var auditLog = new AdmAuditLog
+                                {
+                                    CompanyId = CompanyId,
+                                    ModuleId = (short)E_Modules.Admin,
+                                    TransactionId = (short)E_Admin.NumberFormat,
+                                    DocumentId = s_NumberFormat.NumberId,
+                                    DocumentNo = "",
+                                    TblName = "S_NumberFormat",
+                                    ModeId = (short)E_Mode.Update,
+                                    Remarks = "NumberFormat Update Successfully",
+                                    CreateById = UserId
+                                };
+                                _context.Add(auditLog);
+                                var auditLogSave = await _context.SaveChangesAsync();
+
+                                if (auditLogSave > 0)
+                                {
+                                    transaction.Commit();
+                                    return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                                }
+                            }
+                            else
+                            {
+                                return new SqlResponce { Result = -1, Message = "Update Failed" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Number Not Exist" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "NumberId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Admin,
+                        TransactionId = (short)E_Admin.NumberFormat,
+                        DocumentId = s_NumberFormat.NumberId,
+                        DocumentNo = "",
+                        TblName = "S_NumberFormat",
+                        ModeId = (short)E_Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}
