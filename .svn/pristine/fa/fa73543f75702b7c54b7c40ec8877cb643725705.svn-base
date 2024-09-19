@@ -1,0 +1,279 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class CustomerAddressController : BaseController
+    {
+        private readonly ICustomerAddressService _CustomerAddressService;
+        private readonly ILogger<CustomerAddressController> _logger;
+
+        public CustomerAddressController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CustomerAddressController> logger, ICustomerAddressService CustomerAddressService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CustomerAddressService = CustomerAddressService;
+        }
+
+        //Get the Customer Address List
+        [HttpGet, Route("GetCustomerAddressbyCustomerId/{CustomerId}")]
+        [Authorize]
+        public async Task<ActionResult> GetCustomerAddressByCustomerId(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var customerAddressViewModel = await _CustomerAddressService.GetCustomerAddressByCustomerIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
+
+                        if (customerAddressViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, customerAddressViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        //Customer Address one record by using addressId
+        [HttpGet, Route("GetCustomerAddressbyid/{CustomerId}/{AddressId}")]
+        [Authorize]
+        public async Task<ActionResult<CustomerAddressViewModel>> GetCustomerAddressById(Int32 CustomerId, Int32 AddressId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var customerAddressViewModel = _mapper.Map<CustomerAddressViewModel>(await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, AddressId, headerViewModel.UserId));
+
+                        if (customerAddressViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, customerAddressViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddCustomerAddress")]
+        [Authorize]
+        public async Task<ActionResult<CustomerAddressViewModel>> CreateCustomerAddress(CustomerAddressViewModel customerAddress, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (customerAddress == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var CustomerAddressEntity = new M_CustomerAddress
+                            {
+                                CustomerId = customerAddress.CustomerId,
+                                AddressId = customerAddress.AddressId,
+                                Address1 = customerAddress.Address1,
+                                Address2 = customerAddress.Address2 == null ? string.Empty : customerAddress.Address2.Trim(),
+                                Address3 = customerAddress.Address3 == null ? string.Empty : customerAddress.Address3.Trim(),
+                                Address4 = customerAddress.Address4 == null ? string.Empty : customerAddress.Address4.Trim(),
+                                PinCode = customerAddress.PinCode == null ? string.Empty : customerAddress.PinCode.Trim(),
+                                CountryId = customerAddress.CountryId,
+                                PhoneNo = customerAddress.PhoneNo == null ? string.Empty : customerAddress.PhoneNo.Trim(),
+                                FaxNo = customerAddress.FaxNo == null ? string.Empty : customerAddress.FaxNo.Trim(),
+                                EmailAdd = customerAddress.EmailAdd == null ? string.Empty : customerAddress.EmailAdd.Trim(),
+                                WebUrl = customerAddress.WebUrl == null ? string.Empty : customerAddress.WebUrl.Trim(),
+                                IsDefaultAdd = customerAddress.IsDefaultAdd,
+                                IsDeleveryAdd = customerAddress.IsDeleveryAdd,
+                                IsFinAdd = customerAddress.IsFinAdd,
+                                IsSalesAdd = customerAddress.IsSalesAdd,
+                                IsActive = customerAddress.IsActive,
+                                CreateById = headerViewModel.UserId
+                            };
+
+                            var createdCustomerAddress = await _CustomerAddressService.AddCustomerAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerAddressEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdCustomerAddress);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new CustomerAddress record");
+            }
+        }
+
+        [HttpPost, Route("UpdateCustomerAddress")]
+        [Authorize]
+        public async Task<ActionResult<CustomerAddressViewModel>> UpdateCustomerAddress([FromBody] CustomerAddressViewModel customerAddressViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            ////Checking Data Exist
+                            //var CustomerAddressToUpdate = await _CustomerAddressService.GetCustomerAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, customerAddressViewModel.CustomerId, customerAddressViewModel.AddressId, headerViewModel.UserId);
+
+                            //if (CustomerAddressToUpdate == null)
+                            //    return NotFound(GenrateMessage.datanotfound);
+
+                            var CustomerAddressEntity = new M_CustomerAddress
+                            {
+                                CustomerId = customerAddressViewModel.CustomerId,
+                                AddressId = customerAddressViewModel.AddressId,
+                                Address1 = customerAddressViewModel.Address1,
+                                Address2 = customerAddressViewModel.Address2 == null ? string.Empty : customerAddressViewModel.Address2.Trim(),
+                                Address3 = customerAddressViewModel.Address3 == null ? string.Empty : customerAddressViewModel.Address3.Trim(),
+                                Address4 = customerAddressViewModel.Address4 == null ? string.Empty : customerAddressViewModel.Address4.Trim(),
+                                PinCode = customerAddressViewModel.PinCode == null ? string.Empty : customerAddressViewModel.PinCode.Trim(),
+                                CountryId = customerAddressViewModel.CountryId,
+                                PhoneNo = customerAddressViewModel.PhoneNo == null ? string.Empty : customerAddressViewModel.PhoneNo.Trim(),
+                                FaxNo = customerAddressViewModel.FaxNo == null ? string.Empty : customerAddressViewModel.FaxNo.Trim(),
+                                EmailAdd = customerAddressViewModel.EmailAdd == null ? string.Empty : customerAddressViewModel.EmailAdd.Trim(),
+                                WebUrl = customerAddressViewModel.WebUrl == null ? string.Empty : customerAddressViewModel.WebUrl.Trim(),
+                                IsDefaultAdd = customerAddressViewModel.IsDefaultAdd,
+                                IsDeleveryAdd = customerAddressViewModel.IsDeleveryAdd,
+                                IsFinAdd = customerAddressViewModel.IsFinAdd,
+                                IsSalesAdd = customerAddressViewModel.IsSalesAdd,
+                                IsActive = customerAddressViewModel.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
+                            };
+
+                            var sqlResponce = await _CustomerAddressService.UpdateCustomerAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerAddressEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCustomerAddress/{CustomerId}/{AddressId}")]
+        [Authorize]
+        public async Task<ActionResult<M_CustomerAddress>> DeleteCustomerAddress(Int32 CustomerId, Int32 AddressId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var sqlResponce = await _CustomerAddressService.DeleteCustomerAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, AddressId, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"CustomerAddress_{AddressId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

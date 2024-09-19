@@ -1,0 +1,353 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Dapper;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class PortRegionService : IPortRegionService
+    {
+        private readonly IRepository<M_PortRegion> _repository;
+        private ApplicationDbContext _context;
+
+        public PortRegionService(IRepository<M_PortRegion> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<PortRegionViewModelCount> GetPortRegionListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId)
+        {
+            var parameters = new DynamicParameters();
+            PortRegionViewModelCount countViewModel = new PortRegionViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.M_PortRegion M_PortRg INNER JOIN  dbo.M_Country M_Cou ON M_Cou.CountryId = M_PortRg.CountryId WHERE M_PortRg.PortRegionId<>0 AND  ( M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%' OR M_PortRg.PortRegionName LIKE '%{searchString}%' OR M_PortRg.PortRegionCode LIKE '%{searchString}%' OR M_PortRg.Remarks LIKE '%{searchString}%') AND  M_PortRg.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.PortRegion}))");
+
+                var result = await _repository.GetQueryAsync<PortRegionViewModel>(RegId, $"SELECT M_PortRg.PortRegionId,M_PortRg.CompanyId,M_PortRg.PortRegionCode,M_PortRg.PortRegionName,M_PortRg.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_PortRg.Remarks,M_PortRg.IsActive,M_PortRg.CreateById,M_PortRg.CreateDate,M_PortRg.EditById,M_PortRg.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_PortRegion M_PortRg INNER JOIN  dbo.M_Country M_Cou ON M_Cou.CountryId = M_PortRg.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_PortRg.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_PortRg.EditById WHERE M_PortRg.PortRegionId<>0 AND  ( M_Cou.CountryCode LIKE '%{searchString}%' OR M_Cou.CountryName LIKE '%{searchString}%' OR M_PortRg.PortRegionName LIKE '%{searchString}%' OR M_PortRg.PortRegionCode LIKE '%{searchString}%' OR M_PortRg.Remarks LIKE '%{searchString}%') AND  M_PortRg.CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.PortRegion})) ORDER BY M_PortRg.PortRegionName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "Success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.PortRegion,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_PortRegion",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<M_PortRegion> GetPortRegionByIdAsync(string RegId, Int16 CompanyId, Int32 PortRegionId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_PortRegion>(RegId, $"SELECT PortRegionId,CompanyId,PortRegionCode,PortRegionName,CountryId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_PortRegion WHERE PortRegionId={PortRegionId} AND CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.PortRegion}))");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.PortRegion,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_PortRegion",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> AddPortRegionAsync(string RegId, Int16 CompanyId, M_PortRegion PortRegion, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.PortRegion})) AND PortRegionCode='{PortRegion.PortRegionCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT PortRegionId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.PortRegion})) AND PortRegionName='{PortRegion.PortRegionName}'");
+
+                    if (StrExist.Count() > 0)
+                    {
+                        if (StrExist.ToList()[0].IsExist == 1)
+                        {
+                            return new SqlResponce { Result = -1, Message = "PortRegion Code Exist" };
+                        }
+                        else if (StrExist.ToList()[0].IsExist == 2)
+                        {
+                            return new SqlResponce { Result = -2, Message = "PortRegion Name Exist" };
+                        }
+                    }
+
+                    //Take the Next Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (PortRegionId + 1) FROM dbo.M_PortRegion WHERE (PortRegionId + 1) NOT IN (SELECT PortRegionId FROM dbo.M_PortRegion)),1) AS NextId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.NextId > 0)
+                    {
+                        #region Saving PortRegion
+
+                        PortRegion.PortRegionId = Convert.ToInt32(sqlMissingResponce.NextId);
+
+                        var entity = _context.Add(PortRegion);
+                        entity.Property(b => b.EditDate).IsModified = false;
+
+                        var PortRegionToSave = _context.SaveChanges();
+
+                        #endregion Saving PortRegion
+
+                        #region Save AuditLog
+
+                        if (PortRegionToSave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.PortRegion,
+                                DocumentId = PortRegion.PortRegionId,
+                                DocumentNo = PortRegion.PortRegionCode,
+                                TblName = "M_PortRegion",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "Port Region Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "PortRegionId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.PortRegion,
+                        DocumentId = 0,
+                        DocumentNo = PortRegion.PortRegionCode,
+                        TblName = "M_PortRegion",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> UpdatePortRegionAsync(string RegId, Int16 CompanyId, M_PortRegion PortRegion, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (PortRegion.PortRegionId > 0)
+                    {
+                        //Check the Name exist or not
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_PortRegion WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.PortRegion})) AND PortRegionName='{PortRegion.PortRegionName} AND PortRegionId <>{PortRegion.PortRegionId}'");
+
+                        if (StrExist.Count() > 0)
+                        {
+                            if (StrExist.ToList()[0].IsExist == 2)
+                            {
+                                return new SqlResponce { Result = -2, Message = "PortRegion Name Exist" };
+                            }
+                        }
+
+                        #region Update PortRegion
+
+                        var entity = _context.Update(PortRegion);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.PortRegionCode).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update PortRegion
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.PortRegion,
+                                DocumentId = PortRegion.PortRegionId,
+                                DocumentNo = PortRegion.PortRegionCode,
+                                TblName = "M_PortRegion",
+                                ModeId = (short)E_Mode.Update,
+                                Remarks = "PortRegion Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "PortRegionId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.PortRegion,
+                        DocumentId = PortRegion.PortRegionId,
+                        DocumentNo = PortRegion.PortRegionCode,
+                        TblName = "M_PortRegion",
+                        ModeId = (short)E_Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> DeletePortRegionAsync(string RegId, Int16 CompanyId, M_PortRegion PortRegion, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (PortRegion.PortRegionId > 0)
+                    {
+                        var PortRegionToRemove = _context.M_PortRegion.Where(x => x.PortRegionId == PortRegion.PortRegionId).ExecuteDelete();
+
+                        if (PortRegionToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.PortRegion,
+                                DocumentId = PortRegion.PortRegionId,
+                                DocumentNo = PortRegion.PortRegionCode,
+                                TblName = "M_PortRegion",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "PortRegion Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "PortRegionId Should be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.PortRegion,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_PortRegion",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,138 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Admin;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Account.AR;
+using AHHA.Core.Models.Admin;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+
+namespace AHHA.Infra.Services.Admin
+{
+    public sealed class UserRightsService : IUserRightsService
+    {
+        private readonly IRepository<AdmUserRights> _repository;
+        private ApplicationDbContext _context;
+
+        public UserRightsService(IRepository<AdmUserRights> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<IEnumerable<UserRightsViewModel>> GetUserRightsByIdAsync(string RegId, Int16 CompanyId, Int16 Userid, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<UserRightsViewModel>(RegId, $"exec Adm_GetUserAccessRights {CompanyId},{Userid}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Admin.User,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "AdmUser",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> UpsertUserRightsAsync(string RegId, Int16 CompanyId, AdmUserRights admUserRights, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                bool IsEdit = false;
+                try
+                {
+                    if (admUserRights.CompanyId > 0 && admUserRights.UserId > 0)
+                    {
+                        IsEdit = true;
+                    }
+                    if (IsEdit)
+                    {
+                        var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.AdmUserRights WHERE CompanyId={admUserRights.CompanyId} AND UserId={admUserRights.UserId}");
+
+                        if (DataExist.Count() > 0 && DataExist.ToList()[0].IsExist == 1)
+                        {
+                            _context.Update(admUserRights);
+                        }
+                        else
+                            return new SqlResponce { Result = -1, Message = "User Group Rights Not Found" };
+                    }
+                    else
+                    {
+                        _context.Add(admUserRights);
+                    }
+
+                    var upsertData = _context.SaveChanges();
+
+                    if (upsertData > 0)
+                    {
+                        var auditLog = new AdmAuditLog
+                        {
+                            CompanyId = CompanyId,
+                            ModuleId = (short)E_Modules.Master,
+                            TransactionId = (short)E_Admin.UserRights,
+                            DocumentId = admUserRights.UserId,
+                            DocumentNo = "",
+                            TblName = "AdmUserRights",
+                            ModeId = (short)E_Mode.Update,
+                            Remarks = "User Rights Upset Successfully",
+                            CreateById = UserId
+                        };
+                        _context.Add(auditLog);
+                        var auditLogSave = await _context.SaveChangesAsync();
+
+                        if (auditLogSave > 0)
+                        {
+                            transaction.Commit();
+                            return new SqlResponce { Result = 1, Message = "Upset Successfully" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "Upset Failed" };
+                    }
+
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Admin.UserRights,
+                        DocumentId = admUserRights.UserId,
+                        DocumentNo = "",
+                        TblName = "AdmUserRights",
+                        ModeId = (short)E_Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

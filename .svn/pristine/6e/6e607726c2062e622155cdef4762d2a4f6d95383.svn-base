@@ -1,0 +1,568 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class CurrencyController : BaseController
+    {
+        private readonly ICurrencyService _CurrencyService;
+        private readonly ILogger<CurrencyController> _logger;
+
+        public CurrencyController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CurrencyController> logger, ICurrencyService CurrencyService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CurrencyService = CurrencyService;
+        }
+
+        #region Currency Header
+
+        [HttpGet, Route("GetCurrency")]
+        [Authorize]
+        public async Task<ActionResult> GetCurrency([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Currency, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CurrencyData = await _CurrencyService.GetCurrencyListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (CurrencyData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CurrencyData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCurrencybyid/{CurrencyId}")]
+        [Authorize]
+        public async Task<ActionResult<CurrencyViewModel>> GetCurrencyById(Int32 CurrencyId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Currency, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var currencyViewModel = _mapper.Map<CurrencyViewModel>(await _CurrencyService.GetCurrencyByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, headerViewModel.UserId));
+
+                        if (currencyViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, currencyViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCurrency")]
+        [Authorize]
+        public async Task<ActionResult<CurrencyViewModel>> SaveCurrency(CurrencyViewModel currencyViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Currency, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate || userGroupRight.IsEdit)
+                        {
+                            if (currencyViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var CurrencyEntity = new M_Currency
+                            {
+                                CurrencyId = currencyViewModel.CurrencyId,
+                                CompanyId = headerViewModel.CompanyId,
+                                CurrencyCode = currencyViewModel.CurrencyCode,
+                                CurrencyName = currencyViewModel.CurrencyName,
+                                IsMultiply = currencyViewModel.IsMultiply,
+                                Remarks = currencyViewModel.Remarks,
+                                IsActive = currencyViewModel.IsActive,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var createdCreditTermDt = await _CurrencyService.SaveCurrencyAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdCreditTermDt);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Currency record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCurrency/{CurrencyId}")]
+        [Authorize]
+        public async Task<ActionResult<M_Currency>> DeleteCurrency(int CurrencyId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Currency, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CurrencyToDelete = await _CurrencyService.GetCurrencyByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, headerViewModel.UserId);
+
+                            if (CurrencyToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponce = await _CurrencyService.DeleteCurrencyAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+
+        #endregion Currency Header
+
+        #region Currency Details
+
+        [HttpGet, Route("GetCurrencyDt")]
+        [Authorize]
+        public async Task<ActionResult> GetCurrencyDt([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.CurrencyDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CurrencyDtData = await _CurrencyService.GetCurrencyDtListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (CurrencyDtData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CurrencyDtData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCurrencyDtbyid/{CurrencyId}/{ValidFrom}")]
+        [Authorize]
+        public async Task<ActionResult<CurrencyDtViewModel>> GetCurrencyDtById(Int32 CurrencyId, DateTime ValidFrom, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.CurrencyDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CurrencyDtViewModel = await _CurrencyService.GetCurrencyDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, ValidFrom, headerViewModel.UserId);
+
+                        if (CurrencyDtViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CurrencyDtViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCurrencyDt")]
+        [Authorize]
+        public async Task<ActionResult<CurrencyDtViewModel>> SaveCurrencyDt(CurrencyDtViewModel CurrencyDtViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.CurrencyDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate || userGroupRight.IsEdit)
+                        {
+                            if (CurrencyDtViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var CurrencyDtEntity = new M_CurrencyDt
+                            {
+                                CurrencyId = CurrencyDtViewModel.CurrencyId,
+                                CompanyId = headerViewModel.CompanyId,
+                                ExhRate = CurrencyDtViewModel.ExhRate,
+                                ValidFrom = DateOnly.FromDateTime(CurrencyDtViewModel.ValidFrom),
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var createdCreditTermDt = await _CurrencyService.SaveCurrencyDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyDtEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdCreditTermDt);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new CurrencyDt record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCurrencyDt/{CurrencyId}/{ValidFrom}")]
+        [Authorize]
+        public async Task<ActionResult<M_CurrencyDt>> DeleteCurrencyDt(int CurrencyId, DateTime ValidFrom, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.CurrencyDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CurrencyDtToDelete = _mapper.Map<M_CurrencyDt>(await _CurrencyService.GetCurrencyDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, ValidFrom, headerViewModel.UserId));
+
+                            if (CurrencyDtToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponce = await _CurrencyService.DeleteCurrencyDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyDtToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+
+        #endregion Currency Details
+
+        #region Currency Local Details
+
+        [HttpGet, Route("GetCurrencyLocalDt")]
+        [Authorize]
+        public async Task<ActionResult> GetCurrencyLocalDt([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.CurrencyLocalDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CurrencyLocalDtData = await _CurrencyService.GetCurrencyLocalDtListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (CurrencyLocalDtData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CurrencyLocalDtData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCurrencyLocalDtbyid/{CurrencyId}/{ValidFrom}")]
+        [Authorize]
+        public async Task<ActionResult<CurrencyLocalDtViewModel>> GetCurrencyLocalDtById(Int32 CurrencyId, DateTime ValidFrom, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.CurrencyLocalDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CurrencyLocalDtViewModel = await _CurrencyService.GetCurrencyLocalDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, ValidFrom, headerViewModel.UserId);
+
+                        if (CurrencyLocalDtViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CurrencyLocalDtViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCurrencyLocalDt")]
+        [Authorize]
+        public async Task<ActionResult<CurrencyLocalDtViewModel>> SaveCurrencyLocalDt(CurrencyLocalDtViewModel CurrencyLocalDtViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.CurrencyLocalDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate || userGroupRight.IsEdit)
+                        {
+                            if (CurrencyLocalDtViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var CurrencyLocalDtEntity = new M_CurrencyLocalDt
+                            {
+                                CurrencyId = CurrencyLocalDtViewModel.CurrencyId,
+                                CompanyId = headerViewModel.CompanyId,
+                                ExhRate = CurrencyLocalDtViewModel.ExhRate,
+                                ValidFrom = DateOnly.FromDateTime(CurrencyLocalDtViewModel.ValidFrom),
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var createdCreditTermDt = await _CurrencyService.SaveCurrencyLocalDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyLocalDtEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdCreditTermDt);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new CurrencyLocalDt record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCurrencyLocalDt/{CurrencyId}/{ValidFrom}")]
+        [Authorize]
+        public async Task<ActionResult<M_CurrencyLocalDt>> DeleteCurrencyLocalDt(int CurrencyId, DateTime ValidFrom, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.CurrencyLocalDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CurrencyLocalDtToDelete = _mapper.Map<M_CurrencyLocalDt>(await _CurrencyService.GetCurrencyLocalDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, ValidFrom, headerViewModel.UserId));
+
+                            if (CurrencyLocalDtToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponce = await _CurrencyService.DeleteCurrencyLocalDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyLocalDtToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+
+        #endregion Currency Local Details
+    }
+}

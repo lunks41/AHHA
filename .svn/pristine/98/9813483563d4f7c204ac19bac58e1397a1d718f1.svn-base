@@ -1,0 +1,25 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+
+namespace AHHA.Application.IServices.Masters
+{
+    public interface IUomService
+    {
+        public Task<UomViewModelCount> GetUomListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId);
+
+        public Task<M_Uom> GetUomByIdAsync(string RegId, Int16 CompanyId, Int16 UomId, Int16 UserId);
+
+        public Task<SqlResponce> SaveUomAsync(string RegId, Int16 CompanyId, M_Uom m_Uom, Int16 UserId);
+
+        public Task<SqlResponce> DeleteUomAsync(string RegId, Int16 CompanyId, M_Uom m_Uom, Int16 UserId);
+
+        public Task<UomDtViewModelCount> GetUomDtListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId);
+
+        public Task<M_UomDt> GetUomDtByIdAsync(string RegId, Int16 CompanyId, Int16 UomId, Int16 PackUomId, Int16 UserId);
+
+        public Task<SqlResponce> SaveUomDtAsync(string RegId, Int16 CompanyId, M_UomDt m_UomDt, Int16 UserId);
+
+        public Task<SqlResponce> DeleteUomDtAsync(string RegId, Int16 CompanyId, M_UomDt m_UomDt, Int16 UserId);
+    }
+}

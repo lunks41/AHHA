@@ -1,0 +1,295 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class SupplierAddressController : BaseController
+    {
+        private readonly ISupplierAddressService _SupplierAddressService;
+        private readonly ILogger<SupplierAddressController> _logger;
+
+        public SupplierAddressController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierAddressController> logger, ISupplierAddressService SupplierAddressService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _SupplierAddressService = SupplierAddressService;
+        }
+
+        //Get the Supplier Address List
+        [HttpGet, Route("GetSupplierAddressbySupplierId/{SupplierId}")]
+        [Authorize]
+        public async Task<ActionResult> GetSupplierAddressBySupplierId(Int16 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var SupplierAddressViewModel = await _SupplierAddressService.GetSupplierAddressBySupplierIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
+
+                        if (SupplierAddressViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierAddressViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        //Supplier Address one record by using addressId
+        [HttpGet, Route("GetSupplierAddressbyid/{SupplierId}/{AddressId}")]
+        [Authorize]
+        public async Task<ActionResult<SupplierAddressViewModel>> GetSupplierAddressById(Int32 SupplierId, Int32 AddressId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var SupplierAddressViewModel = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, AddressId, headerViewModel.UserId);
+
+                        if (SupplierAddressViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierAddressViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddSupplierAddress")]
+        [Authorize]
+        public async Task<ActionResult<SupplierAddressViewModel>> CreateSupplierAddress(SupplierAddressViewModel SupplierAddressViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (SupplierAddressViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var SupplierAddressEntity = new M_SupplierAddress
+                            {
+                                SupplierId = SupplierAddressViewModel.SupplierId,
+                                AddressId = SupplierAddressViewModel.AddressId,
+                                Address1 = SupplierAddressViewModel.Address1,
+                                Address2 = SupplierAddressViewModel.Address2 == null ? string.Empty : SupplierAddressViewModel.Address2.Trim(),
+                                Address3 = SupplierAddressViewModel.Address3 == null ? string.Empty : SupplierAddressViewModel.Address3.Trim(),
+                                Address4 = SupplierAddressViewModel.Address4 == null ? string.Empty : SupplierAddressViewModel.Address4.Trim(),
+                                PinCode = SupplierAddressViewModel.PinCode == null ? string.Empty : SupplierAddressViewModel.PinCode.Trim(),
+                                CountryId = SupplierAddressViewModel.CountryId,
+                                PhoneNo = SupplierAddressViewModel.PhoneNo == null ? string.Empty : SupplierAddressViewModel.PhoneNo.Trim(),
+                                FaxNo = SupplierAddressViewModel.FaxNo == null ? string.Empty : SupplierAddressViewModel.FaxNo.Trim(),
+                                EmailAdd = SupplierAddressViewModel.EmailAdd == null ? string.Empty : SupplierAddressViewModel.EmailAdd.Trim(),
+                                WebUrl = SupplierAddressViewModel.WebUrl == null ? string.Empty : SupplierAddressViewModel.WebUrl.Trim(),
+                                IsDefaultAdd = SupplierAddressViewModel.IsDefaultAdd,
+                                IsDeliveryAdd = SupplierAddressViewModel.IsDeliveryAdd,
+                                IsFinAdd = SupplierAddressViewModel.IsFinAdd,
+                                IsSalesAdd = SupplierAddressViewModel.IsSalesAdd,
+                                IsActive = SupplierAddressViewModel.IsActive,
+                                CreateById = headerViewModel.UserId
+                            };
+
+                            var sqlResponce = await _SupplierAddressService.AddSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
+
+                            if (sqlResponce.Result > 0)
+                            {
+                                var SupplierModel = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressViewModel.SupplierId, Convert.ToInt32(sqlResponce.Result), headerViewModel.UserId);
+
+                                return StatusCode(StatusCodes.Status202Accepted, SupplierModel);
+                            }
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new SupplierAddress record");
+            }
+        }
+
+        [HttpPost, Route("UpdateSupplierAddress")]
+        [Authorize]
+        public async Task<ActionResult<SupplierAddressViewModel>> UpdateSupplierAddress([FromBody] SupplierAddressViewModel SupplierAddressViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (SupplierAddressViewModel.AddressId > 0 && SupplierAddressViewModel.SupplierId > 0)
+                            {
+                                var SupplierAddressEntity = new M_SupplierAddress
+                                {
+                                    SupplierId = SupplierAddressViewModel.SupplierId,
+                                    AddressId = SupplierAddressViewModel.AddressId,
+                                    Address1 = SupplierAddressViewModel.Address1,
+                                    Address2 = SupplierAddressViewModel.Address2 == null ? string.Empty : SupplierAddressViewModel.Address2.Trim(),
+                                    Address3 = SupplierAddressViewModel.Address3 == null ? string.Empty : SupplierAddressViewModel.Address3.Trim(),
+                                    Address4 = SupplierAddressViewModel.Address4 == null ? string.Empty : SupplierAddressViewModel.Address4.Trim(),
+                                    PinCode = SupplierAddressViewModel.PinCode == null ? string.Empty : SupplierAddressViewModel.PinCode.Trim(),
+                                    CountryId = SupplierAddressViewModel.CountryId,
+                                    PhoneNo = SupplierAddressViewModel.PhoneNo == null ? string.Empty : SupplierAddressViewModel.PhoneNo.Trim(),
+                                    FaxNo = SupplierAddressViewModel.FaxNo == null ? string.Empty : SupplierAddressViewModel.FaxNo.Trim(),
+                                    EmailAdd = SupplierAddressViewModel.EmailAdd == null ? string.Empty : SupplierAddressViewModel.EmailAdd.Trim(),
+                                    WebUrl = SupplierAddressViewModel.WebUrl == null ? string.Empty : SupplierAddressViewModel.WebUrl.Trim(),
+                                    IsDefaultAdd = SupplierAddressViewModel.IsDefaultAdd,
+                                    IsDeliveryAdd = SupplierAddressViewModel.IsDeliveryAdd,
+                                    IsFinAdd = SupplierAddressViewModel.IsFinAdd,
+                                    IsSalesAdd = SupplierAddressViewModel.IsSalesAdd,
+                                    IsActive = SupplierAddressViewModel.IsActive,
+                                    EditById = headerViewModel.UserId,
+                                    EditDate = DateTime.Now
+                                };
+
+                                var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
+
+                                if (sqlResponce.Result > 0)
+                                {
+                                    var SupplierModel = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressViewModel.SupplierId, Convert.ToInt32(sqlResponce.Result), headerViewModel.UserId);
+
+                                    return StatusCode(StatusCodes.Status202Accepted, SupplierModel);
+                                }
+
+                                return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                            }
+
+                            return NotFound(GenrateMessage.inputdatamismatch);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteSupplierAddress/{SupplierId}/{AddressId}")]
+        [Authorize]
+        public async Task<ActionResult<M_SupplierAddress>> DeleteSupplierAddress(Int32 SupplierId, Int32 AddressId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, AddressId, headerViewModel.UserId);
+                            // Remove data from cache by key
+                            _memoryCache.Remove($"SupplierAddress_{AddressId}");
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

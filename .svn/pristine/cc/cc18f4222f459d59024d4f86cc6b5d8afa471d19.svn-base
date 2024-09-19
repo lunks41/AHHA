@@ -1,0 +1,287 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class SupplierContactController : BaseController
+    {
+        private readonly ISupplierContactService _SupplierContactService;
+        private readonly ILogger<SupplierContactController> _logger;
+
+        public SupplierContactController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierContactController> logger, ISupplierContactService SupplierContactService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _SupplierContactService = SupplierContactService;
+        }
+
+        //Get the Supplier Contact List
+        [HttpGet, Route("getSuppliercontactbySupplierid/{SupplierId}")]
+        [Authorize]
+        public async Task<ActionResult> GetSupplierContactBySupplierId(Int16 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var SupplierContactViewModel = await _SupplierContactService.GetSupplierContactBySupplierIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
+
+                        if (SupplierContactViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierContactViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        //Supplier Contact one record by using contactid
+        [HttpGet, Route("getSuppliercontactbyid/{SupplierId}/{ContactId}")]
+        [Authorize]
+        public async Task<ActionResult<SupplierContactViewModel>> GetSupplierContactById(Int32 SupplierId, Int32 ContactId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var SupplierContactViewModel = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, ContactId, headerViewModel.UserId);
+
+                        if (SupplierContactViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierContactViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddSupplierContact")]
+        [Authorize]
+        public async Task<ActionResult<SupplierContactViewModel>> CreateSupplierContact(SupplierContactViewModel SupplierContactViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (SupplierContactViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var SupplierContactEntity = new M_SupplierContact
+                            {
+                                SupplierId = SupplierContactViewModel.SupplierId,
+                                ContactId = SupplierContactViewModel.ContactId,
+                                ContactName = SupplierContactViewModel.ContactName == null ? string.Empty : SupplierContactViewModel.ContactName,
+                                OtherName = SupplierContactViewModel.OtherName == null ? string.Empty : SupplierContactViewModel.OtherName,
+                                OffNo = SupplierContactViewModel.OffNo == null ? string.Empty : SupplierContactViewModel.OffNo,
+                                FaxNo = SupplierContactViewModel.FaxNo == null ? string.Empty : SupplierContactViewModel.FaxNo,
+                                EmailAdd = SupplierContactViewModel.EmailAdd == null ? string.Empty : SupplierContactViewModel.EmailAdd,
+                                MessId = SupplierContactViewModel.MessId == null ? string.Empty : SupplierContactViewModel.MessId,
+                                ContactMessType = SupplierContactViewModel.ContactMessType == null ? string.Empty : SupplierContactViewModel.ContactMessType,
+                                IsDefault = SupplierContactViewModel.IsDefault,
+                                IsFinance = SupplierContactViewModel.IsFinance,
+                                IsSales = SupplierContactViewModel.IsSales,
+                                IsActive = SupplierContactViewModel.IsActive,
+                                MobileNo = SupplierContactViewModel.MobileNo,
+                                CreateById = headerViewModel.UserId
+                            };
+
+                            var sqlResponce = await _SupplierContactService.AddSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactEntity, headerViewModel.UserId);
+
+                            if (sqlResponce.Result > 0)
+                            {
+                                var SupplierModel = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactViewModel.SupplierId, Convert.ToInt32(sqlResponce.Result), headerViewModel.UserId);
+
+                                return StatusCode(StatusCodes.Status202Accepted, SupplierModel);
+                            }
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new SupplierContact record");
+            }
+        }
+
+        [HttpPost, Route("UpdateSupplierContact")]
+        [Authorize]
+        public async Task<ActionResult<SupplierContactViewModel>> UpdateSupplierContact([FromBody] SupplierContactViewModel SupplierContactViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (SupplierContactViewModel.ContactId > 0 && SupplierContactViewModel.SupplierId > 0)
+                            {
+                                var SupplierContactEntity = new M_SupplierContact
+                                {
+                                    SupplierId = SupplierContactViewModel.SupplierId,
+                                    ContactId = SupplierContactViewModel.ContactId,
+                                    ContactName = SupplierContactViewModel.ContactName == null ? string.Empty : SupplierContactViewModel.ContactName,
+                                    OtherName = SupplierContactViewModel.OtherName == null ? string.Empty : SupplierContactViewModel.OtherName,
+                                    OffNo = SupplierContactViewModel.OffNo == null ? string.Empty : SupplierContactViewModel.OffNo,
+                                    FaxNo = SupplierContactViewModel.FaxNo == null ? string.Empty : SupplierContactViewModel.FaxNo,
+                                    EmailAdd = SupplierContactViewModel.EmailAdd == null ? string.Empty : SupplierContactViewModel.EmailAdd,
+                                    MessId = SupplierContactViewModel.MessId == null ? string.Empty : SupplierContactViewModel.MessId,
+                                    ContactMessType = SupplierContactViewModel.ContactMessType == null ? string.Empty : SupplierContactViewModel.ContactMessType,
+                                    IsDefault = SupplierContactViewModel.IsDefault,
+                                    IsFinance = SupplierContactViewModel.IsFinance,
+                                    IsSales = SupplierContactViewModel.IsSales,
+                                    IsActive = SupplierContactViewModel.IsActive,
+                                    MobileNo = SupplierContactViewModel.MobileNo,
+                                    EditById = headerViewModel.UserId,
+                                    EditDate = DateTime.Now
+                                };
+
+                                var sqlResponce = await _SupplierContactService.UpdateSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactEntity, headerViewModel.UserId);
+
+                                if (sqlResponce.Result > 0)
+                                {
+                                    var SupplierModel = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactViewModel.SupplierId, SupplierContactViewModel.ContactId, headerViewModel.UserId);
+
+                                    return StatusCode(StatusCodes.Status202Accepted, SupplierModel);
+                                }
+                                return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                            }
+
+                            return NotFound(GenrateMessage.inputdatamismatch);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteSupplierContact/{SupplierId}/{ContactId}")]
+        [Authorize]
+        public async Task<ActionResult<M_SupplierContact>> DeleteSupplierContact(Int32 SupplierId, Int32 ContactId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var sqlResponce = await _SupplierContactService.DeleteSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, ContactId, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

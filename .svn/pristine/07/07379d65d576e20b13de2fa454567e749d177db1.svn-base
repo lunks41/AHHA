@@ -1,0 +1,327 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class CustomerContactService : ICustomerContactService
+    {
+        private readonly IRepository<M_CustomerContact> _repository;
+        private ApplicationDbContext _context;
+
+        public CustomerContactService(IRepository<M_CustomerContact> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<IEnumerable<CustomerContactViewModel>> GetCustomerContactByCustomerIdAsync(string RegId, Int16 CompanyId, Int32 CustomerId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<CustomerContactViewModel>(RegId, $"SELECT M_CusCon.CustomerId,M_CusCon.ContactId,M_CusCon.ContactName,M_CusCon.OtherName,M_CusCon.MobileNo,M_CusCon.OffNo,M_CusCon.FaxNo,M_CusCon.EmailAdd,M_CusCon.MessId,M_CusCon.ContactMessType,M_CusCon.IsDefault,M_CusCon.IsFinance,M_CusCon.IsSales,M_Cus.CustomerCode,M_Cus.CustomerName,M_CusCon.CreateById,M_CusCon.CreateDate,M_CusCon.EditById,M_CusCon.EditDate FROM dbo.M_CustomerContact M_CusCon INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusCon.CustomerId WHERE M_CusCon.CustomerId = {CustomerId}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Customer,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_CustomerContact",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<CustomerContactViewModel> GetCustomerContactByIdAsync(string RegId, Int16 CompanyId, Int32 CustomerId, Int32 ContactId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<CustomerContactViewModel>(RegId, $"SELECT M_CusCon.CustomerId,M_CusCon.ContactId,M_CusCon.ContactName,M_CusCon.OtherName,M_CusCon.MobileNo,M_CusCon.OffNo,M_CusCon.FaxNo,M_CusCon.EmailAdd,M_CusCon.MessId,M_CusCon.ContactMessType,M_CusCon.IsDefault,M_CusCon.IsFinance,M_CusCon.IsSales,M_CusCon.IsActive,M_Cus.CustomerCode,M_Cus.CustomerName,M_CusCon.CreateById,M_CusCon.CreateDate,M_CusCon.EditById,M_CusCon.EditDate FROM dbo.M_CustomerContact M_CusCon INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_CusCon.CustomerId WHERE M_CusCon.CustomerId = {CustomerId} AND ContactId={ContactId}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Customer,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_CustomerContact",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> AddCustomerContactAsync(string RegId, Int16 CompanyId, M_CustomerContact CustomerContact, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerContact where CustomerId = {CustomerContact.CustomerId} And ContactName = '{CustomerContact.ContactName}' And ContactId<>{CustomerContact.ContactId}");
+
+                    if (DataExist.Count() > 0)
+                    {
+                        if (DataExist.ToList()[0].IsExist == 1)
+                        {
+                            return new SqlResponce { Result = -1, Message = "CustomerContact Exist" };
+                        }
+                    }
+
+                    //Take the Next Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT ISNULL((SELECT TOP 1(ContactId + 1) FROM dbo.M_CustomerContact WHERE CustomerId = {CustomerContact.CustomerId} AND (ContactId + 1) NOT IN(SELECT ContactId FROM dbo.M_CustomerContact where CustomerId= {CustomerContact.CustomerId})),1) AS NextId");
+
+                    if (sqlMissingResponce != null && sqlMissingResponce.NextId > 0)
+                    {
+                        #region Saving CustomerContact
+
+                        CustomerContact.ContactId = Convert.ToInt32(sqlMissingResponce.NextId);
+
+                        var entity = _context.Add(CustomerContact);
+                        entity.Property(b => b.EditDate).IsModified = false;
+
+                        var CustomerContactToSave = _context.SaveChanges();
+
+                        #endregion Saving CustomerContact
+
+                        #region Save AuditLog
+
+                        if (CustomerContactToSave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Customer,
+                                DocumentId = CustomerContact.CustomerId,
+                                DocumentNo = CustomerContact.OtherName,
+                                TblName = "M_CustomerContact",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "Customer Contact Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = CustomerContact.ContactId, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Customer,
+                        DocumentId = 0,
+                        DocumentNo = CustomerContact.OtherName,
+                        TblName = "M_CustomerContact",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> UpdateCustomerContactAsync(string RegId, Int16 CompanyId, M_CustomerContact CustomerContact, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (CustomerContact.CustomerId > 0 && CustomerContact.ContactId > 0)
+                    {
+                        #region Update CustomerContact
+
+                        var entity = _context.Update(CustomerContact);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update CustomerContact
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Customer,
+                                DocumentId = CustomerContact.CustomerId,
+                                DocumentNo = CustomerContact.OtherName,
+                                TblName = "M_CustomerContact",
+                                ModeId = (short)E_Mode.Update,
+                                Remarks = "CustomerContact Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = CustomerContact.ContactId, Message = "Update Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Customer,
+                        DocumentId = CustomerContact.CustomerId,
+                        DocumentNo = CustomerContact.OtherName,
+                        TblName = "M_CustomerContact",
+                        ModeId = (short)E_Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> DeleteCustomerContactAsync(string RegId, Int16 CompanyId, Int32 CustomerId, Int32 ContactId, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (CustomerId > 0 && ContactId > 0)
+                    {
+                        var CustomerContactToRemove = _context.M_CustomerContact.Where(x => x.CustomerId == CustomerId && x.ContactId == ContactId).ExecuteDelete();
+
+                        if (CustomerContactToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Customer,
+                                DocumentId = CustomerId,
+                                DocumentNo = "",
+                                TblName = "M_CustomerContact",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "CustomerContact Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Customer,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_CustomerContact",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

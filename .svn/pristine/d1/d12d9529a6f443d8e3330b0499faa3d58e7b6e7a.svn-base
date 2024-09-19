@@ -1,0 +1,24 @@
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace AHHA.Core.Entities.Setting
+{
+    [PrimaryKey(nameof(CompanyId), nameof(UserId), nameof(ModuleId), nameof(TransactionId), nameof(GrdName))]
+    public class S_UserGrdFormat
+    {
+        public Int16 CompanyId { get; set; }
+        public Int16 UserId { get; set; }
+        public Int16 ModuleId { get; set; }
+        public Int32 TransactionId { get; set; }
+        public string GrdName { get; set; }
+        public string GrdString { get; set; }
+        public Int16 CreateById { get; set; }
+
+        [NotMapped]
+        public DateTime CreateDate { get; set; }
+
+        public Int16? EditById { get; set; }
+        public DateTime? EditDate { get; set; }
+    }
+}

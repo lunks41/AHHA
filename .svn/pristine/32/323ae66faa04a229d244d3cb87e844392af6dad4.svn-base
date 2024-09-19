@@ -1,0 +1,327 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class SupplierContactService : ISupplierContactService
+    {
+        private readonly IRepository<M_SupplierContact> _repository;
+        private ApplicationDbContext _context;
+
+        public SupplierContactService(IRepository<M_SupplierContact> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<IEnumerable<SupplierContactViewModel>> GetSupplierContactBySupplierIdAsync(string RegId, Int16 CompanyId, Int32 SupplierId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<SupplierContactViewModel>(RegId, $"SELECT M_SupCon.SupplierId,M_SupCon.ContactId,M_SupCon.ContactName,M_SupCon.OtherName,M_SupCon.MobileNo,M_SupCon.OffNo,M_SupCon.FaxNo,M_SupCon.EmailAdd,M_SupCon.MessId,M_SupCon.ContactMessType,M_SupCon.IsDefault,M_SupCon.IsFinance,M_SupCon.IsSales,M_Sup.SupplierCode,M_Sup.SupplierName,M_SupCon.CreateById,M_SupCon.CreateDate,M_SupCon.EditById,M_SupCon.EditDate FROM dbo.M_SupplierContact M_SupCon INNER JOIN dbo.M_Supplier M_Sup ON M_Sup.SupplierId = M_SupCon.SupplierId WHERE M_SupCon.SupplierId = {SupplierId}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Supplier,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_SupplierContact",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SupplierContactViewModel> GetSupplierContactByIdAsync(string RegId, Int16 CompanyId, Int32 SupplierId, Int32 ContactId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<SupplierContactViewModel>(RegId, $"SELECT M_SupCon.SupplierId,M_SupCon.ContactId,M_SupCon.ContactName,M_SupCon.OtherName,M_SupCon.MobileNo,M_SupCon.OffNo,M_SupCon.FaxNo,M_SupCon.EmailAdd,M_SupCon.MessId,M_SupCon.ContactMessType,M_SupCon.IsDefault,M_SupCon.IsFinance,M_SupCon.IsSales,M_SupCon.IsActive,M_Sup.SupplierCode,M_Sup.SupplierName,M_SupCon.CreateById,M_SupCon.CreateDate,M_SupCon.EditById,M_SupCon.EditDate FROM dbo.M_SupplierContact M_SupCon INNER JOIN dbo.M_Supplier M_Sup ON M_Sup.SupplierId = M_SupCon.SupplierId WHERE M_SupCon.SupplierId = {SupplierId} AND ContactId={ContactId}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Supplier,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_SupplierContact",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> AddSupplierContactAsync(string RegId, Int16 CompanyId, M_SupplierContact SupplierContact, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SupplierContact where SupplierId = {SupplierContact.SupplierId} And ContactName = '{SupplierContact.ContactName}' And ContactId<>{SupplierContact.ContactId}");
+
+                    if (DataExist.Count() > 0)
+                    {
+                        if (DataExist.ToList()[0].IsExist == 1)
+                        {
+                            return new SqlResponce { Result = -1, Message = "SupplierContact Exist" };
+                        }
+                    }
+
+                    //Take the Next Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT ISNULL((SELECT TOP 1(ContactId + 1) FROM dbo.M_SupplierContact WHERE SupplierId = {SupplierContact.SupplierId} AND (ContactId + 1) NOT IN(SELECT ContactId FROM dbo.M_SupplierContact where SupplierId= {SupplierContact.SupplierId})),1) AS NextId");
+
+                    if (sqlMissingResponce != null && sqlMissingResponce.NextId > 0)
+                    {
+                        #region Saving SupplierContact
+
+                        SupplierContact.ContactId = Convert.ToInt32(sqlMissingResponce.NextId);
+
+                        var entity = _context.Add(SupplierContact);
+                        entity.Property(b => b.EditDate).IsModified = false;
+
+                        var SupplierContactToSave = _context.SaveChanges();
+
+                        #endregion Saving SupplierContact
+
+                        #region Save AuditLog
+
+                        if (SupplierContactToSave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Supplier,
+                                DocumentId = SupplierContact.SupplierId,
+                                DocumentNo = SupplierContact.OtherName,
+                                TblName = "M_SupplierContact",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "Supplier Contact Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = SupplierContact.ContactId, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "SupplierId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Supplier,
+                        DocumentId = 0,
+                        DocumentNo = SupplierContact.OtherName,
+                        TblName = "M_SupplierContact",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> UpdateSupplierContactAsync(string RegId, Int16 CompanyId, M_SupplierContact SupplierContact, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (SupplierContact.SupplierId > 0 && SupplierContact.ContactId > 0)
+                    {
+                        #region Update SupplierContact
+
+                        var entity = _context.Update(SupplierContact);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update SupplierContact
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Supplier,
+                                DocumentId = SupplierContact.SupplierId,
+                                DocumentNo = SupplierContact.OtherName,
+                                TblName = "M_SupplierContact",
+                                ModeId = (short)E_Mode.Update,
+                                Remarks = "SupplierContact Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = SupplierContact.ContactId, Message = "Update Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "SupplierId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Supplier,
+                        DocumentId = SupplierContact.SupplierId,
+                        DocumentNo = SupplierContact.OtherName,
+                        TblName = "M_SupplierContact",
+                        ModeId = (short)E_Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> DeleteSupplierContactAsync(string RegId, Int16 CompanyId, Int32 SupplierId, Int32 ContactId, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (SupplierId > 0 && ContactId > 0)
+                    {
+                        var SupplierContactToRemove = _context.M_SupplierContact.Where(x => x.SupplierId == SupplierId && x.ContactId == ContactId).ExecuteDelete();
+
+                        if (SupplierContactToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Supplier,
+                                DocumentId = SupplierId,
+                                DocumentNo = "",
+                                TblName = "M_SupplierContact",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "SupplierContact Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "SupplierId Should be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Supplier,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_SupplierContact",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

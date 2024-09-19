@@ -1,0 +1,182 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class MandatoryFieldsController : BaseController
+    {
+        private readonly IMandatoryFieldsServices _MandatoryFieldsServices;
+        private readonly ILogger<MandatoryFieldsController> _logger;
+
+        public MandatoryFieldsController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<MandatoryFieldsController> logger, IMandatoryFieldsServices MandatoryFieldsServices)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _MandatoryFieldsServices = MandatoryFieldsServices;
+        }
+
+        [HttpGet, Route("GetMandatoryFields")]
+        [Authorize]
+        public async Task<ActionResult> GetMandatoryFields([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Admin, (Int32)E_Admin.MandatoryFields, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _MandatoryFieldsServices.GetMandatoryFieldsListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetMandatoryFieldsbyid/{ModuleId}/{TransactionId}")]
+        [Authorize]
+        public async Task<ActionResult<MandatoryFieldsViewModel>> GetMandatoryFieldsById(Int16 ModuleId, Int32 TransactionId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Admin, (Int32)E_Admin.MandatoryFields, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var MandatoryFieldsViewModel = _mapper.Map<MandatoryFieldsViewModel>(await _MandatoryFieldsServices.GetMandatoryFieldsByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ModuleId, TransactionId, headerViewModel.UserId));
+
+                        if (MandatoryFieldsViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, MandatoryFieldsViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveMandatoryFields")]
+        [Authorize]
+        public async Task<ActionResult<MandatoryFieldsViewModel>> SaveMandatoryFields(MandatoryFieldsViewModel mandatoryFieldsViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Admin, (Int32)E_Admin.MandatoryFields, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (mandatoryFieldsViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var MandatoryFieldsEntity = new S_MandatoryFields
+                            {
+                                CompanyId = headerViewModel.CompanyId,
+                                ModuleId = mandatoryFieldsViewModel.ModuleId,
+                                TransactionId = mandatoryFieldsViewModel.TransactionId,
+                                M_ProductId = mandatoryFieldsViewModel.M_ProductId,
+                                M_GLId = mandatoryFieldsViewModel.M_GLId,
+                                M_QTY = mandatoryFieldsViewModel.M_QTY,
+                                M_UomId = mandatoryFieldsViewModel.M_UomId,
+                                M_UnitPrice = mandatoryFieldsViewModel.M_UnitPrice,
+                                M_TotAmt = mandatoryFieldsViewModel.M_TotAmt,
+                                M_Remarks = mandatoryFieldsViewModel.M_Remarks,
+                                M_GstId = mandatoryFieldsViewModel.M_GstId,
+                                M_DeliveryDate = mandatoryFieldsViewModel.M_DeliveryDate,
+                                M_DepartmentId = mandatoryFieldsViewModel.M_DepartmentId,
+                                M_EmployeeId = mandatoryFieldsViewModel.M_EmployeeId,
+                                M_PortId = mandatoryFieldsViewModel.M_PortId,
+                                M_VesselId = mandatoryFieldsViewModel.M_VesselId,
+                                M_BargeId = mandatoryFieldsViewModel.M_BargeId,
+                                M_VoyageId = mandatoryFieldsViewModel.M_VoyageId,
+                                M_SupplyDate = mandatoryFieldsViewModel.M_SupplyDate,
+                                M_ReferenceNo = mandatoryFieldsViewModel.M_ReferenceNo,
+                                M_SuppInvoiceNo = mandatoryFieldsViewModel.M_SuppInvoiceNo,
+                                M_BankId = mandatoryFieldsViewModel.M_BankId,
+                                M_Remarks_Hd = mandatoryFieldsViewModel.M_Remarks_Hd,
+                                M_Address1 = mandatoryFieldsViewModel.M_Address1,
+                                M_Address2 = mandatoryFieldsViewModel.M_Address2,
+                                M_Address3 = mandatoryFieldsViewModel.M_Address3,
+                                M_Address4 = mandatoryFieldsViewModel.M_Address4,
+                                M_PinCode = mandatoryFieldsViewModel.M_PinCode,
+                                M_CountryId = mandatoryFieldsViewModel.M_CountryId,
+                                M_PhoneNo = mandatoryFieldsViewModel.M_PhoneNo,
+                                M_ContactName = mandatoryFieldsViewModel.M_ContactName,
+                                M_MobileNo = mandatoryFieldsViewModel.M_MobileNo,
+                                M_EmailAdd = mandatoryFieldsViewModel.M_EmailAdd,
+                            };
+
+                            var createdMandatoryFields = await _MandatoryFieldsServices.SaveMandatoryFieldsAsync(headerViewModel.RegId, headerViewModel.CompanyId, MandatoryFieldsEntity, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, createdMandatoryFields);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new MandatoryFields record");
+            }
+        }
+    }
+}

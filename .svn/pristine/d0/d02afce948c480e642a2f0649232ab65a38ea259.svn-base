@@ -1,0 +1,378 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class SupplierAddressService : ISupplierAddressService
+    {
+        private readonly IRepository<M_SupplierAddress> _repository;
+        private ApplicationDbContext _context;
+
+        public SupplierAddressService(IRepository<M_SupplierAddress> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<IEnumerable<SupplierAddressViewModel>> GetSupplierAddressBySupplierIdAsync(string RegId, Int16 CompanyId, Int32 SupplierId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<SupplierAddressViewModel>(RegId, $"SELECT  M_CusAdd.SupplierId,M_CusAdd.AddressId,M_CusAdd.Address1,M_CusAdd.Address2,M_CusAdd.Address3,M_CusAdd.Address4,M_CusAdd.PhoneNo,M_CusAdd.EmailAdd,M_CusAdd.IsDefaultAdd,M_CusAdd.IsDeleveryAdd,M_CusAdd.IsFinAdd,M_CusAdd.IsSalesAdd,M_CusAdd.IsActive,M_Cus.SupplierCode,M_Cus.SupplierName,M_Cou.CountryCode,M_Cou.CountryName,M_CusAdd.CreateById,M_CusAdd.CreateDate,M_CusAdd.EditById,M_CusAdd.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_SupplierAddress M_CusAdd INNER JOIN dbo.M_Supplier M_Cus ON M_Cus.SupplierId = M_CusAdd.SupplierId INNER JOIN dbo.M_Country M_Cou ON M_Cou.CountryId = M_CusAdd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_CusAdd.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_CusAdd.EditById WHERE M_CusAdd.SupplierId = {SupplierId} AND M_Cus.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Supplier}))");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Supplier,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_SupplierAddress",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SupplierAddressViewModelCount> GetSupplierAddressListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId)
+        {
+            SupplierAddressViewModelCount countViewModel = new SupplierAddressViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SupplierAddress M_Sad INNER JOIN dbo.M_Supplier M_Sup ON M_Sup.SupplierId = M_Sad.SupplierId WHERE (M_Sad.Address1 LIKE '%{searchString}%' OR M_Sad.Address2 LIKE '%{searchString}%' OR M_Sad.Address3 LIKE '%{searchString}%' OR M_Sad.Address4 LIKE '%{searchString}%' OR M_Sup.SupplierCode LIKE '%{searchString}%' OR M_Sup.SupplierName LIKE '%{searchString}%') AND M_Sad.AddressId<>0 AND M_Sup.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Supplier}))");
+
+                var result = await _repository.GetQueryAsync<SupplierAddressViewModel>(RegId, $"SELECT M_Sad.AddressId,M_Sad.Address1,M_Sad.Address2,M_Sad.Address3,M_Sad.Address4,M_Sad.PhoneNo,M_Sad.EmailAdd,M_Sad.IsDefaultAdd,M_Sad.IsDeliveryAdd,M_Sad.IsFinAdd,M_Sad.IsSalesAdd,M_Sad.IsActive,M_Sup.SupplierCode,M_Sup.SupplierName,M_Sad.CreateById,M_Sad.CreateDate,M_Sad.EditById,M_Sad.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SupplierAddress M_Sad INNER JOIN dbo.M_Supplier M_Sup ON M_Sup.SupplierId = M_Sad.SupplierId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Sad.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_Sad.EditById WHERE (M_Sad.Address1 LIKE '%{searchString}%' OR M_Sad.Address2 LIKE '%{searchString}%' OR M_Sad.Address3 LIKE '%{searchString}%' OR M_Sad.Address4 LIKE '%{searchString}%' OR M_Sup.SupplierCode LIKE '%{searchString}%' OR M_Sup.SupplierName LIKE '%{searchString}%') AND M_Sad.AddressId<>0 AND M_Sup.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Supplier})) ORDER BY M_Sup.Address1 OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Supplier,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_SupplierAddress",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<M_SupplierAddress> GetSupplierAddressByIdAsync(string RegId, Int16 CompanyId, Int32 AddressId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_SupplierAddress>(RegId, $"SELECT AddressId,SupplierAddressCode,SupplierAddressName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_SupplierAddress WHERE AddressId={AddressId}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Supplier,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_SupplierAddress",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> AddSupplierAddressAsync(string RegId, Int16 CompanyId, M_SupplierAddress SupplierAddress, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Supplier})) UNION ALL SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Supplier}))");
+
+                    if (StrExist.Count() > 0)
+                    {
+                        if (StrExist.ToList()[0].IsExist == 1)
+                        {
+                            return new SqlResponce { Result = -1, Message = "SupplierAddress Code Exist" };
+                        }
+                        else if (StrExist.ToList()[0].IsExist == 2)
+                        {
+                            return new SqlResponce { Result = -2, Message = "SupplierAddress Name Exist" };
+                        }
+                    }
+
+                    //Take the Next Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (AddressId + 1) FROM dbo.M_SupplierAddress WHERE (AddressId + 1) NOT IN (SELECT AddressId FROM dbo.M_SupplierAddress)),1) AS NextId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.NextId > 0)
+                    {
+                        #region Saving SupplierAddress
+
+                        SupplierAddress.AddressId = Convert.ToInt32(sqlMissingResponce.NextId);
+
+                        var entity = _context.Add(SupplierAddress);
+                        entity.Property(b => b.EditDate).IsModified = false;
+
+                        var SupplierAddressToSave = _context.SaveChanges();
+
+                        #endregion Saving SupplierAddress
+
+                        #region Save AuditLog
+
+                        if (SupplierAddressToSave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Supplier,
+                                DocumentId = SupplierAddress.SupplierId,
+                                DocumentNo = "",
+                                TblName = "M_SupplierAddress",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "Supplier Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AddressId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Supplier,
+                        DocumentId = 0,
+                        DocumentNo = SupplierAddress.Address1,
+                        TblName = "M_SupplierAddress",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> UpdateSupplierAddressAsync(string RegId, Int16 CompanyId, M_SupplierAddress SupplierAddress, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (SupplierAddress.AddressId > 0)
+                    {
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_SupplierAddress WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Supplier})) AND SupplierAddressName='{SupplierAddress.Address1} AND AddressId <>{SupplierAddress.AddressId}'");
+
+                        if (StrExist.Count() > 0)
+                        {
+                            if (StrExist.ToList()[0].IsExist == 2)
+                            {
+                                return new SqlResponce { Result = -2, Message = "SupplierAddress Name Exist" };
+                            }
+                        }
+
+                        #region Update SupplierAddress
+
+                        var entity = _context.Update(SupplierAddress);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update SupplierAddress
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Supplier,
+                                DocumentId = SupplierAddress.AddressId,
+                                DocumentNo = SupplierAddress.Address1,
+                                TblName = "M_SupplierAddress",
+                                ModeId = (short)E_Mode.Update,
+                                Remarks = "SupplierAddress Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AddressId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Supplier,
+                        DocumentId = SupplierAddress.AddressId,
+                        DocumentNo = SupplierAddress.Address1,
+                        TblName = "M_SupplierAddress",
+                        ModeId = (short)E_Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> DeleteSupplierAddressAsync(string RegId, Int16 CompanyId, M_SupplierAddress SupplierAddress, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (SupplierAddress.AddressId > 0)
+                    {
+                        var SupplierAddressToRemove = _context.M_SupplierAddress.Where(x => x.AddressId == SupplierAddress.AddressId).ExecuteDelete();
+
+                        if (SupplierAddressToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Supplier,
+                                DocumentId = SupplierAddress.AddressId,
+                                DocumentNo = SupplierAddress.Address1,
+                                TblName = "M_SupplierAddress",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "SupplierAddress Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AddressId Should be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Supplier,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_SupplierAddress",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

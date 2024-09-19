@@ -1,0 +1,33 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+
+namespace AHHA.Application.IServices.Masters
+{
+    public interface ICurrencyService
+    {
+        public Task<CurrencyViewModelCount> GetCurrencyListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId);
+
+        public Task<M_Currency> GetCurrencyByIdAsync(string RegId, Int16 CompanyId, Int32 CurrencyId, Int16 UserId);
+
+        public Task<SqlResponce> SaveCurrencyAsync(string RegId, Int16 CompanyId, M_Currency M_Currency, Int16 UserId);
+
+        public Task<SqlResponce> DeleteCurrencyAsync(string RegId, Int16 CompanyId, M_Currency M_Currency, Int16 UserId);
+
+        public Task<CurrencyDtViewModelCount> GetCurrencyDtListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId);
+
+        public Task<CurrencyDtViewModel> GetCurrencyDtByIdAsync(string RegId, Int16 CompanyId, Int32 CurrencyId, DateTime ValidFrom, Int16 UserId);
+
+        public Task<SqlResponce> SaveCurrencyDtAsync(string RegId, Int16 CompanyId, M_CurrencyDt M_CurrencyDt, Int16 UserId);
+
+        public Task<SqlResponce> DeleteCurrencyDtAsync(string RegId, Int16 CompanyId, M_CurrencyDt M_CurrencyDt, Int16 UserId);
+
+        public Task<CurrencyLocalDtViewModelCount> GetCurrencyLocalDtListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId);
+
+        public Task<CurrencyLocalDtViewModel> GetCurrencyLocalDtByIdAsync(string RegId, Int16 CompanyId, Int32 CurrencyId, DateTime ValidFrom, Int16 UserId);
+
+        public Task<SqlResponce> SaveCurrencyLocalDtAsync(string RegId, Int16 CompanyId, M_CurrencyLocalDt M_CurrencyLocalDt, Int16 UserId);
+
+        public Task<SqlResponce> DeleteCurrencyLocalDtAsync(string RegId, Int16 CompanyId, M_CurrencyLocalDt M_CurrencyLocalDt, Int16 UserId);
+    }
+}

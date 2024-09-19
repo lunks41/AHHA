@@ -1,0 +1,160 @@
+using AHHA.Application.CommonServices;
+using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts;
+using AHHA.Application.IServices.Accounts.AR;
+using AHHA.Application.IServices.Admin;
+using AHHA.Application.IServices.Masters;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Infra.Data;
+using AHHA.Infra.Repository;
+using AHHA.Infra.Services;
+using AHHA.Infra.Services.Accounts;
+using AHHA.Infra.Services.Accounts.AR;
+using AHHA.Infra.Services.Admin;
+using AHHA.Infra.Services.Masters;
+using AHHA.Infra.Services.Setting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace AHHA.Infra.Extensions;
+
+public static class InfraServices
+{
+    public static IServiceCollection AddInfraServices(this IServiceCollection serviceCollection,
+        IConfiguration configuration)
+    {
+        serviceCollection.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+        #region Services
+
+        serviceCollection.AddScoped<IBaseService, BaseService>();
+        serviceCollection.AddScoped<IAuthService, AuthService>();
+
+        #region Master
+
+        serviceCollection.AddScoped<IAccountGroupService, AccountGroupService>();
+        serviceCollection.AddScoped<IAccountSetupCategoryService, AccountSetupCategoryService>();
+        serviceCollection.AddScoped<IAccountSetupService, AccountSetupService>();
+        serviceCollection.AddScoped<IAccountTypeService, AccountTypeService>();
+        serviceCollection.AddScoped<IBankService, BankService>();
+        serviceCollection.AddScoped<IBargeService, BargeService>();
+        serviceCollection.AddScoped<ICategoryService, CategoryService>();
+        serviceCollection.AddScoped<IChartOfAccountService, ChartOfAccountService>();
+        serviceCollection.AddScoped<ICOACategory1Service, COACategory1Service>();
+        serviceCollection.AddScoped<ICOACategory2Service, COACategory2Service>();
+        serviceCollection.AddScoped<ICOACategory3Service, COACategory3Service>();
+        serviceCollection.AddScoped<ICountryService, CountryService>();
+        serviceCollection.AddScoped<ICreditTermService, CreditTermService>();
+        serviceCollection.AddScoped<ICurrencyService, CurrencyService>();
+        serviceCollection.AddScoped<ICustomerGroupCreditLimitService, CustomerGroupCreditLimitService>();
+        serviceCollection.AddScoped<ICustomerAddressService, CustomerAddressService>();
+        serviceCollection.AddScoped<ICustomerContactService, CustomerContactService>();
+        serviceCollection.AddScoped<ICustomerCreditLimitService, CustomerCreditLimitService>();
+        serviceCollection.AddScoped<ICustomerService, CustomerService>();
+        serviceCollection.AddScoped<IDepartmentService, DepartmentService>();
+        serviceCollection.AddScoped<IDesignationService, DesignationService>();
+        serviceCollection.AddScoped<IEmployeeService, EmployeeService>();
+        serviceCollection.AddScoped<IGroupCreditLimitService, GroupCreditLimitService>();
+        serviceCollection.AddScoped<IGroupCreditLimit_CustomerService, GroupCreditLimit_CustomerService>();
+        serviceCollection.AddScoped<IGstCategoryService, GstCategoryService>();
+        serviceCollection.AddScoped<IGstService, GstService>();
+        serviceCollection.AddScoped<IOrderTypeCategoryService, OrderTypeCategoryService>();
+        serviceCollection.AddScoped<IOrderTypeService, OrderTypeService>();
+        serviceCollection.AddScoped<IPaymentTypeService, PaymentTypeService>();
+        serviceCollection.AddScoped<IPortRegionService, PortRegionService>();
+        serviceCollection.AddScoped<IPortService, PortService>();
+        serviceCollection.AddScoped<IProductService, ProductService>();
+        serviceCollection.AddScoped<ISubCategoryService, SubCategoryService>();
+        serviceCollection.AddScoped<ISupplierAddressService, SupplierAddressService>();
+        serviceCollection.AddScoped<ISupplierContactService, SupplierContactService>();
+        serviceCollection.AddScoped<ISupplierService, SupplierService>();
+        serviceCollection.AddScoped<ITaxCategoryService, TaxCategoryService>();
+        serviceCollection.AddScoped<ITaxService, TaxService>();
+        serviceCollection.AddScoped<IUomService, UomService>();
+        serviceCollection.AddScoped<IVesselService, VesselService>();
+        serviceCollection.AddScoped<IVoyageService, VoyageService>();
+
+        #endregion Master
+
+        #region Admin
+
+        serviceCollection.AddScoped<IUserService, UserService>();
+        serviceCollection.AddScoped<IModuleService, ModuleService>();
+        serviceCollection.AddScoped<ICompanyService, CompanyService>();
+        serviceCollection.AddScoped<ITransactionService, TransactionService>();
+        serviceCollection.AddScoped<IUserGroupService, UserGroupService>();
+
+        #endregion Admin
+
+        #region LookUp
+
+        serviceCollection.AddScoped<IMasterLookupService, MasterLookupService>();
+
+        #endregion LookUp
+
+        #region Account
+
+        serviceCollection.AddScoped<IAccountService, AccountService>();
+        serviceCollection.AddScoped<IARInvoiceService, ARInvoiceService>();
+
+        #endregion Account
+
+        #region Setting
+
+        serviceCollection.AddScoped<IDecSettingsService, DecSettingsServices>();
+        serviceCollection.AddScoped<IFinSettingsService, FinSettingsServices>();
+        serviceCollection.AddScoped<INumberFormatServices, NumberFormatServices>();
+
+        #endregion Setting
+
+        #endregion Services
+
+        #region Chaning the Data Base Connection String
+
+        serviceCollection.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+        {
+            DBGetConnection dBGetConnection = new DBGetConnection();
+            string regId = string.Empty;
+            var connectionString = string.Empty;
+            var getConnectionStringName = string.Empty;
+
+            var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+            regId = httpContextAccessor.HttpContext.Request.Headers["regId"].First().ToString();
+
+            if (regId == null)
+                getConnectionStringName = dBGetConnection.GetconnectionDB(regId);
+            else
+                getConnectionStringName = "DbConnection";
+
+            //read the company registration data from json
+            //string regCompanyData = File.ReadAllText("regCompany.json");
+            //Convert json to object list
+            //var regCompany = JsonConvert.DeserializeObject<IEnumerable<CompanyRegistration>>(regCompanyData);
+            // find out the regId & get the connectionstring from there
+            //var getConnectionStringName = regCompany.Where(b => b.RegId == regId).FirstOrDefault().ConnectionStringName;
+
+            if (getConnectionStringName == null)
+                connectionString = configuration.GetConnectionString(getConnectionStringName);
+            else
+                connectionString = configuration.GetConnectionString("DbConnection");
+
+            //var connectionString = configuration.GetConnectionString("DbConnection");
+            options.UseSqlServer(connectionString,
+                        b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+        });
+
+        //serviceCollection.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
+
+        //    configuration.GetConnectionString("DbConnection"),
+        //        b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));//Why use this line (b=>b.MigrationsAssembly)?
+
+        #endregion Chaning the Data Base Connection String
+
+        serviceCollection.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+        return serviceCollection;
+    }
+}

@@ -1,0 +1,75 @@
+{
+  "IpRateLimiting": {
+    "EnableEndpointRateLimiting": false,
+    "StackBlockedRequests": false,
+    "RealIpHeader": "X-Real-IP",
+    "ClientIdHeader": "X-ClientId",
+    "HttpStatusCode": 429,
+    "IpWhitelist": [ "127.0.0.1", "::1/10", "192.168.0.0/24" ],
+    "EndpointWhitelist": [ "get:/api/license", "*:/api/status" ],
+    "ClientWhitelist": [ "dev-id-1", "dev-id-2" ],
+    "QuotaExceededMessage": "API rate limit exceeded.",
+    "GeneralRules": [
+      {
+        "Endpoint": "*",
+        "Period": "1s",
+        "Limit": 100 //2
+      },
+      {
+        "Endpoint": "*",
+        "Period": "15m",
+        "Limit": 1000 //100
+      },
+      {
+        "Endpoint": "*",
+        "Period": "12h",
+        "Limit": 10000 //1000
+      },
+      {
+        "Endpoint": "*",
+        "Period": "7d",
+        "Limit": 10000
+      }
+    ]
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "Serilog": {
+    "Using": [ "Serilog.Sinks.File" ],
+    "MinimumLevel": {
+      "Default": "Information"
+    },
+    "WriteTo": [
+      {
+        "Name": "File",
+        "Args": {
+          "path": "../Logs/Serilog.log",
+          "rollingInterval": "Day",
+          "outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {CorrelationId} {Level:u3}] {Username} {Message:lj}{NewLine}{Exception}"
+        }
+      }
+    ]
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    //"DbConnection": "Data Source=118.189.194.191;Initial Catalog=AHHA.v1;User Id=ASTAR; Password=ahha1223@A*;Connect Timeout=60;TrustServerCertificate=True;MultipleActiveResultSets=true;",
+    "DbConnection": "Data Source=WIN-29P2108J6JM;Initial Catalog=AHHA.v1;User Id=sa; Password=Admin@123;Connect Timeout=60;TrustServerCertificate=True;MultipleActiveResultSets=true;",
+    "LiveDBConnection": "Data Source=118.189.194.191;Initial Catalog=AHHA.v1;User Id=ASTAR; Password=ahha1223@A*;Connect Timeout=60;TrustServerCertificate=True;MultipleActiveResultSets=true;"
+  },
+  "JWT": {
+    "ValidAudience": "SecureApiUser",
+    "ValidIssuer": "SecureApi",
+    "SecretKey": "ByYM000OLlMQG6VVVp1OH7Xzyr7gHuw1qvUC5dcGt3SNM",
+    "DurationInMinutes": 800
+  },
+  "DefaultRecordsForPage": {
+    "pageSize": "10"
+  },
+  "LookupDefault": {
+    "RecordCount": 500
+  }
+}

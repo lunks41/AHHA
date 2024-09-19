@@ -1,0 +1,349 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class CustomerCreditLimitService : ICustomerCreditLimitService
+    {
+        private readonly IRepository<M_CustomerCreditLimit> _repository;
+        private ApplicationDbContext _context;
+
+        public CustomerCreditLimitService(IRepository<M_CustomerCreditLimit> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<CustomerCreditLimitViewModelCount> GetCustomerCreditLimitListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId)
+        {
+            CustomerCreditLimitViewModelCount countViewModel = new CustomerCreditLimitViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_CustomerCreditLimit M_Cusc INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_Cusc.CustomerId WHERE (M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%') AND M_Cusc.CustomerId<>0 AND M_Cusc.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.CustomerCreditLimit}))");
+
+                var result = await _repository.GetQueryAsync<CustomerCreditLimitViewModel>(RegId, $"SELECT M_Cusc.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,M_Cusc.EffectFrom,M_Cusc.EffectUntil,M_Cusc.IsExpires,M_Cusc.CreditLimitAmt,M_Cusc.CreateById,M_Cusc.CreateDate,M_Cusc.EditById,M_Cusc.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerCreditLimit M_Cusc INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_Cusc.CustomerId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Cusc.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Cusc.EditById WHERE (M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%') AND M_Cusc.CustomerId<>0 AND M_Cusc.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.CustomerCreditLimit})) ORDER BY M_Cus.CustomerName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.CustomerCreditLimit,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_CustomerCreditLimit",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<M_CustomerCreditLimit> GetCustomerCreditLimitByIdAsync(string RegId, Int16 CompanyId, Int32 CustomerId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_CustomerCreditLimit>(RegId, $"SELECT M_Cusc.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,M_Cusc.EffectFrom,M_Cusc.EffectUntil,M_Cusc.IsExpires,M_Cusc.CreditLimitAmt,M_Cusc.CreateById,M_Cusc.CreateDate,M_Cusc.EditById,M_Cusc.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_CustomerCreditLimit M_Cusc INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = M_Cusc.CustomerId WHERE M_Cus.CustomerId={CustomerId} AND M_Cusc.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.CustomerCreditLimit}))");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.CustomerCreditLimit,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_CustomerCreditLimit",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> AddCustomerCreditLimitAsync(string RegId, Int16 CompanyId, M_CustomerCreditLimit CustomerCreditLimit, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_CustomerCreditLimit WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.CustomerCreditLimit}))  UNION ALL SELECT 2 AS IsExist FROM dbo.M_CustomerCreditLimit WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.CustomerCreditLimit}))");
+
+                    if (DataExist.Count() > 0)
+                    {
+                        if (DataExist.ToList()[0].IsExist == 1)
+                        {
+                            return new SqlResponce { Result = -1, Message = "CustomerCreditLimit Code Exist" };
+                        }
+                        else if (DataExist.ToList()[0].IsExist == 2)
+                        {
+                            return new SqlResponce { Result = -2, Message = "CustomerCreditLimit Name Exist" };
+                        }
+                    }
+
+                    //Take the Next Id From SQL
+                    var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (CustomerId + 1) FROM dbo.M_CustomerCreditLimit WHERE (CustomerId + 1) NOT IN (SELECT CustomerId FROM dbo.M_CustomerCreditLimit)),1) AS NextId");
+                    if (sqlMissingResponce != null && sqlMissingResponce.NextId > 0)
+                    {
+                        #region Saving CustomerCreditLimit
+
+                        CustomerCreditLimit.CustomerId = Convert.ToInt32(sqlMissingResponce.NextId);
+
+                        var entity = _context.Add(CustomerCreditLimit);
+                        entity.Property(b => b.EditDate).IsModified = false;
+
+                        var CustomerCreditLimitToSave = _context.SaveChanges();
+
+                        #endregion Saving CustomerCreditLimit
+
+                        #region Save AuditLog
+
+                        if (CustomerCreditLimitToSave > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.CustomerCreditLimit,
+                                DocumentId = CustomerCreditLimit.CustomerId,
+                                DocumentNo = "",
+                                TblName = "M_CustomerCreditLimit",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "Customer Credit Limit Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.CustomerCreditLimit,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_CustomerCreditLimit",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> UpdateCustomerCreditLimitAsync(string RegId, Int16 CompanyId, M_CustomerCreditLimit CustomerCreditLimit, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (CustomerCreditLimit.CustomerId > 0)
+                    {
+                        var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_CustomerCreditLimit WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.CustomerCreditLimit})) AND CustomerId <>{CustomerCreditLimit.CustomerId}'");
+
+                        if (DataExist.Count() > 0)
+                        {
+                            if (DataExist.ToList()[0].IsExist == 2)
+                            {
+                                return new SqlResponce { Result = -2, Message = "CustomerCreditLimit Name Exist" };
+                            }
+                        }
+
+                        #region Update CustomerCreditLimit
+
+                        var entity = _context.Update(CustomerCreditLimit);
+
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+
+                        var counToUpdate = _context.SaveChanges();
+
+                        #endregion Update CustomerCreditLimit
+
+                        if (counToUpdate > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.CustomerCreditLimit,
+                                DocumentId = CustomerCreditLimit.CustomerId,
+                                DocumentNo = "",
+                                TblName = "M_CustomerCreditLimit",
+                                ModeId = (short)E_Mode.Update,
+                                Remarks = "CustomerCreditLimit Update Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Update Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Update Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.CustomerCreditLimit,
+                        DocumentId = CustomerCreditLimit.CustomerId,
+                        DocumentNo = "",
+                        TblName = "M_CustomerCreditLimit",
+                        ModeId = (short)E_Mode.Update,
+                        Remarks = ex.Message,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> DeleteCustomerCreditLimitAsync(string RegId, Int16 CompanyId, M_CustomerCreditLimit CustomerCreditLimit, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (CustomerCreditLimit.CustomerId > 0)
+                    {
+                        var CustomerCreditLimitToRemove = _context.M_CustomerCreditLimit.Where(x => x.CustomerId == CustomerCreditLimit.CustomerId).ExecuteDelete();
+
+                        if (CustomerCreditLimitToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.CustomerCreditLimit,
+                                DocumentId = CustomerCreditLimit.CustomerId,
+                                DocumentNo = "",
+                                TblName = "M_CustomerCreditLimit",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "CustomerCreditLimit Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "CustomerId Should be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.CustomerCreditLimit,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_CustomerCreditLimit",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

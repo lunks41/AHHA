@@ -1,0 +1,110 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using System.Reflection;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class BaseSettingsController : BaseController
+    {
+        private readonly IBaseSettingsService _BaseSettingsService;
+        private readonly ILogger<BaseSettingsController> _logger;
+
+        public BaseSettingsController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BaseSettingsController> logger, IBaseSettingsService BaseSettingsService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _BaseSettingsService = BaseSettingsService;
+        }
+
+        [HttpGet, Route("GetExchangeRate/{CurrencyId}/{TrnsDate}")]
+        [Authorize]
+        public async Task<ActionResult<decimal>> GetExchangeRate(Int16 CurrencyId, DateOnly TrnsDate, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var BaseViewModel = await _BaseSettingsService.GetExchangeRateAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, TrnsDate, headerViewModel.UserId);
+
+                    if (BaseViewModel == null)
+                        return NotFound(GenrateMessage.datanotfound);
+
+                    return StatusCode(StatusCodes.Status202Accepted, BaseViewModel);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetExchangeRateLocal/{CurrencyId}/{TrnsDate}")]
+        [Authorize]
+        public async Task<ActionResult<decimal>> GetExchangeRateLocal(Int16 CurrencyId, DateOnly TrnsDate, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var BaseViewModel = await _BaseSettingsService.GetExchangeRateLocalAsync(headerViewModel.RegId, headerViewModel.CompanyId, CurrencyId, TrnsDate, headerViewModel.UserId);
+
+                    if (BaseViewModel == null)
+                        return NotFound(GenrateMessage.datanotfound);
+
+                    return StatusCode(StatusCodes.Status202Accepted, BaseViewModel);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCheckPeriodClosed/{ModuleId}/{TrnsDate}")]
+        [Authorize]
+        public async Task<ActionResult<bool>> GetCheckPeriodClosed(Int16 ModuleId, DateOnly TrnsDate, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var BaseViewModel = await _BaseSettingsService.GetCheckPeriodClosedAsync(headerViewModel.RegId, headerViewModel.CompanyId, ModuleId, TrnsDate, headerViewModel.UserId);
+
+                    if (BaseViewModel == null)
+                        return NotFound(GenrateMessage.datanotfound);
+
+                    return StatusCode(StatusCodes.Status202Accepted, BaseViewModel);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+    }
+}

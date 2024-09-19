@@ -1,0 +1,110 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AHHA.Infra.Data;
+using System.Reflection;
+
+namespace AHHA.Infra.Services.Setting
+{
+    public sealed class BaseSettingsServices : IBaseSettingsService
+    {
+        private readonly IRepository<dynamic> _repository;
+        private ApplicationDbContext _context;
+
+        public BaseSettingsServices(IRepository<dynamic> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<decimal> GetExchangeRateAsync(string RegId, Int16 CompanyId, Int16 CurrencyId, DateOnly TrnsDate, Int16 UserId)
+        {
+            try
+            {
+                return await _repository.GetQuerySingleOrDefaultAsync<decimal>(RegId, $"select dbo.GetExchangeRate ({CompanyId},{CurrencyId},'{TrnsDate}')");
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.DecSetting,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_BaseSettings",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<decimal> GetExchangeRateLocalAsync(string RegId, Int16 CompanyId, Int16 CurrencyId, DateOnly TrnsDate, Int16 UserId)
+        {
+            try
+            {
+                return await _repository.GetQuerySingleOrDefaultAsync<decimal>(RegId, $"select dbo.GetExchangeRate_Local ({CompanyId},{CurrencyId},'{TrnsDate}')");
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.DecSetting,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_BaseSettings",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<bool> GetCheckPeriodClosedAsync(string RegId, Int16 CompanyId, Int16 ModuleId, DateOnly TrnsDate, Int16 UserId)
+        {
+            try
+            {
+                bool IsResult = await _repository.GetQuerySingleOrDefaultAsync<bool>(RegId, $"select  dbo.CheckPeriodClosed ({CompanyId},{ModuleId},'{TrnsDate}')");
+
+                return IsResult;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.DecSetting,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_BaseSettings",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+    }
+}

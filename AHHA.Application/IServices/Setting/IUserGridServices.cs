@@ -1,0 +1,15 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+
+namespace AHHA.Application.IServices.Setting
+{
+    public interface IUserGridServices
+    {
+        public Task<UserGridViewModelCount> GetUserGridAsync(string RegId, Int16 CompanyId, UserGridViewModel userGridViewModel, Int16 UserId);
+
+        public Task<UserGridViewModel> GetUserGridByIdAsync(string RegId, Int16 CompanyId, UserGridViewModel userGridViewModel, Int16 UserId);
+
+        public Task<SqlResponce> UpsertUserGridAsync(string RegId, Int16 CompanyId, S_UserGrdFormat s_UserGrdFormat, Int16 UserId);
+    }
+}

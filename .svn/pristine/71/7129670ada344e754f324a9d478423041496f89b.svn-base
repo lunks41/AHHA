@@ -1,0 +1,330 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Accounts;
+using AHHA.Application.IServices.Accounts.AR;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AP;
+using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Account.AR;
+using AHHA.Core.Models.Admin;
+using AHHA.Infra.Data;
+using Dapper;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.Design;
+using System.Data;
+using System.Reflection;
+
+namespace AHHA.Infra.Services.Accounts.AR
+{
+    public sealed class ARInvoiceService : IARInvoiceService
+    {
+        private readonly IRepository<ArInvoiceHd> _repository;
+        private ApplicationDbContext _context;
+        private readonly IAccountService _accountService;
+
+        public ARInvoiceService(IRepository<ArInvoiceHd> repository, ApplicationDbContext context, IAccountService accountService)
+        {
+            _repository = repository;
+            _context = context;
+            _accountService = accountService;
+        }
+
+        public async Task<ARInvoiceViewModelCount> GetARInvoiceListAsync(string RegId, Int16 CompanyId, short pageSize, short pageNumber, string searchString, Int16 UserId)
+        {
+            ARInvoiceViewModelCount countViewModel = new ARInvoiceViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.ArInvoiceHd Invhd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = Invhd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = Invhd.CurrencyId INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = Invhd.CreditTermId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = Invhd.BankId LEFT JOIN dbo.M_Country M_Cun ON M_Cun.CountryId = Invhd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = Invhd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = Invhd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = Invhd.CancelById WHERE (Invhd.InvoiceNo LIKE '%{searchString}%' OR Invhd.ReferenceNo LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%') AND Invhd.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice}))");
+
+                var result = await _repository.GetQueryAsync<ARInvoiceViewModel>(RegId, $"SELECT Invhd.CompanyId,Invhd.InvoiceId,Invhd.InvoiceNo,Invhd.ReferenceNo,Invhd.TrnDate,Invhd.AccountDate,Invhd.DeliveryDate,Invhd.DueDate,Invhd.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,Invhd.CurrencyId,M_Cur.CurrencyCode,M_Cur.CurrencyCode,Invhd.ExhRate,Invhd.CtyExhRate,Invhd.CreditTermId,M_Crd.CreditTermCode,M_Crd.CreditTermName,Invhd.BankId,M_Ban.BankCode,M_Ban.BankName,Invhd.TotAmt,Invhd.TotLocalAmt,Invhd.TotCtyAmt,Invhd.GstClaimDate,Invhd.GstAmt,Invhd.GstLocalAmt,Invhd.GstCtyAmt,Invhd.TotAmtAftGst,Invhd.TotLocalAmtAftGst,Invhd.TotCtyAmtAftGst,Invhd.BalAmt,Invhd.BalLocalAmt,Invhd.PayAmt,Invhd.PayLocalAmt,Invhd.ExGainLoss,Invhd.SalesOrderId,Invhd.SalesOrderNo,Invhd.OperationId,Invhd.OperationNo,Invhd.Remarks,Invhd.Address1,Invhd.Address2,Invhd.Address3,Invhd.Address4,Invhd.PinCode,Invhd.CountryId,M_Cun.CountryCode,M_Cun.CountryName,Invhd.PhoneNo,Invhd.FaxNo,Invhd.ContactName,Invhd.MobileNo,Invhd.EmailAdd,Invhd.ModuleFrom,Invhd.SupplierName,Invhd.SuppInvoiceNo,Invhd.APInvoiceId,Invhd.APInvoiceNo,Invhd.CreateById,Invhd.CreateDate,Invhd.EditById,Invhd.EditDate,Invhd.CancelById,Invhd.CancelDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy,Usr2.UserName AS CancelBy FROM dbo.ArInvoiceHd Invhd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = Invhd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = Invhd.CurrencyId INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = Invhd.CreditTermId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = Invhd.BankId LEFT JOIN dbo.M_Country M_Cun ON M_Cun.CountryId = Invhd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = Invhd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = Invhd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = Invhd.CancelById WHERE (Invhd.InvoiceNo LIKE '%{searchString}%' OR Invhd.ReferenceNo LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%') AND Invhd.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice})) ORDER BY Invhd.InvoiceNo,Invhd.AccountDate OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "Success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AR,
+                    TransactionId = (short)E_AR.Invoice,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "ArInvoiceHd",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<ARInvoiceViewModel> GetARInvoiceByIdAsync(string RegId, Int16 CompanyId, Int64 InvoiceId, string InvoiceNo, Int16 UserId)
+        {
+            ARInvoiceViewModel aRInvoiceViewModel = new ARInvoiceViewModel();
+            try
+            {
+                aRInvoiceViewModel = await _repository.GetQuerySingleOrDefaultAsync<ARInvoiceViewModel>(RegId, $"SELECT Invhd.CompanyId,Invhd.InvoiceId,Invhd.InvoiceNo,Invhd.ReferenceNo,Invhd.TrnDate,Invhd.AccountDate,Invhd.DeliveryDate,Invhd.DueDate,Invhd.CustomerId,Invhd.CurrencyId,Invhd.ExhRate,Invhd.CtyExhRate,Invhd.CreditTermId,Invhd.BankId,Invhd.TotAmt,Invhd.TotLocalAmt,Invhd.TotCtyAmt,Invhd.GstClaimDate,Invhd.GstAmt,Invhd.GstLocalAmt,Invhd.GstCtyAmt,Invhd.TotAmtAftGst,Invhd.TotLocalAmtAftGst,Invhd.TotCtyAmtAftGst,Invhd.BalAmt,Invhd.BalLocalAmt,Invhd.PayAmt,Invhd.PayLocalAmt,Invhd.ExGainLoss,Invhd.SalesOrderId,Invhd.SalesOrderNo,Invhd.OperationId,Invhd.OperationNo,Invhd.Remarks,Invhd.Address1,Invhd.Address2,Invhd.Address3,Invhd.Address4,Invhd.PinCode,Invhd.CountryId,Invhd.PhoneNo,Invhd.FaxNo,Invhd.ContactName,Invhd.MobileNo,Invhd.EmailAdd,Invhd.ModuleFrom,Invhd.SupplierName,Invhd.SuppInvoiceNo,Invhd.APInvoiceId,Invhd.APInvoiceNo,Invhd.CreateById,Invhd.CreateDate,Invhd.EditById,Invhd.EditDate,Invhd.CancelById,Invhd.CancelDate FROM dbo.ArInvoiceHd Invhd WHERE (Invhd.InvoiceId={InvoiceId} OR {InvoiceId}=0) AND (Invhd.InvoiceNo='{InvoiceNo}' OR '{InvoiceNo}'='{string.Empty}')");
+
+                if (aRInvoiceViewModel == null)
+                    return aRInvoiceViewModel;
+
+                var result = await _repository.GetQueryAsync<ARInvoiceDtViewModel>(RegId, $"SELECT InvoiceId,InvoiceNo,ItemNo,SeqNo,DocItemNo,ProductId,GLId,QTY,BillQTY,UomId,UnitPrice,TotAmt,TotLocalAmt,TotCurAmt,Remarks,GstId,GstPercentage,GstAmt,GstLocalAmt,GstCurAmt,DeliveryDate,DepartmentId,EmployeeId,PortId,VesselId,BargeId,VoyageId,OperationId,OperationNo,OPRefNo,SalesOrderId,SalesOrderNo,SupplyDate,SupplierName,SuppInvoiceNo,APInvoiceId,APInvoiceNo FROM dbo.ArInvoiceDt WHERE (InvoiceId={InvoiceId} OR {InvoiceId}=0) AND (InvoiceNo='{InvoiceNo}' OR '{InvoiceNo}'='{string.Empty}')");
+
+                aRInvoiceViewModel.data_details = result == null ? null : result.ToList();
+
+                return aRInvoiceViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AR,
+                    TransactionId = (short)E_AR.Invoice,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "ArInvoiceHd",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> SaveARInvoiceAsync(string RegId, Int16 CompanyId, ArInvoiceHd arInvoiceHd, List<ArInvoiceDt> arInvoiceDt, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    bool IsEdit = false;
+                    if (arInvoiceHd.InvoiceId != 0)
+                    {
+                        IsEdit = true;
+                    }
+                    if (IsEdit)
+                    {
+                        var StrExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.ArInvoiceHd WHERE IsCancel=0 And CompanyId={CompanyId} And InvoiceId={arInvoiceHd.InvoiceId}");
+                        if (StrExist.Count() > 0)
+                        {
+                            if (StrExist.ToList()[0].IsExist == 1)
+                                IsEdit = true;
+                            else
+                                return new SqlResponce { Result = -1, Message = "Invoice Not Exist" };
+                        }
+                        else
+                            return new SqlResponce { Result = -1, Message = "Invoice Not Exist" };
+                    }
+
+                    if (!IsEdit)
+                    {
+                        var documentIdNo = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec S_GENERATE_NUMBER_NOANDID {CompanyId},{(short)E_Modules.AR},{(short)E_AR.Invoice},'{arInvoiceHd.AccountDate.Date}'");
+                        if (documentIdNo.ToList()[0].DocumentId > 0 && documentIdNo.ToList()[0].DocumentNo != string.Empty)
+                        {
+                            arInvoiceHd.InvoiceId = documentIdNo.ToList()[0].DocumentId;
+                            arInvoiceHd.InvoiceNo = documentIdNo.ToList()[0].DocumentNo;
+                        }
+                    }
+                    else
+                    {
+                        arInvoiceHd.EditVersion = Convert.ToByte(arInvoiceHd.EditVersion + 1);
+                    }
+                    ////Document Id Generation
+                    //Int64 InvoiceId = await _accountService.GenrateDocumentId(RegId, (short)E_Modules.AR, (short)E_AR.Invoice);
+
+                    ////Document Number Generation
+                    //string InvoiceNo = await _accountService.GenrateDocumentNumber(RegId, CompanyId, (short)E_Modules.AR, (short)E_AR.Invoice, arInvoiceHd.AccountDate);
+
+                    //Saving Header
+                    if (IsEdit)
+                    {
+                        var entityHead = _context.Update(arInvoiceHd);
+                        entityHead.Property(b => b.CreateById).IsModified = false;
+                        entityHead.Property(b => b.CompanyId).IsModified = false;
+
+                        entityHead.Property(b => b.IsCancel).IsModified = false;
+                        entityHead.Property(b => b.CancelById).IsModified = false;
+                        entityHead.Property(b => b.CancelDate).IsModified = false;
+                        entityHead.Property(b => b.CancelRemarks).IsModified = false;
+                    }
+                    else
+                    {
+                        var entityHead = _context.Add(arInvoiceHd);
+                        entityHead.Property(b => b.EditDate).IsModified = false;
+                        entityHead.Property(b => b.EditById).IsModified = false;
+
+                        entityHead.Property(b => b.IsCancel).IsModified = false;
+                        entityHead.Property(b => b.CancelById).IsModified = false;
+                        entityHead.Property(b => b.CancelDate).IsModified = false;
+                        entityHead.Property(b => b.CancelRemarks).IsModified = false;
+                    }
+
+                    var SaveHeader = _context.SaveChanges();
+
+                    //Saving Details
+                    if (SaveHeader > 0)
+                    {
+                        if (IsEdit)
+                            _context.ArInvoiceDt.Where(x => x.InvoiceId == arInvoiceHd.InvoiceId).ExecuteDelete();
+
+                        foreach (var item in arInvoiceDt)
+                        {
+                            item.InvoiceId = arInvoiceHd.InvoiceId;
+                            item.InvoiceNo = arInvoiceHd.InvoiceNo;
+                            item.EditVersion = arInvoiceHd.EditVersion;
+                            _context.Add(item);
+                        }
+
+                        var SaveDetails = _context.SaveChanges();
+
+                        #region Save AuditLog
+
+                        if (SaveDetails > 0)
+                        {
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.AR,
+                                TransactionId = (short)E_AR.Invoice,
+                                DocumentId = arInvoiceHd.InvoiceId,
+                                DocumentNo = arInvoiceHd.InvoiceNo,
+                                TblName = "ArInvoiceHd",
+                                ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                                Remarks = "ARInvoice Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "InvoiceId Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.AR,
+                        TransactionId = (short)E_AR.Invoice,
+                        DocumentId = 0,
+                        DocumentNo = arInvoiceHd.InvoiceNo,
+                        TblName = "ArInvoiceHd",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> DeleteARInvoiceAsync(string RegId, Int16 CompanyId, Int64 InvoiceId, string InvoiceNo, string CanacelRemarks, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (InvoiceId > 0)
+                    {
+                        //Update IsCancle=1,Cancelby=userid,Canceldate=now,CancelRemarks=CancelRemarks
+                        var ARInvoiceToRemove = _context.ArInvoiceHd.Where(b => b.InvoiceId == InvoiceId).ExecuteUpdate(setPropertyCalls: setters => setters.SetProperty(b => b.IsCancel, true).SetProperty(b => b.CancelById, UserId).SetProperty(b => b.CancelDate, DateTime.Now).SetProperty(b => b.CancelRemarks, CanacelRemarks));
+
+                        if (ARInvoiceToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.AR,
+                                TransactionId = (short)E_AR.Invoice,
+                                DocumentId = InvoiceId,
+                                DocumentNo = InvoiceNo,
+                                TblName = "ArInvoiceHd",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "ARInvoice Cancel Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Cancel Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Cancel Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "Invoice Details Not exists" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.AR,
+                        TransactionId = (short)E_AR.Invoice,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "ArInvoiceHd",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

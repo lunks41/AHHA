@@ -1,0 +1,17 @@
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class UserGridController : ControllerBase
+    {
+        //No Need to Create Screen
+        //Getlist --moduleid/trsid/userid/compid
+        //Getbyid --moduleid/trsid/userid/compid/gridname
+        //Upsert  --moduleid/trsid/userid/compid/gridname
+
+        //GET BY 5 KEY
+        //ADD--update
+    }
+}

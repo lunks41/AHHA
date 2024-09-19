@@ -1,0 +1,175 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AHHA.Infra.Data;
+
+namespace AHHA.Infra.Services.Setting
+{
+    public sealed class UserGridServices : IUserGridServices
+    {
+        private readonly IRepository<S_UserGrdFormat> _repository;
+        private ApplicationDbContext _context;
+
+        public UserGridServices(IRepository<S_UserGrdFormat> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<UserGridViewModelCount> GetUserGridAsync(string RegId, Int16 CompanyId, UserGridViewModel userGridViewModel, Int16 UserId)
+        {
+            UserGridViewModelCount countViewModel = new UserGridViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM AdmTransaction AdmTrn INNER JOIN AdmModule AdmMod on AdmMod.ModuleId=AdmTrn.ModuleId where AdmMod.IsActive=1 And AdmTrn.IsActive=1 And AdmTrn.IsNumber=1  ORDER BY AdmMod.SeqNo,AdmTrn.SeqNo");
+
+                var result = await _repository.GetQueryAsync<UserGridViewModel>(RegId, $"SELECT S_usr.CompanyId,S_usr.UserId,S_usr.ModuleId,S_usr.TransactionId,S_usr.GrdName,S_usr.GrdString,S_usr.CreateById,S_usr.CreateDate,S_usr.EditById,S_usr.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM S_UserGrdFormat S_usr LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = S_usr.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = S_usr.EditById WHERE S_usr.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Admin},{(short)E_Admin.User})) and UserId={UserId} and ModuleId={userGridViewModel.ModuleId} and TransactionId={userGridViewModel.TransactionId}");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.User,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_UserGrdFormat",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<UserGridViewModel> GetUserGridByIdAsync(string RegId, Int16 CompanyId, UserGridViewModel userGridViewModel, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<UserGridViewModel>(RegId, $"SELECT CompanyId,UserId,ModuleId,TransactionId,GrdName,GrdString,CreateById,CreateDate,EditById,EditDate FROM dbo.S_UserGrdFormat WHERE CompanyId={CompanyId} and UserId={UserId} and ModuleId={userGridViewModel.ModuleId} and TransactionId={userGridViewModel.TransactionId} and GrdName='{userGridViewModel.GrdName}'");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Admin.User,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_UserGrdFormat",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> UpsertUserGridAsync(string RegId, Int16 CompanyId, S_UserGrdFormat S_UserGrdFormat, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.S_UserGrdFormat WHERE CompanyId = {CompanyId} and UserId={UserId} and ModuleId={S_UserGrdFormat.ModuleId} and TransactionId={S_UserGrdFormat.TransactionId} and GrdName='{S_UserGrdFormat.GrdName}'");
+
+                    if (DataExist.Count() > 0 && DataExist.ToList()[0].IsExist == 1)
+                    {
+                        var entity = _context.Update(S_UserGrdFormat);
+                        entity.Property(b => b.CreateById).IsModified = false;
+                        entity.Property(b => b.CompanyId).IsModified = false;
+                    }
+                    else
+                    {
+                        var entity = _context.Add(S_UserGrdFormat);
+                        entity.Property(b => b.EditDate).IsModified = false;
+                        entity.Property(b => b.EditById).IsModified = false;
+                    }
+
+                    var FinSettingsToSave = _context.SaveChanges();
+
+                    #region Save AuditLog
+
+                    if (FinSettingsToSave > 0)
+                    {
+                        //Saving Audit log
+                        var auditLog = new AdmAuditLog
+                        {
+                            CompanyId = CompanyId,
+                            ModuleId = (short)E_Modules.Admin,
+                            TransactionId = (short)E_Admin.User,
+                            DocumentId = 0,
+                            DocumentNo = "",
+                            TblName = "S_UserGrdFormat",
+                            ModeId = (short)E_Mode.Create,
+                            Remarks = "FinSettings Save Successfully",
+                            CreateById = UserId,
+                            CreateDate = DateTime.Now
+                        };
+
+                        _context.Add(auditLog);
+                        var auditLogSave = _context.SaveChanges();
+
+                        if (auditLogSave > 0)
+                        {
+                            transaction.Commit();
+                            return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = 1, Message = "Save Failed" };
+                    }
+
+                    #endregion Save AuditLog
+
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Admin,
+                        TransactionId = (short)E_Admin.User,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "S_UserGrdFormat",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

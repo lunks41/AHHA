@@ -1,0 +1,283 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class SupplierAddressController : BaseController
+    {
+        private readonly ISupplierAddressService _SupplierAddressService;
+        private readonly ILogger<SupplierAddressController> _logger;
+
+        public SupplierAddressController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierAddressController> logger, ISupplierAddressService SupplierAddressService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _SupplierAddressService = SupplierAddressService;
+        }
+
+        [HttpGet, Route("GetSupplierAddressbySupplierId/{SupplierId}")]
+        [Authorize]
+        public async Task<ActionResult> GetSupplierAddressBySupplierId(Int16 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var SupplierAddressViewModel = await _SupplierAddressService.GetSupplierAddressBySupplierIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
+
+                        if (SupplierAddressViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierAddressViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetSupplierAddressbyid/{SupplierAddressId}")]
+        [Authorize]
+        public async Task<ActionResult<SupplierAddressViewModel>> GetSupplierAddressById(Int16 SupplierAddressId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var supplierAddressViewModel = _mapper.Map<SupplierAddressViewModel>(await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId));
+
+                        if (supplierAddressViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, supplierAddressViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("AddSupplierAddress")]
+        [Authorize]
+        public async Task<ActionResult<SupplierAddressViewModel>> CreateSupplierAddress(SupplierAddressViewModel supplierAddressViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (supplierAddressViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var SupplierAddressEntity = new M_SupplierAddress
+                            {
+                                SupplierId = supplierAddressViewModel.SupplierId,
+                                AddressId = supplierAddressViewModel.AddressId,
+                                Address1 = supplierAddressViewModel.Address1,
+                                Address2 = supplierAddressViewModel.Address2,
+                                Address3 = supplierAddressViewModel.Address3,
+                                Address4 = supplierAddressViewModel.Address4,
+                                PinCode = supplierAddressViewModel.PinCode,
+                                CountryId = supplierAddressViewModel.CountryId,
+                                PhoneNo = supplierAddressViewModel.PhoneNo,
+                                FaxNo = supplierAddressViewModel.FaxNo,
+                                EmailAdd = supplierAddressViewModel.EmailAdd,
+                                WebUrl = supplierAddressViewModel.WebUrl,
+                                IsDefaultAdd = supplierAddressViewModel.IsDefaultAdd,
+                                IsDeliveryAdd = supplierAddressViewModel.IsDeliveryAdd,
+                                IsFinAdd = supplierAddressViewModel.IsFinAdd,
+                                IsSalesAdd = supplierAddressViewModel.IsSalesAdd,
+                                IsActive = supplierAddressViewModel.IsActive,
+                                CreateById = headerViewModel.UserId,
+                            };
+
+                            var createdSupplierAddress = await _SupplierAddressService.AddSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdSupplierAddress);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new SupplierAddress record");
+            }
+        }
+
+        [HttpPut, Route("UpdateSupplierAddress/{SupplierAddressId}")]
+        [Authorize]
+        public async Task<ActionResult<SupplierAddressViewModel>> UpdateSupplierAddress(Int16 SupplierAddressId, [FromBody] SupplierAddressViewModel supplierAddressViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsEdit)
+                        {
+                            if (SupplierAddressId != supplierAddressViewModel.AddressId)
+                                return StatusCode(StatusCodes.Status400BadRequest, "SupplierAddress ID mismatch");
+
+                            var SupplierAddressToUpdate = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
+
+                            if (SupplierAddressToUpdate == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var SupplierAddressEntity = new M_SupplierAddress
+                            {
+                                SupplierId = supplierAddressViewModel.SupplierId,
+                                AddressId = supplierAddressViewModel.AddressId,
+                                Address1 = supplierAddressViewModel.Address1,
+                                Address2 = supplierAddressViewModel.Address2,
+                                Address3 = supplierAddressViewModel.Address3,
+                                Address4 = supplierAddressViewModel.Address4,
+                                PinCode = supplierAddressViewModel.PinCode,
+                                CountryId = supplierAddressViewModel.CountryId,
+                                PhoneNo = supplierAddressViewModel.PhoneNo,
+                                FaxNo = supplierAddressViewModel.FaxNo,
+                                EmailAdd = supplierAddressViewModel.EmailAdd,
+                                WebUrl = supplierAddressViewModel.WebUrl,
+                                IsDefaultAdd = supplierAddressViewModel.IsDefaultAdd,
+                                IsDeliveryAdd = supplierAddressViewModel.IsDeliveryAdd,
+                                IsFinAdd = supplierAddressViewModel.IsFinAdd,
+                                IsSalesAdd = supplierAddressViewModel.IsSalesAdd,
+                                IsActive = supplierAddressViewModel.IsActive,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var sqlResponce = await _SupplierAddressService.UpdateSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+
+        [HttpDelete, Route("DeleteSupplierAddress/{SupplierAddressId}")]
+        [Authorize]
+        public async Task<ActionResult<M_SupplierAddress>> DeleteSupplierAddress(Int16 SupplierAddressId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Supplier, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var SupplierAddressToDelete = await _SupplierAddressService.GetSupplierAddressByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressId, headerViewModel.UserId);
+
+                            if (SupplierAddressToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponce = await _SupplierAddressService.DeleteSupplierAddressAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierAddressToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}
