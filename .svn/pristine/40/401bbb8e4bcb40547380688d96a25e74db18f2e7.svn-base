@@ -12,16 +12,16 @@ namespace AHHA.API.Controllers.Setting
 {
     [Route("api/Setting")]
     [ApiController]
-    public class FinSettingsController : BaseController
+    public class FinanceSettingController : BaseController
     {
-        private readonly IFinSettingsService _FinSettingsService;
-        private readonly ILogger<FinSettingsController> _logger;
+        private readonly IFinanceSettingService _FinanceSettingService;
+        private readonly ILogger<FinanceSettingController> _logger;
 
-        public FinSettingsController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<FinSettingsController> logger, IFinSettingsService FinSettingsService)
+        public FinanceSettingController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<FinanceSettingController> logger, IFinanceSettingService FinanceSettingService)
     : base(memoryCache, mapper, baseServices)
         {
             _logger = logger;
-            _FinSettingsService = FinSettingsService;
+            _FinanceSettingService = FinanceSettingService;
         }
 
         //get --companyid
@@ -29,7 +29,7 @@ namespace AHHA.API.Controllers.Setting
 
         [HttpGet, Route("GetFinSetting")]
         [Authorize]
-        public async Task<ActionResult<FinSettingViewModel>> GetFinSetting([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<FinanceSettingViewModel>> GetFinSetting([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace AHHA.API.Controllers.Setting
 
                     //if (userGroupRight != null)
                     //{
-                    var finSettingViewModel = await _FinSettingsService.GetFinSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+                    var finSettingViewModel = await _FinanceSettingService.GetFinSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
                     if (finSettingViewModel == null)
                         return NotFound(GenrateMessage.datanotfound);
@@ -66,7 +66,7 @@ namespace AHHA.API.Controllers.Setting
 
         [HttpPost, Route("UpsertFinSetting")]
         [Authorize]
-        public async Task<ActionResult<FinSettingViewModel>> UpsertFinSetting(FinSettingViewModel finSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<FinanceSettingViewModel>> UpsertFinSetting(FinanceSettingViewModel finSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -99,7 +99,7 @@ namespace AHHA.API.Controllers.Setting
                         EditDate = DateTime.Now,
                     };
 
-                    var createdFin = await _FinSettingsService.UpsertFinSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
+                    var createdFin = await _FinanceSettingService.UpsertFinSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
                     return StatusCode(StatusCodes.Status202Accepted, createdFin);
                     //    }
                     //    else

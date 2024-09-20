@@ -78,8 +78,8 @@ namespace AHHA.Application.IServices
 
         public Task<IEnumerable<UserLookupModel>> GetUserLookupListAsync(string RegId, Int16 CompanyId, Int16 UserId);
 
-        public Task<IEnumerable<CustomerAddressLookupModel>> GetCustomerAddressLookup_FinListAsync(string RegId, Int16 CompanyId, Int16 UserId, Int16 CustomerId);
+        public Task<IEnumerable<UserLookupModel>> GetCustomerAddressLookup_FinListAsync(string RegId, Int16 CompanyId, Int16 UserId,Int16 CustomerId);
+        public Task<IEnumerable<UserLookupModel>> GetCustomerContactLookup_FinListAsync(string RegId, Int16 CompanyId, Int16 UserId, Int16 CustomerId);
 
-        public Task<IEnumerable<CustomerContactLookupModel>> GetCustomerContactLookup_FinListAsync(string RegId, Int16 CompanyId, Int16 UserId, Int16 CustomerId);
     }
 }

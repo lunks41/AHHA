@@ -8,23 +8,22 @@ using AHHA.Infra.Data;
 
 namespace AHHA.Infra.Services.Setting
 {
-    public sealed class FinanceSettingServices : IFinanceSettingService
+    public sealed class DecimalSettingServices : IDecimalSettingService
     {
-        private readonly IRepository<S_FinSettings> _repository;
+        private readonly IRepository<S_DecSettings> _repository;
         private ApplicationDbContext _context;
 
-        public FinanceSettingServices(IRepository<S_FinSettings> repository, ApplicationDbContext context)
+        public DecimalSettingServices(IRepository<S_DecSettings> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        // add the number id
-        public async Task<FinanceSettingViewModel> GetFinSettingAsync(string RegId, Int16 CompanyId, Int16 UserId)
+        public async Task<DecimalSettingViewModel> GetDecSettingAsync(string RegId, Int16 CompanyId, Int16 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<FinanceSettingViewModel>(RegId, $"SELECT CompanyId,Base_CurrencyId,Local_CurrencyId,ExhGainLoss_GlId,BankCharge_GlId,ProfitLoss_GlId,RetEarning_GlId,SaleGst_GlId,PurGst_GlId,SaleDef_GlId,PurDef_GlId,CreateById,CreateDate,EditById,EditDate FROM dbo.S_FinSettings WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Setting},{(short)E_Setting.FinSetting}))");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<DecimalSettingViewModel>(RegId, $"SELECT CompanyId,AmtDec,LocAmtDec,PriceDec,QtyDec,ExhRateDec,DateFormat,CreateById,CreateDate,EditById,EditDate FROM dbo.S_DecSettings WHERE CompanyId={CompanyId}");
 
                 return result;
             }
@@ -33,11 +32,11 @@ namespace AHHA.Infra.Services.Setting
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)E_Modules.Admin,
-                    TransactionId = (short)E_Setting.FinSetting,
+                    ModuleId = (short)E_Modules.Setting,
+                    TransactionId = (short)E_Setting.DecSetting,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "S_FinSettings",
+                    TblName = "S_DecSettings",
                     ModeId = (short)E_Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId,
@@ -50,23 +49,23 @@ namespace AHHA.Infra.Services.Setting
             }
         }
 
-        public async Task<SqlResponce> UpsertFinSettingAsync(string RegId, Int16 CompanyId, S_FinSettings s_FinSettings, Int16 UserId)
+        public async Task<SqlResponce> UpsertDecSettingAsync(string RegId, Int16 CompanyId, S_DecSettings s_DecSettings, Int16 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.S_FinSettings WHERE CompanyId = {s_FinSettings.CompanyId}");
+                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.S_DecSettings WHERE CompanyId = {s_DecSettings.CompanyId}");
 
                     if (DataExist.Count() > 0 && DataExist.ToList()[0].IsExist == 1)
                     {
-                        var entity = _context.Update(s_FinSettings);
+                        var entity = _context.Update(s_DecSettings);
                         entity.Property(b => b.CreateById).IsModified = false;
                         entity.Property(b => b.CompanyId).IsModified = false;
                     }
                     else
                     {
-                        var entity = _context.Add(s_FinSettings);
+                        var entity = _context.Add(s_DecSettings);
                         entity.Property(b => b.EditDate).IsModified = false;
                         entity.Property(b => b.EditById).IsModified = false;
                     }
@@ -81,11 +80,11 @@ namespace AHHA.Infra.Services.Setting
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)E_Modules.Admin,
-                            TransactionId = (short)E_Setting.FinSetting,
+                            ModuleId = (short)E_Modules.Setting,
+                            TransactionId = (short)E_Setting.DecSetting,
                             DocumentId = 0,
                             DocumentNo = "",
-                            TblName = "S_FinSettings",
+                            TblName = "S_DecSettings",
                             ModeId = (short)E_Mode.Create,
                             Remarks = "FinSettings Save Successfully",
                             CreateById = UserId,
@@ -118,11 +117,11 @@ namespace AHHA.Infra.Services.Setting
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)E_Modules.Admin,
-                        TransactionId = (short)E_Setting.FinSetting,
+                        ModuleId = (short)E_Modules.Setting,
+                        TransactionId = (short)E_Setting.DecSetting,
                         DocumentId = 0,
                         DocumentNo = "",
-                        TblName = "S_FinSettings",
+                        TblName = "S_DecSettings",
                         ModeId = (short)E_Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId

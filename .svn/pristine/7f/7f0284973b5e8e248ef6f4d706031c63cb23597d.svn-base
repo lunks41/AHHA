@@ -1,6 +1,6 @@
 ﻿namespace AHHA.Core.Models.Setting
 {
-    public class FinSettingViewModel
+    public class FinanceSettingViewModel
     {
         public Int16 CompanyId { get; set; }
         public Int16 Base_CurrencyId { get; set; }

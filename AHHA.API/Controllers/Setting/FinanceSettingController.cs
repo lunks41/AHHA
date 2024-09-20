@@ -12,41 +12,39 @@ namespace AHHA.API.Controllers.Setting
 {
     [Route("api/Setting")]
     [ApiController]
-    public class DecSettingsController : BaseController
+    public class FinanceSettingController : BaseController
     {
-        private readonly IDecSettingsService _DecSettingsService;
-        private readonly ILogger<DecSettingsController> _logger;
+        private readonly IFinanceSettingService _FinanceSettingService;
+        private readonly ILogger<FinanceSettingController> _logger;
 
-        public DecSettingsController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<DecSettingsController> logger, IDecSettingsService DecSettingsService)
+        public FinanceSettingController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<FinanceSettingController> logger, IFinanceSettingService FinanceSettingService)
     : base(memoryCache, mapper, baseServices)
         {
             _logger = logger;
-            _DecSettingsService = DecSettingsService;
+            _FinanceSettingService = FinanceSettingService;
         }
-
-        //decimal screen
 
         //get --companyid
         //upsert  --company/model
 
-        [HttpGet, Route("GetDecSetting")]
+        [HttpGet, Route("GetFinSetting")]
         [Authorize]
-        public async Task<ActionResult<DecSettingViewModel>> GetDecSetting([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<FinanceSettingViewModel>> GetFinSetting([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    //var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Admin, (Int32)E_Admin.DecSetting, headerViewModel.UserId);
+                    //var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Admin, (Int32)E_Admin.FinSetting, headerViewModel.UserId);
 
                     //if (userGroupRight != null)
                     //{
-                    var DecSettingViewModel = await _DecSettingsService.GetDecSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+                    var finSettingViewModel = await _FinanceSettingService.GetFinSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
-                    if (DecSettingViewModel == null)
+                    if (finSettingViewModel == null)
                         return NotFound(GenrateMessage.datanotfound);
 
-                    return StatusCode(StatusCodes.Status202Accepted, DecSettingViewModel);
+                    return StatusCode(StatusCodes.Status202Accepted, finSettingViewModel);
                     //}
                     //else
                     //{
@@ -66,38 +64,42 @@ namespace AHHA.API.Controllers.Setting
             }
         }
 
-        [HttpPost, Route("UpsertDecSetting")]
+        [HttpPost, Route("UpsertFinSetting")]
         [Authorize]
-        public async Task<ActionResult<DecSettingViewModel>> UpsertDecSetting(DecSettingViewModel decSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<FinanceSettingViewModel>> UpsertFinSetting(FinanceSettingViewModel finSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    //var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Admin, (Int32)E_Admin.DecSetting, headerViewModel.UserId);
+                    //var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Admin, (Int32)E_Admin.FinSetting, headerViewModel.UserId);
 
                     //if (userGroupRight != null)
                     //{
                     //    if (userGroupRight.IsCreate)
                     //    {
-                    if (decSettingViewModel == null)
+                    if (finSettingViewModel == null)
                         return NotFound(GenrateMessage.datanotfound);
 
-                    var FinEntity = new S_DecSettings
+                    var FinEntity = new S_FinSettings
                     {
                         CompanyId = headerViewModel.CompanyId,
-                        AmtDec = decSettingViewModel.AmtDec,
-                        LocAmtDec = decSettingViewModel.LocAmtDec,
-                        PriceDec = decSettingViewModel.PriceDec,
-                        QtyDec = decSettingViewModel.QtyDec,
-                        ExhRateDec = decSettingViewModel.ExhRateDec,
-                        DateFormat = decSettingViewModel.DateFormat,
+                        Base_CurrencyId = finSettingViewModel.Base_CurrencyId,
+                        Local_CurrencyId = finSettingViewModel.Local_CurrencyId,
+                        ExhGainLoss_GlId = finSettingViewModel.ExhGainLoss_GlId,
+                        BankCharge_GlId = finSettingViewModel.BankCharge_GlId,
+                        ProfitLoss_GlId = finSettingViewModel.ProfitLoss_GlId,
+                        RetEarning_GlId = finSettingViewModel.RetEarning_GlId,
+                        SaleGst_GlId = finSettingViewModel.SaleGst_GlId,
+                        PurGst_GlId = finSettingViewModel.PurGst_GlId,
+                        SaleDef_GlId = finSettingViewModel.SaleDef_GlId,
+                        PurDef_GlId = finSettingViewModel.PurDef_GlId,
                         CreateById = headerViewModel.UserId,
                         EditById = headerViewModel.UserId,
                         EditDate = DateTime.Now,
                     };
 
-                    var createdFin = await _DecSettingsService.UpsertDecSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
+                    var createdFin = await _FinanceSettingService.UpsertFinSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
                     return StatusCode(StatusCodes.Status202Accepted, createdFin);
                     //    }
                     //    else

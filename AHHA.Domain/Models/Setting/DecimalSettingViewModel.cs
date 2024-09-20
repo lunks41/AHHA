@@ -1,13 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace AHHA.Core.Entities.Setting
+﻿namespace AHHA.Core.Models.Setting
 {
-    public class S_DecSettings
+    public class DecimalSettingViewModel
     {
-        [Key]
         public Int16 CompanyId { get; set; }
-
         public Int16 AmtDec { get; set; }
         public Int16 LocAmtDec { get; set; }
         public Int16 PriceDec { get; set; }
@@ -15,11 +10,10 @@ namespace AHHA.Core.Entities.Setting
         public Int16 ExhRateDec { get; set; }
         public string DateFormat { get; set; }
         public Int16 CreateById { get; set; }
-
-        [NotMapped]
         public DateTime CreateDate { get; set; }
-
         public Int16? EditById { get; set; }
         public DateTime? EditDate { get; set; }
+        public string CreateBy { get; set; }
+        public string EditBy { get; set; }
     }
 }

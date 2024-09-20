@@ -1,0 +1,13 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+
+namespace AHHA.Application.IServices.Setting
+{
+    public interface IDecimalSettingService
+    {
+        public Task<DecimalSettingViewModel> GetDecSettingAsync(string RegId, Int16 CompanyId, Int16 UserId);
+
+        public Task<SqlResponce> UpsertDecSettingAsync(string RegId, Int16 CompanyId, S_DecSettings s_DecSettings, Int16 UserId);
+    }
+}

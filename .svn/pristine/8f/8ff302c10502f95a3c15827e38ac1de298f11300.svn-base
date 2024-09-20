@@ -107,7 +107,7 @@ public static class InfraServices
         #region Setting
 
         serviceCollection.AddScoped<IDecimalSettingService, DecimalSettingServices>();
-        serviceCollection.AddScoped<IFinanceSettingService, FinanceSettingServices>();
+        serviceCollection.AddScoped<IFinSettingsService, FinSettingsServices>();
         serviceCollection.AddScoped<INumberFormatServices, NumberFormatServices>();
         serviceCollection.AddScoped<IUserGridServices, UserGridServices>();
         serviceCollection.AddScoped<IBaseSettingsService, BaseSettingsServices>();

@@ -1025,7 +1025,7 @@ namespace AHHA.API.Controllers
 
         [HttpGet, Route("GetCustomerAddressLookup_Fin/{CustromerId}")]
         [Authorize]
-        public async Task<ActionResult> GetCustomerAddressLookup_Fin(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetCustomerAddressLookup_Fin(Int16 RecordCount, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -1034,7 +1034,7 @@ namespace AHHA.API.Controllers
                     //enable the cache from appsetting...
                     //cache use into only MasterLookup
 
-                    var cacheData = await _MasterLookupService.GetCustomerAddressLookup_FinListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId, CustomerId);
+                    var cacheData = await _MasterLookupService.GetCustomerAddressLookup_FinListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.searchString, RecordCount, headerViewModel.UserId,CustomerId);
 
                     return StatusCode(StatusCodes.Status202Accepted, cacheData);
                 }
@@ -1050,10 +1050,9 @@ namespace AHHA.API.Controllers
                  "Error retrieving data from the database");
             }
         }
-
         [HttpGet, Route("GetCustomerContactLookup_Fin/{CustromerId}")]
         [Authorize]
-        public async Task<ActionResult> GetCustomerContactLookup_Fin(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetCustomerContactLookup_Fin(Int16 RecordCount, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -1062,7 +1061,7 @@ namespace AHHA.API.Controllers
                     //enable the cache from appsetting...
                     //cache use into only MasterLookup
 
-                    var cacheData = await _MasterLookupService.GetCustomerContactLookup_FinListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId, CustomerId);
+                    var cacheData = await _MasterLookupService.GetCustomerContactLookup_FinListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.searchString, RecordCount, headerViewModel.UserId, CustomerId);
 
                     return StatusCode(StatusCodes.Status202Accepted, cacheData);
                 }
@@ -1078,5 +1077,6 @@ namespace AHHA.API.Controllers
                  "Error retrieving data from the database");
             }
         }
+
     }
 }

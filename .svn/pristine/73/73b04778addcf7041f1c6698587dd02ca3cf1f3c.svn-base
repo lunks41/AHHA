@@ -1134,7 +1134,7 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<IEnumerable<CustomerAddressLookupModel>> GetCustomerAddressLookup_FinListAsync(string RegId, Int16 CompanyId, Int16 UserId, Int16 CustomerId)
+        public async Task<IEnumerable<CustomerAddressLookupModel>> GetCustomerAddressLookup_FinListAsync(string RegId, Int16 CompanyId, Int16 UserId,Int16 CustomerId)
         {
             try
             {

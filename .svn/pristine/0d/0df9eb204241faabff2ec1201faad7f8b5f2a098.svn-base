@@ -4,7 +4,7 @@ using AHHA.Core.Models.Setting;
 
 namespace AHHA.Application.IServices.Setting
 {
-    public interface IDecSettingsService
+    public interface IDecimalSettingService
     {
         public Task<DecSettingViewModel> GetDecSettingAsync(string RegId, Int16 CompanyId, Int16 UserId);
 

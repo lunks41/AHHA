@@ -73,9 +73,7 @@ namespace AHHA.Infra.Services.Accounts.AR
                 if (aRInvoiceViewModel == null)
                     return aRInvoiceViewModel;
 
-                //var result = await _repository.GetQueryAsync<ARInvoiceDtViewModel>(RegId, $"SELECT InvoiceId,InvoiceNo,ItemNo,SeqNo,DocItemNo,ProductId,GLId,QTY,BillQTY,UomId,UnitPrice,TotAmt,TotLocalAmt,TotCurAmt,Remarks,GstId,GstPercentage,GstAmt,GstLocalAmt,GstCurAmt,DeliveryDate,DepartmentId,EmployeeId,PortId,VesselId,BargeId,VoyageId,OperationId,OperationNo,OPRefNo,SalesOrderId,SalesOrderNo,SupplyDate,SupplierName,SuppInvoiceNo,APInvoiceId,APInvoiceNo FROM dbo.ArInvoiceDt WHERE InvoiceId={aRInvoiceViewModel.InvoiceId}");
-
-                var result = await _repository.GetQueryAsync<ARInvoiceDtViewModel>(RegId, $"SELECT Invdt.InvoiceId,Invdt.InvoiceNo,Invdt.ItemNo,Invdt.SeqNo,Invdt.DocItemNo,Invdt.ProductId,M_Pro.ProductCode,M_Pro.ProductName,Invdt.GLId,M_Gs.GstCode,M_Gs.GstName,Invdt.QTY,Invdt.BillQTY,Invdt.UomId,M_um.UomCode,M_um.UomName,Invdt.UnitPrice,Invdt.TotAmt,Invdt.TotLocalAmt,Invdt.TotCurAmt,Invdt.Remarks,Invdt.GstId,M_Gs.GstCode,M_Gs.GstName,Invdt.GstPercentage,Invdt.GstAmt,Invdt.GstLocalAmt,Invdt.GstCurAmt,Invdt.DeliveryDate,Invdt.DepartmentId,M_Dep.DepartmentCode,M_Dep.DepartmentName,Invdt.EmployeeId,M_Emp.EmployeeCode,M_Emp.EmployeeName,Invdt.PortId,M_Po.PortCode,M_Po.PortName,Invdt.VesselId,M_Vel.VesselCode,M_Vel.VesselName,Invdt.BargeId,M_Brg.BargeCode,M_Brg.BargeName,Invdt.VoyageId,M_Vo.VoyageNo,M_Vo.ReferenceNo,Invdt.OperationId,Invdt.OperationNo,Invdt.OPRefNo,Invdt.SalesOrderId,Invdt.SalesOrderNo,Invdt.SupplyDate,Invdt.SupplierName,Invdt.SuppInvoiceNo,Invdt.APInvoiceId,Invdt.APInvoiceNo FROM dbo.ArInvoiceDt Invdt LEFT JOIN dbo.M_Uom M_um ON M_um.UomId = Invdt.UomId LEFT JOIN dbo.M_ChartOfAccount M_chra ON M_chra.GLId = Invdt.GLId LEFT JOIN dbo.M_Product M_Pro ON M_Pro.ProductId = Invdt.ProductId LEFT JOIN dbo.M_Gst M_Gs ON M_Gs.GstId = Invdt.GstId LEFT JOIN dbo.M_Department M_Dep ON M_Dep.DepartmentId = Invdt.DepartmentId LEFT JOIN dbo.M_Employee M_Emp ON M_Emp.EmployeeId = Invdt.EmployeeId LEFT JOIN dbo.M_Port M_Po ON M_Po.PortId = Invdt.PortId LEFT JOIN dbo.M_Vessel M_Vel ON M_Vel.VesselId = Invdt.VesselId LEFT JOIN dbo.M_Barge M_Brg ON M_Brg.BargeId = Invdt.BargeId LEFT JOIN dbo.M_Voyage M_Vo ON M_Vo.VoyageId = Invdt.VoyageId  WHERE Invdt.InvoiceId={aRInvoiceViewModel.InvoiceId}");
+                var result = await _repository.GetQueryAsync<ARInvoiceDtViewModel>(RegId, $"SELECT InvoiceId,InvoiceNo,ItemNo,SeqNo,DocItemNo,ProductId,GLId,QTY,BillQTY,UomId,UnitPrice,TotAmt,TotLocalAmt,TotCurAmt,Remarks,GstId,GstPercentage,GstAmt,GstLocalAmt,GstCurAmt,DeliveryDate,DepartmentId,EmployeeId,PortId,VesselId,BargeId,VoyageId,OperationId,OperationNo,OPRefNo,SalesOrderId,SalesOrderNo,SupplyDate,SupplierName,SuppInvoiceNo,APInvoiceId,APInvoiceNo FROM dbo.ArInvoiceDt WHERE InvoiceId={aRInvoiceViewModel.InvoiceId}");
 
                 aRInvoiceViewModel.data_details = result == null ? null : result.ToList();
 
@@ -222,7 +220,7 @@ namespace AHHA.Infra.Services.Accounts.AR
                                 //Update Edit Version
                                 if (IsEdit)
                                     await _repository.UpsertExecuteScalarAsync(RegId, $"update ArinvoiceHd set EditVersion=EditVersion+1 where InvoiceId={arInvoiceHd.InvoiceId}; Update ArInvoiceDt set EditVersion=(SELECT TOP 1 EditVersion FROM dbo.ArInvoiceHd where InvoiceId={arInvoiceHd.InvoiceId}) where InvoiceId={arInvoiceHd.InvoiceId}");
-
+                                
                                 //Create / Update Ar Statement
                                 await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_CreateStatement {CompanyId},{UserId},{arInvoiceHd.InvoiceId},{(short)E_AR.Invoice}");
 
