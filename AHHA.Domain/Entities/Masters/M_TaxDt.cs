@@ -9,7 +9,7 @@ namespace AHHA.Core.Entities.Masters
         public Int16 TaxId { get; set; }
         public Int16 CompanyId { get; set; }
         public decimal TaxPercentage { get; set; }
-        public DateOnly ValidFrom { get; set; }
+        public DateTime ValidFrom { get; set; }
         public Int16 CreateById { get; set; }
 
         [NotMapped]
