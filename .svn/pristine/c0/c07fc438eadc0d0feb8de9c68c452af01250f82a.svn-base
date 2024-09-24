@@ -2,15 +2,14 @@
 
 namespace AHHA.Core.Models.Masters
 {
-    public class CurrencyDtViewModel
+    public class GstDtViewModel
     {
-        public Int16 CurrencyId { get; set; }
-        public string CurrencyCode { get; set; }
-        public string CurrencyName { get; set; }
+        public Int16 GstId { get; set; }
         public Int16 CompanyId { get; set; }
-        
-        [Column(TypeName = "decimal(18,10)")]
-        public decimal ExhRate { get; set; }
+
+        [Column(TypeName = "decimal(4,2)")]
+        public decimal GstPercentahge { get; set; }
+
         public DateTime ValidFrom { get; set; }
         public Int16 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
