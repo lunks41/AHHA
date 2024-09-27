@@ -1550,7 +1550,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<bool>("IsDefaultAdd")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleveryAdd")
+                    b.Property<bool>("IsDeliveryAdd")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsFinAdd")

@@ -1,0 +1,217 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class BankContactController : BaseController
+    {
+        private readonly IBankContactService _BankContactService;
+        private readonly ILogger<BankContactController> _logger;
+
+        public BankContactController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BankContactController> logger, IBankContactService BankContactService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _BankContactService = BankContactService;
+        }
+
+        //Get the Bank Contact List
+        [HttpGet, Route("getBankcontactbyBankid/{BankId}")]
+        [Authorize]
+        public async Task<ActionResult> GetBankContactByBankId(Int16 BankId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Bank, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var BankContactViewModel = await _BankContactService.GetBankContactByBankIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId);
+
+                        if (BankContactViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, BankContactViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        //Bank Contact one record by using contactid
+        [HttpGet, Route("getBankcontactbyid/{BankId}/{ContactId}")]
+        [Authorize]
+        public async Task<ActionResult<BankContactViewModel>> GetBankContactById(Int16 BankId, Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Bank, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var BankContactViewModel = await _BankContactService.GetBankContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, ContactId, headerViewModel.UserId);
+
+                        if (BankContactViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, BankContactViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveBankContact")]
+        [Authorize]
+        public async Task<ActionResult<BankContactViewModel>> SaveBankContact(BankContactViewModel BankContactViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Bank, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (BankContactViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var BankContactEntity = new M_BankContact
+                            {
+                                BankId = BankContactViewModel.BankId,
+                                ContactId = BankContactViewModel.ContactId,
+                                ContactName = BankContactViewModel.ContactName == null ? string.Empty : BankContactViewModel.ContactName,
+                                OtherName = BankContactViewModel.OtherName == null ? string.Empty : BankContactViewModel.OtherName,
+                                OffNo = BankContactViewModel.OffNo == null ? string.Empty : BankContactViewModel.OffNo,
+                                FaxNo = BankContactViewModel.FaxNo == null ? string.Empty : BankContactViewModel.FaxNo,
+                                EmailAdd = BankContactViewModel.EmailAdd == null ? string.Empty : BankContactViewModel.EmailAdd,
+                                MessId = BankContactViewModel.MessId == null ? string.Empty : BankContactViewModel.MessId,
+                                ContactMessType = BankContactViewModel.ContactMessType == null ? string.Empty : BankContactViewModel.ContactMessType,
+                                IsDefault = BankContactViewModel.IsDefault,
+                                IsFinance = BankContactViewModel.IsFinance,
+                                IsSales = BankContactViewModel.IsSales,
+                                IsActive = BankContactViewModel.IsActive,
+                                MobileNo = BankContactViewModel.MobileNo,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var sqlResponce = await _BankContactService.SaveBankContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankContactEntity, headerViewModel.UserId);
+
+                            if (sqlResponce.Result > 0)
+                            {
+                                var BankModel = await _BankContactService.GetBankContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankContactViewModel.BankId, Convert.ToInt16(sqlResponce.Result), headerViewModel.UserId);
+
+                                return StatusCode(StatusCodes.Status204NoContent, BankModel);
+                            }
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Bank record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteBankContact/{BankId}/{ContactId}")]
+        [Authorize]
+        public async Task<ActionResult<M_BankContact>> DeleteBankContact(Int16 BankId, Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)E_Master.Bank, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var sqlResponce = await _BankContactService.DeleteBankContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, ContactId, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

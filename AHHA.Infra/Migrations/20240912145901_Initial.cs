@@ -766,7 +766,7 @@ namespace AHHA.Infra.Migrations
                     EmailAdd = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     WebUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsDefaultAdd = table.Column<bool>(type: "bit", nullable: false),
-                    IsDeleveryAdd = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeliveryAdd = table.Column<bool>(type: "bit", nullable: false),
                     IsFinAdd = table.Column<bool>(type: "bit", nullable: false),
                     IsSalesAdd = table.Column<bool>(type: "bit", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),

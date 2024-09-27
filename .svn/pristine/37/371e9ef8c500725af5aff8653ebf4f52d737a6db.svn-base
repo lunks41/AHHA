@@ -1,0 +1,259 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class BankAddressService : IBankAddressService
+    {
+        private readonly IRepository<M_BankAddress> _repository;
+        private ApplicationDbContext _context;
+
+        public BankAddressService(IRepository<M_BankAddress> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        //Bank Address List
+        public async Task<IEnumerable<BankAddressViewModel>> GetBankAddressByBankIdAsync(string RegId, Int16 CompanyId, Int16 BankId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<BankAddressViewModel>(RegId, $"SELECT M_BankAdd.BankId,M_BankAdd.AddressId,M_BankAdd.Address1,M_BankAdd.Address2,M_BankAdd.Address3,M_BankAdd.Address4,M_BankAdd.PhoneNo,M_BankAdd.EmailAdd,M_BankAdd.IsDefaultAdd,M_BankAdd.IsDeliveryAdd,M_BankAdd.IsFinAdd,M_BankAdd.IsSalesAdd,M_BankAdd.IsActive,M_Bank.BankCode,M_Bank.BankName,M_Cou.CountryCode,M_Cou.CountryName,M_BankAdd.CreateById,M_BankAdd.CreateDate,M_BankAdd.EditById,M_BankAdd.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_BankAddress M_BankAdd INNER JOIN dbo.M_Banktomer M_Bank ON M_Bank.BankId = M_BankAdd.BankId INNER JOIN dbo.M_Country M_Cou ON M_Cou.CountryId = M_BankAdd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_BankAdd.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_BankAdd.EditById WHERE M_BankAdd.BankId = {BankId} AND M_BankAdd.AddressId <>0 ");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Bank,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_BankAddress",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        //Bank Address one record by using addressId
+        public async Task<BankAddressViewModel> GetBankAddressByIdAsync(string RegId, Int16 CompanyId, Int16 BankId, Int16 AddressId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<BankAddressViewModel>(RegId, $"SELECT  M_BankAdd.BankId,M_BankAdd.AddressId,M_BankAdd.Address1,M_BankAdd.Address2,M_BankAdd.Address3,M_BankAdd.Address4,M_BankAdd.PinCode,M_BankAdd.PhoneNo,M_BankAdd.FaxNo,M_BankAdd.WebUrl,M_BankAdd.EmailAdd,M_BankAdd.IsDefaultAdd,M_BankAdd.IsDeliveryAdd,M_BankAdd.IsFinAdd,M_BankAdd.IsSalesAdd,M_BankAdd.IsActive,M_Bank.BankCode,M_Bank.BankName,M_BankAdd.CountryId,M_Cou.CountryCode,M_Cou.CountryName,M_BankAdd.CreateById,M_BankAdd.CreateDate,M_BankAdd.EditById,M_BankAdd.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_BankAddress M_BankAdd INNER JOIN dbo.M_Banktomer M_Bank ON M_Bank.BankId = M_BankAdd.BankId INNER JOIN dbo.M_Country M_Cou ON M_Cou.CountryId = M_BankAdd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_BankAdd.CreateById LEFT JOIN AdmUser Usr1 ON Usr1.UserId = M_BankAdd.EditById WHERE M_BankAdd.BankId = {BankId} And M_BankAdd.AddressId={AddressId}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Bank,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_BankAddress",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> SaveBankAddressAsync(string RegId, Int16 CompanyId, M_BankAddress M_BankAddress, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                bool IsEdit = false;
+                try
+                {
+                    if (M_BankAddress.BankId != 0 && M_BankAddress.AddressId != 0)
+                    {
+                        IsEdit = true;
+                    }
+                    if (IsEdit)
+                    {
+                        var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_BankAddress where BankId = {M_BankAddress.BankId} And Address1 = '{M_BankAddress.Address1}' And AddressId<>{M_BankAddress.AddressId}");
+
+                        if (DataExist.Count() > 0 && (DataExist.ToList()[0].IsExist == 1 || DataExist.ToList()[0].IsExist == 2))
+                            return new SqlResponce { Result = -1, Message = "Bank Address Name Exist" };
+                    }
+                    if (IsEdit)
+                    {
+                        var entityHead = _context.Update(M_BankAddress);
+                        entityHead.Property(b => b.CreateById).IsModified = false;
+                        entityHead.Property(b => b.BankId).IsModified = false;
+                    }
+                    else
+                    {
+                        var sqlMissingResponce = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT ISNULL((SELECT TOP 1(AddressId + 1) FROM dbo.M_BankAddress WHERE BankId = {M_BankAddress.BankId} AND (AddressId + 1) NOT IN(SELECT AddressId FROM dbo.M_BankAddress where BankId= {M_BankAddress.BankId})),1) AS NextId");
+
+                        if (sqlMissingResponce != null && sqlMissingResponce.NextId > 0)
+                        {
+                            M_BankAddress.AddressId = Convert.ToInt16(sqlMissingResponce.NextId);
+
+                            M_BankAddress.EditDate = null;
+                            M_BankAddress.EditById = null;
+                            _context.Add(M_BankAddress);
+                        }
+                        else
+                            return new SqlResponce { Result = -1, Message = "Id Should not be zero" };
+                    }
+
+                    var BankToSave = _context.SaveChanges();
+
+                    #region Save AuditLog
+
+                    if (BankToSave > 0)
+                    {
+                        //Saving Audit log
+                        var auditLog = new AdmAuditLog
+                        {
+                            CompanyId = CompanyId,
+                            ModuleId = (short)E_Modules.Master,
+                            TransactionId = (short)E_Master.Bank,
+                            DocumentId = M_BankAddress.AddressId,
+                            DocumentNo = M_BankAddress.Address1,
+                            TblName = "M_BankAddress",
+                            ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                            Remarks = "Bank Save Successfully",
+                            CreateById = UserId,
+                            CreateDate = DateTime.Now
+                        };
+
+                        _context.Add(auditLog);
+                        var auditLogSave = _context.SaveChanges();
+
+                        if (auditLogSave > 0)
+                        {
+                            transaction.Commit();
+                            return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = 1, Message = "Save Failed" };
+                    }
+
+                    #endregion Save AuditLog
+
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Bank,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_BankAddress",
+                        ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<SqlResponce> DeleteBankAddressAsync(string RegId, Int16 CompanyId, Int16 BankId, Int16 AddressId, Int16 UserId)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (AddressId > 0 && BankId > 0)
+                    {
+                        var BankAddressToRemove = _context.M_BankAddress.Where(x => x.AddressId == AddressId && x.BankId == BankId).ExecuteDelete();
+
+                        if (BankAddressToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Bank,
+                                DocumentId = AddressId,
+                                DocumentNo = "",
+                                TblName = "M_BankAddress",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "BankAddress Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                transaction.Commit();
+                                return new SqlResponce { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "AddressId Should be zero" };
+                    }
+                    return new SqlResponce();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Bank,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_BankAddress",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}
