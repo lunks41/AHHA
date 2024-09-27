@@ -12,22 +12,22 @@ namespace AHHA.API.Controllers.Masters
 {
     [Route("api/Master")]
     [ApiController]
-    public class SupplierContactController : BaseController
+    public class SupplierBankController : BaseController
     {
-        private readonly ISupplierContactService _SupplierContactService;
-        private readonly ILogger<SupplierContactController> _logger;
+        private readonly ISupplierBankService _SupplierBankService;
+        private readonly ILogger<SupplierBankController> _logger;
 
-        public SupplierContactController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierContactController> logger, ISupplierContactService SupplierContactService)
+        public SupplierBankController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierBankController> logger, ISupplierBankService SupplierBankService)
     : base(memoryCache, mapper, baseServices)
         {
             _logger = logger;
-            _SupplierContactService = SupplierContactService;
+            _SupplierBankService = SupplierBankService;
         }
 
-        //Get the Supplier Contact List
-        [HttpGet, Route("getSuppliercontactbySupplierid/{SupplierId}")]
+        //Get the Supplier Bank List
+        [HttpGet, Route("getSupplierBankbySupplierid/{SupplierId}")]
         [Authorize]
-        public async Task<ActionResult> GetSupplierContactBySupplierId(Int16 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult> GetSupplierBankBySupplierId(Int16 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -37,12 +37,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var SupplierContactViewModel = await _SupplierContactService.GetSupplierContactBySupplierIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
+                        var SupplierBankViewModel = await _SupplierBankService.GetSupplierBankBySupplierIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
 
-                        if (SupplierContactViewModel == null)
+                        if (SupplierBankViewModel == null)
                             return NotFound(GenrateMessage.datanotfound);
 
-                        return StatusCode(StatusCodes.Status202Accepted, SupplierContactViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierBankViewModel);
                     }
                     else
                     {
@@ -62,10 +62,10 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        //Supplier Contact one record by using contactid
-        [HttpGet, Route("getSuppliercontactbyid/{SupplierId}/{ContactId}")]
+        //Supplier Bank one record by using Bankid
+        [HttpGet, Route("getSupplierBankbyid/{SupplierId}/{SupplierBankId}")]
         [Authorize]
-        public async Task<ActionResult<SupplierContactViewModel>> GetSupplierContactById(Int32 SupplierId, Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierBankViewModel>> GetSupplierBankById(Int32 SupplierId, Int16 SupplierBankId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -75,12 +75,12 @@ namespace AHHA.API.Controllers.Masters
 
                     if (userGroupRight != null)
                     {
-                        var SupplierContactViewModel = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, ContactId, headerViewModel.UserId);
+                        var SupplierBankViewModel = await _SupplierBankService.GetSupplierBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, SupplierBankId, headerViewModel.UserId);
 
-                        if (SupplierContactViewModel == null)
+                        if (SupplierBankViewModel == null)
                             return NotFound(GenrateMessage.datanotfound);
 
-                        return StatusCode(StatusCodes.Status202Accepted, SupplierContactViewModel);
+                        return StatusCode(StatusCodes.Status202Accepted, SupplierBankViewModel);
                     }
                     else
                     {
@@ -100,9 +100,9 @@ namespace AHHA.API.Controllers.Masters
             }
         }
 
-        [HttpPost, Route("SaveSupplierContact")]
+        [HttpPost, Route("SaveSupplierBank")]
         [Authorize]
-        public async Task<ActionResult<SupplierContactViewModel>> SaveSupplierContact(SupplierContactViewModel SupplierContactViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<SupplierBankViewModel>> SaveSupplierBank(SupplierBankViewModel SupplierBankViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -114,35 +114,38 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsCreate)
                         {
-                            if (SupplierContactViewModel == null)
+                            if (SupplierBankViewModel == null)
                                 return NotFound(GenrateMessage.datanotfound);
 
-                            var SupplierContactEntity = new M_SupplierContact
+                            var SupplierBankEntity = new M_SupplierBank
                             {
-                                SupplierId = SupplierContactViewModel.SupplierId,
-                                ContactId = SupplierContactViewModel.ContactId,
-                                ContactName = SupplierContactViewModel.ContactName == null ? string.Empty : SupplierContactViewModel.ContactName,
-                                OtherName = SupplierContactViewModel.OtherName == null ? string.Empty : SupplierContactViewModel.OtherName,
-                                OffNo = SupplierContactViewModel.OffNo == null ? string.Empty : SupplierContactViewModel.OffNo,
-                                FaxNo = SupplierContactViewModel.FaxNo == null ? string.Empty : SupplierContactViewModel.FaxNo,
-                                EmailAdd = SupplierContactViewModel.EmailAdd == null ? string.Empty : SupplierContactViewModel.EmailAdd,
-                                MessId = SupplierContactViewModel.MessId == null ? string.Empty : SupplierContactViewModel.MessId,
-                                ContactMessType = SupplierContactViewModel.ContactMessType == null ? string.Empty : SupplierContactViewModel.ContactMessType,
-                                IsDefault = SupplierContactViewModel.IsDefault,
-                                IsFinance = SupplierContactViewModel.IsFinance,
-                                IsSales = SupplierContactViewModel.IsSales,
-                                IsActive = SupplierContactViewModel.IsActive,
-                                MobileNo = SupplierContactViewModel.MobileNo,
+                                SupplierId = SupplierBankViewModel.SupplierId,
+                                SupplierBankId = SupplierBankViewModel.SupplierBankId,
+                                BankId = SupplierBankViewModel.BankId,
+                                BranchName = SupplierBankViewModel.BranchName == null ? string.Empty : SupplierBankViewModel.BranchName.Trim(),
+                                AccountNo = SupplierBankViewModel.AccountNo == null ? string.Empty : SupplierBankViewModel.AccountNo.Trim(),
+                                SwiftCode = SupplierBankViewModel.SwiftCode == null ? string.Empty : SupplierBankViewModel.SwiftCode.Trim(),
+                                OtherCode = SupplierBankViewModel.OtherCode == null ? string.Empty : SupplierBankViewModel.OtherCode.Trim(),
+                                Address1 = SupplierBankViewModel.Address1 == null ? string.Empty : SupplierBankViewModel.Address1.Trim(),
+                                Address2 = SupplierBankViewModel.Address2 == null ? string.Empty : SupplierBankViewModel.Address2.Trim(),
+                                Address3 = SupplierBankViewModel.Address3 == null ? string.Empty : SupplierBankViewModel.Address3.Trim(),
+                                Address4 = SupplierBankViewModel.Address4 == null ? string.Empty : SupplierBankViewModel.Address4.Trim(),
+                                PinCode = SupplierBankViewModel.PinCode == null ? string.Empty : SupplierBankViewModel.PinCode.Trim(),
+                                Remarks1 = SupplierBankViewModel.Remarks1 == null ? string.Empty : SupplierBankViewModel.Remarks1.Trim(),
+                                Remarks2 = SupplierBankViewModel.Remarks2 == null ? string.Empty : SupplierBankViewModel.Remarks2.Trim(),
+                                CountryId = SupplierBankViewModel.CountryId,
+                                IsDefault = SupplierBankViewModel.IsDefault,
+                                IsActive = SupplierBankViewModel.IsActive,
                                 CreateById = headerViewModel.UserId,
                                 EditById = headerViewModel.UserId,
                                 EditDate = DateTime.Now,
                             };
 
-                            var sqlResponce = await _SupplierContactService.SaveSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactEntity, headerViewModel.UserId);
+                            var sqlResponce = await _SupplierBankService.SaveSupplierBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierBankEntity, headerViewModel.UserId);
 
                             if (sqlResponce.Result > 0)
                             {
-                                var SupplierModel = await _SupplierContactService.GetSupplierContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierContactViewModel.SupplierId, Convert.ToInt16(sqlResponce.Result), headerViewModel.UserId);
+                                var SupplierModel = await _SupplierBankService.GetSupplierBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierBankViewModel.SupplierId, Convert.ToInt16(sqlResponce.Result), headerViewModel.UserId);
 
                                 return StatusCode(StatusCodes.Status202Accepted, SupplierModel);
                             }
@@ -168,13 +171,13 @@ namespace AHHA.API.Controllers.Masters
             {
                 _logger.LogError(ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error creating new SupplierContact record");
+                    "Error creating new SupplierBank record");
             }
         }
 
-        [HttpDelete, Route("DeleteSupplierContact/{SupplierId}/{ContactId}")]
+        [HttpDelete, Route("DeleteSupplierBank/{SupplierId}/{SupplierBankId}")]
         [Authorize]
-        public async Task<ActionResult<M_SupplierContact>> DeleteSupplierContact(Int32 SupplierId, Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<M_SupplierBank>> DeleteSupplierBank(Int32 SupplierId, Int16 SupplierBankId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
@@ -186,7 +189,7 @@ namespace AHHA.API.Controllers.Masters
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            var sqlResponce = await _SupplierContactService.DeleteSupplierContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, ContactId, headerViewModel.UserId);
+                            var sqlResponce = await _SupplierBankService.DeleteSupplierBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, SupplierBankId, headerViewModel.UserId);
 
                             return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
                         }
