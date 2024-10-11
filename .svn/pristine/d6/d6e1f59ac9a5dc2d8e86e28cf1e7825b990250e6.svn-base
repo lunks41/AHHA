@@ -1,0 +1,48 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.AR;
+using AHHA.Core.Common;
+using AHHA.Core.Models.Account;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Accounts.AR
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class ARTransactionController : BaseController
+    {
+        private readonly IARTransactionService _ARTransactionService;
+        private readonly ILogger<ARTransactionController> _logger;
+
+        public ARTransactionController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ARTransactionController> logger, IARTransactionService ARTransactionService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _ARTransactionService = ARTransactionService;
+        }
+
+        //GET ONE ARTransaction BY INVOICEID
+        [HttpGet, Route("GetARTransaction")]
+        [Authorize]
+        public async Task<ActionResult<GetTransactionViewModel>> GetARTransactionList(GetTransactionViewModel getTransactionViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                var ARTransactionViewModel = await _ARTransactionService.GetARTransactionListAsync(headerViewModel.RegId, headerViewModel.CompanyId, getTransactionViewModel.CurrencyId, getTransactionViewModel.CustomerId, headerViewModel.UserId);
+
+                if (ARTransactionViewModel == null)
+                    return NotFound(GenrateMessage.datanotfound);
+
+                return StatusCode(StatusCodes.Status202Accepted, ARTransactionViewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+    }
+}

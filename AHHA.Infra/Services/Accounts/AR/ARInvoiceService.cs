@@ -4,6 +4,7 @@ using AHHA.Application.IServices.Accounts.AR;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Accounts.AR;
 using AHHA.Core.Entities.Admin;
+using AHHA.Core.Helper;
 using AHHA.Core.Models.Account.AR;
 using AHHA.Infra.Data;
 using Microsoft.EntityFrameworkCore;

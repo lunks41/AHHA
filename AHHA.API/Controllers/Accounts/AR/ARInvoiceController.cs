@@ -2,12 +2,14 @@
 using AHHA.Application.IServices.Accounts.AR;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Helper;
 using AHHA.Core.Models.Account;
 using AHHA.Core.Models.Account.AR;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace AHHA.API.Controllers.Accounts.AR
 {
@@ -17,12 +19,14 @@ namespace AHHA.API.Controllers.Accounts.AR
     {
         private readonly IARInvoiceService _ARInvoiceService;
         private readonly ILogger<ARInvoiceController> _logger;
+        public readonly DateHelperNonStatic _dateHelperNonStatic;
 
-        public ARInvoiceController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ARInvoiceController> logger, IARInvoiceService ARInvoiceService)
+        public ARInvoiceController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, DateHelperNonStatic dateHelperNonStatic, ILogger<ARInvoiceController> logger, IARInvoiceService ARInvoiceService)
     : base(memoryCache, mapper, baseServices)
         {
             _logger = logger;
             _ARInvoiceService = ARInvoiceService;
+            _dateHelperNonStatic = dateHelperNonStatic;
         }
 
         //All ARINVOICE LIST
@@ -164,10 +168,10 @@ namespace AHHA.API.Controllers.Accounts.AR
                                 InvoiceId = Convert.ToInt64(string.IsNullOrEmpty(aRInvoiceViewModel.InvoiceId) ? 0 : aRInvoiceViewModel.InvoiceId.Trim()),
                                 InvoiceNo = aRInvoiceViewModel.InvoiceNo,
                                 ReferenceNo = aRInvoiceViewModel.ReferenceNo == null ? string.Empty : aRInvoiceViewModel.ReferenceNo,
-                                TrnDate = aRInvoiceViewModel.TrnDate,
-                                AccountDate = aRInvoiceViewModel.AccountDate,
-                                DeliveryDate = aRInvoiceViewModel.DeliveryDate,
-                                DueDate = aRInvoiceViewModel.DueDate,
+                                TrnDate = _dateHelperNonStatic.ParseClientDate(aRInvoiceViewModel.TrnDate),
+                                AccountDate = _dateHelperNonStatic.ParseClientDate(aRInvoiceViewModel.AccountDate),
+                                DeliveryDate = _dateHelperNonStatic.ParseClientDate(aRInvoiceViewModel.DeliveryDate),
+                                DueDate = _dateHelperNonStatic.ParseClientDate(aRInvoiceViewModel.DueDate),
                                 CustomerId = aRInvoiceViewModel.CustomerId,
                                 CurrencyId = aRInvoiceViewModel.CurrencyId,
                                 ExhRate = aRInvoiceViewModel.ExhRate == null ? 0 : aRInvoiceViewModel.ExhRate,
@@ -177,7 +181,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                 TotAmt = aRInvoiceViewModel.TotAmt == null ? 0 : aRInvoiceViewModel.TotAmt,
                                 TotLocalAmt = aRInvoiceViewModel.TotLocalAmt == null ? 0 : aRInvoiceViewModel.TotLocalAmt,
                                 TotCtyAmt = aRInvoiceViewModel.TotCtyAmt == null ? 0 : aRInvoiceViewModel.TotCtyAmt,
-                                GstClaimDate = DateOnly.FromDateTime(aRInvoiceViewModel.GstClaimDate),
+                                GstClaimDate = _dateHelperNonStatic.ParseClientDate(aRInvoiceViewModel.GstClaimDate),
                                 GstAmt = aRInvoiceViewModel.GstAmt == null ? 0 : aRInvoiceViewModel.GstAmt,
                                 GstLocalAmt = aRInvoiceViewModel.GstLocalAmt == null ? 0 : aRInvoiceViewModel.GstLocalAmt,
                                 GstCtyAmt = aRInvoiceViewModel.GstCtyAmt == null ? 0 : aRInvoiceViewModel.GstCtyAmt,
@@ -244,7 +248,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                         GstAmt = item.GstAmt,
                                         GstLocalAmt = item.GstLocalAmt,
                                         GstCtyAmt = item.GstCtyAmt,
-                                        DeliveryDate = item.DeliveryDate,
+                                        DeliveryDate = _dateHelperNonStatic.ParseClientDate(item.DeliveryDate),
                                         DepartmentId = item.DepartmentId,
                                         EmployeeId = item.EmployeeId,
                                         PortId = item.PortId,
@@ -256,7 +260,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                         OPRefNo = item.OPRefNo,
                                         SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(item.SalesOrderId.Trim())),
                                         SalesOrderNo = item.SalesOrderNo,
-                                        SupplyDate = item.SupplyDate,
+                                        SupplyDate = _dateHelperNonStatic.ParseClientDate(item.SupplyDate),
                                         SupplierName = item.SupplierName,
                                         SuppInvoiceNo = item.SuppInvoiceNo,
                                         APInvoiceId = Convert.ToInt64(string.IsNullOrEmpty(item.APInvoiceId.Trim())),
@@ -315,13 +319,13 @@ namespace AHHA.API.Controllers.Accounts.AR
                     {
                         if (userGroupRight.IsDelete)
                         {
-                            if (!string.IsNullOrEmpty(deleteViewModel.InvoiceId))
+                            if (!string.IsNullOrEmpty(deleteViewModel.DocumentId))
                             {
-                                var sqlResponce = await _ARInvoiceService.DeleteARInvoiceAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(deleteViewModel.InvoiceId), deleteViewModel.CancelRemarks, headerViewModel.UserId);
+                                var sqlResponce = await _ARInvoiceService.DeleteARInvoiceAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(deleteViewModel.DocumentId), deleteViewModel.CancelRemarks, headerViewModel.UserId);
 
                                 if (sqlResponce.Result > 0)
                                 {
-                                    var customerModel = await _ARInvoiceService.GetARInvoiceByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(deleteViewModel.InvoiceId), string.Empty, headerViewModel.UserId);
+                                    var customerModel = await _ARInvoiceService.GetARInvoiceByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId);
 
                                     return StatusCode(StatusCodes.Status202Accepted, customerModel);
                                 }
@@ -354,6 +358,44 @@ namespace AHHA.API.Controllers.Accounts.AR
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Error deleting data");
             }
+        }
+
+        [NonAction]
+        public DateTime ConvertStringToDate(string Passdate, string DateFormat)
+        {
+            DateTime returndate = new DateTime();
+            //Array splitdate;
+            //Array splitdateformat;
+
+            //if (string.IsNullOrEmpty(Passdate))
+            //{
+            //    if (Passdate.Contains('/'))
+            //    {
+            //        splitdate = Passdate.Split('/');
+            //    }
+            //    else if (Passdate.Contains('-'))
+            //    {
+            //        splitdate = Passdate.Split('-');
+            //    }
+            //}
+
+            string[] formats = { "yyyy-MM-dd", "dd-MM-yyyy hh:mm:ss", "dd-MM-yyyy", "MM-dd-yyyy", "MM-dd-yyyy hh:mm:ss", "dd-MM-yyyy hh:mm:ss", "dd/MM/yyyy", "MM/dd/yyyy", "MM/dd/yyyy hh:mm:ss" };
+
+            if (DateTime.TryParseExact(Passdate, formats,
+                                    System.Globalization.CultureInfo.InvariantCulture,
+                                    System.Globalization.DateTimeStyles.None,
+                                    out DateTime date))
+            {
+                return date;
+            }
+
+            return returndate;
+        }
+
+        [NonAction]
+        public string ConvertDateToString(DateTime Passdate, string DateFormat = "yyyy-MM-dd")
+        {
+            return Passdate.ToString(DateFormat);
         }
     }
 }

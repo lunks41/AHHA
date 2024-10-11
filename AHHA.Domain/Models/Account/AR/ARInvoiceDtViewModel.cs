@@ -1,10 +1,24 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using AHHA.Core.Helper;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AHHA.Core.Models.Account.AR
 {
     public class ARInvoiceDtViewModel
     {
+        //Get & Set the formate
+
+        private DateTime _supplyDate;
+        private DateTime _deliveryDate;
+        private readonly DateHelperNonStatic _dateHelperNonStatic;
+
+        public ARInvoiceDtViewModel(DateHelperNonStatic dateHelperNonStatic)
+        {
+            _dateHelperNonStatic = dateHelperNonStatic;
+        }
+
+        //actual Model
         public string InvoiceId { get; set; }
+
         public string InvoiceNo { get; set; }
         public Int16 ItemNo { get; set; }
         public Int16 SeqNo { get; set; }
@@ -55,7 +69,12 @@ namespace AHHA.Core.Models.Account.AR
         [Column(TypeName = "decimal(18,4)")]
         public decimal GstCtyAmt { get; set; }
 
-        public DateTime DeliveryDate { get; set; }
+        public string DeliveryDate
+        {
+            get { return DateHelperStatic.FormatDate(_deliveryDate, _dateHelperNonStatic); }
+            set { _deliveryDate = DateHelperStatic.ParseDBDate(value); }
+        }
+
         public Int16 DepartmentId { get; set; }
         public string DepartmentCode { get; set; }
         public string DepartmentName { get; set; }
@@ -79,7 +98,13 @@ namespace AHHA.Core.Models.Account.AR
         public string OPRefNo { get; set; }
         public string SalesOrderId { get; set; }
         public string SalesOrderNo { get; set; }
-        public DateTime SupplyDate { get; set; }
+
+        public string SupplyDate
+        {
+            get { return DateHelperStatic.FormatDate(_supplyDate, _dateHelperNonStatic); }
+            set { _supplyDate = DateHelperStatic.ParseDBDate(value); }
+        }
+
         public string SupplierName { get; set; }
         public string SuppInvoiceNo { get; set; }
         public string APInvoiceId { get; set; }
