@@ -105,6 +105,7 @@ public static class InfraServices
         serviceCollection.AddScoped<IARInvoiceService, ARInvoiceService>();
         serviceCollection.AddScoped<IAPInvoiceService, APInvoiceService>();
         serviceCollection.AddScoped<IARCreditNoteService, ARCreditNoteService>();
+        serviceCollection.AddScoped<IARDebitNoteService, ARDebitNoteService>();
         serviceCollection.AddScoped<IARReceiptService, ARReceiptService>();
         serviceCollection.AddScoped<IARTransactionService, ARTransactionService>();
 

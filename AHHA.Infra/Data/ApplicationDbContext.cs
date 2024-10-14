@@ -105,6 +105,8 @@ namespace AHHA.Infra.Data
         public DbSet<ArInvoiceDt> ArInvoiceDt { get; set; }
         public DbSet<ArCreditNoteHd> ArCreditNoteHd { get; set; }
         public DbSet<ArCreditNoteDt> ArCreditNoteDt { get; set; }
+        public DbSet<ArDebitNoteHd> ArDebitNoteHd { get; set; }
+        public DbSet<ArDebitNoteDt> ArDebitNoteDt { get; set; }
         public DbSet<ArReceiptHd> ArReceiptHd { get; set; }
         public DbSet<ArReceiptDt> ArReceiptDt { get; set; }
 
