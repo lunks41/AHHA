@@ -22,18 +22,18 @@ namespace AHHA.Infra.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AR.ArInvoiceDt", b =>
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AP.ApInvoiceDt", b =>
                 {
                     b.Property<long>("InvoiceId")
                         .HasColumnType("bigint");
 
-                    b.Property<short>("ItemNo")
-                        .HasColumnType("smallint");
+                    b.Property<int>("ItemNo")
+                        .HasColumnType("int");
 
-                    b.Property<long>("APInvoiceId")
+                    b.Property<long>("ArInvoiceId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("APInvoiceNo")
+                    b.Property<string>("ArInvoiceNo")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<short>("BargeId")
@@ -42,14 +42,20 @@ namespace AHHA.Infra.Migrations
                     b.Property<decimal>("BillQTY")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateOnly>("DeliveryDate")
-                        .HasColumnType("date");
+                    b.Property<string>("CustInvoiceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CustomerName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<short>("DepartmentId")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("DocItemNo")
-                        .HasColumnType("smallint");
+                    b.Property<int>("DocItemNo")
+                        .HasColumnType("int");
 
                     b.Property<byte>("EditVersion")
                         .HasColumnType("tinyint");
@@ -66,8 +72,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<decimal>("GstCtyAmt")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<byte>("GstId")
-                        .HasColumnType("tinyint");
+                    b.Property<short>("GstId")
+                        .HasColumnType("smallint");
 
                     b.Property<decimal>("GstLocalAmt")
                         .HasColumnType("decimal(18,2)");
@@ -90,11 +96,935 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("PortId")
                         .HasColumnType("smallint");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
+                    b.Property<short>("ProductId")
+                        .HasColumnType("smallint");
+
+                    b.Property<long>("PurOrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PurOrderNo")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("QTY")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("SupplyDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("TotAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotCtyAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotLocalAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<short>("UomId")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("VesselId")
+                        .HasColumnType("int");
+
+                    b.Property<short>("VoyageId")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("InvoiceId", "ItemNo");
+
+                    b.ToTable("ApInvoiceDt");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AP.ApInvoiceHd", b =>
+                {
+                    b.Property<long>("InvoiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("InvoiceId"));
+
+                    b.Property<DateTime>("AccountDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Address1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address4")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ArInvoiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ArInvoiceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("BalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("BalLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CancelById")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("CancelRemarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CompanyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("ContactName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CreditTermId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("CtyExhRate")
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<short>("CurrencyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("CustomerName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("EditVersion")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("EmailAdd")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("ExGainLoss")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("ExhRate")
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<string>("FaxNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("GstAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("GstClaimDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("GstCtyAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("GstLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("InvoiceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCancel")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MobileNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ModuleFrom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("OperationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OperationNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PayAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("PayLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("PhoneNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PinCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("PurchaseOrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PurchaseOrderNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReferenceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SuppInvoiceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotAmtAftGst")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotCtyAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotCtyAmtAftGst")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotLocalAmtAftGst")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("TrnDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("InvoiceId");
+
+                    b.ToTable("ApInvoiceHd");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AR.ArCreditNoteDt", b =>
+                {
+                    b.Property<long>("CreditNoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ItemNo")
+                        .HasColumnType("int");
+
+                    b.Property<long>("APCreditNoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("APCreditNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("BargeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("BillQTY")
+                        .HasColumnType("decimal(9,4)");
+
+                    b.Property<string>("CreditNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short>("DepartmentId")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("DocItemNo")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("EditVersion")
+                        .HasColumnType("tinyint");
+
+                    b.Property<short>("EmployeeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("GLId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("GstAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("GstCtyAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<short>("GstId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("GstLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("GstPercentage")
+                        .HasColumnType("decimal(4,2)");
+
+                    b.Property<string>("OPRefNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("OperationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OperationNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("PortId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("ProductId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("QTY")
+                        .HasColumnType("decimal(9,4)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("SalesOrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SalesOrderNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("SuppCreditNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SupplierName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SupplyDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("TotAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotCtyAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(9,4)");
+
+                    b.Property<short>("UomId")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("VesselId")
+                        .HasColumnType("int");
+
+                    b.Property<short>("VoyageId")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("CreditNoteId", "ItemNo");
+
+                    b.ToTable("ArCreditNoteDt");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AR.ArCreditNoteHd", b =>
+                {
+                    b.Property<long>("CreditNoteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("CreditNoteId"));
+
+                    b.Property<long>("APCreditNoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("APCreditNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("AccountDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Address1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address4")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("BalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("BalLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CancelById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("CancelDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CancelRemarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CompanyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("ContactName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreditNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CreditTermId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("CtyExhRate")
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<short>("CurrencyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("EditVersion")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("EmailAdd")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("ExGainLoss")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("ExhRate")
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<string>("FaxNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("GstAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("GstClaimDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("GstCtyAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("GstLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<long>("InvoiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("InvoiceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCancel")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MobileNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ModuleFrom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("OperationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OperationNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PayAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("PayLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("PhoneNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PinCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReferenceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("SalesOrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SalesOrderNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SuppCreditNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SupplierName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TotAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotAmtAftGst")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotCtyAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotCtyAmtAftGst")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotLocalAmtAftGst")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("TrnDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CreditNoteId");
+
+                    b.ToTable("ArCreditNoteHd");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AR.ArDebitNoteDt", b =>
+                {
+                    b.Property<long>("DebitNoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ItemNo")
+                        .HasColumnType("int");
+
+                    b.Property<long>("APDebitNoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("APDebitNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("BargeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("BillQTY")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DebitNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short>("DepartmentId")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("DocItemNo")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("EditVersion")
+                        .HasColumnType("tinyint");
+
+                    b.Property<short>("EmployeeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("GLId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("GstAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GstCtyAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<short>("GstId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("GstLocalAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GstPercentage")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("OPRefNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("OperationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OperationNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("PortId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("ProductId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("QTY")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("SalesOrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SalesOrderNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("SuppDebitNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SupplierName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SupplyDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("TotAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotCtyAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotLocalAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<short>("UomId")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("VesselId")
+                        .HasColumnType("int");
+
+                    b.Property<short>("VoyageId")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("DebitNoteId", "ItemNo");
+
+                    b.ToTable("ArDebitNoteDt");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AR.ArDebitNoteHd", b =>
+                {
+                    b.Property<long>("DebitNoteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("DebitNoteId"));
+
+                    b.Property<long>("APDebitNoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("APDebitNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("AccountDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Address1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address4")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("BalAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("BalLocalAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CancelById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("CancelDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CancelRemarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CompanyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("ContactName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short>("CreditTermId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("CtyExhRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<short>("CurrencyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DebitNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("EditVersion")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("EmailAdd")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("ExGainLoss")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ExhRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("FaxNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("GstAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("GstClaimDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("GstCtyAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GstLocalAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<long>("InvoiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("InvoiceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCancel")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MobileNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ModuleFrom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("OperationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OperationNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PayAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PayLocalAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PhoneNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PinCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReferenceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("SalesOrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SalesOrderNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SuppDebitNoteNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SupplierName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TotAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotAmtAftGst")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotCtyAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotCtyAmtAftGst")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotLocalAmt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotLocalAmtAftGst")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("TrnDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("DebitNoteId");
+
+                    b.ToTable("ArDebitNoteHd");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AR.ArInvoiceDt", b =>
+                {
+                    b.Property<long>("InvoiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<short>("ItemNo")
+                        .HasColumnType("smallint");
+
+                    b.Property<long>("APInvoiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("APInvoiceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("BargeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("BillQTY")
+                        .HasColumnType("decimal(9,4)");
+
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short>("DepartmentId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("DocItemNo")
+                        .HasColumnType("smallint");
+
+                    b.Property<byte>("EditVersion")
+                        .HasColumnType("tinyint");
+
+                    b.Property<short>("EmployeeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("GLId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("GstAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("GstCtyAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<byte>("GstId")
+                        .HasColumnType("tinyint");
+
+                    b.Property<decimal>("GstLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("GstPercentage")
+                        .HasColumnType("decimal(4,2)");
+
+                    b.Property<string>("InvoiceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OPRefNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("OperationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OperationNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("PortId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("ProductId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("QTY")
+                        .HasColumnType("decimal(9,4)");
 
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
@@ -118,25 +1048,25 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("TotAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotCtyAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotLocalAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(9,4)");
 
-                    b.Property<byte>("UomId")
-                        .HasColumnType("tinyint");
+                    b.Property<short>("UomId")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("VesselId")
                         .HasColumnType("int");
 
-                    b.Property<int>("VoyageId")
-                        .HasColumnType("int");
+                    b.Property<short>("VoyageId")
+                        .HasColumnType("smallint");
 
                     b.HasKey("InvoiceId", "ItemNo");
 
@@ -157,8 +1087,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("APInvoiceNo")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("AccountDate")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("AccountDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Address1")
                         .HasColumnType("nvarchar(max)");
@@ -172,11 +1102,11 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Address4")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("BankId")
-                        .HasColumnType("int");
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
 
-                    b.Property<int?>("CancelById")
-                        .HasColumnType("int");
+                    b.Property<short?>("CancelById")
+                        .HasColumnType("smallint");
 
                     b.Property<DateTime?>("CancelDate")
                         .HasColumnType("datetime2");
@@ -190,8 +1120,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("ContactName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CountryId")
-                        .HasColumnType("int");
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
@@ -200,7 +1130,7 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("smallint");
 
                     b.Property<decimal>("CtyExhRate")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,10)");
 
                     b.Property<short>("CurrencyId")
                         .HasColumnType("smallint");
@@ -208,11 +1138,11 @@ namespace AHHA.Infra.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<DateOnly>("DeliveryDate")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<short?>("EditById")
                         .HasColumnType("smallint");
@@ -233,16 +1163,16 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("GstAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
-                    b.Property<DateOnly>("GstClaimDate")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("GstClaimDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<decimal>("GstCtyAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("GstLocalAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("InvoiceNo")
                         .HasColumnType("nvarchar(max)");
@@ -287,29 +1217,205 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotAmtAftGst")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotCtyAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotCtyAmtAftGst")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotLocalAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotLocalAmtAftGst")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
-                    b.Property<DateOnly>("TrnDate")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("TrnDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("InvoiceId");
 
                     b.ToTable("ArInvoiceHd");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AR.ArReceiptDt", b =>
+                {
+                    b.Property<long>("ReceiptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ReceiptId"));
+
+                    b.Property<decimal>("AllocAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("AllocLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CentDiff")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<short>("CompanyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("DocAccountDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DocAllocAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("DocAllocLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("DocBalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("DocBalLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<short>("DocCurrencyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("DocDueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DocExhRate")
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<decimal>("DocTotAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("DocTotLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<long>("DocumentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DocumentNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte>("EditVersion")
+                        .HasColumnType("tinyint");
+
+                    b.Property<decimal>("ExhGainLoss")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<short>("ItemNo")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("ReceiptNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("TransactionId")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("ReceiptId");
+
+                    b.ToTable("ArReceiptDt");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Accounts.AR.ArReceiptHd", b =>
+                {
+                    b.Property<long>("ReceiptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ReceiptId"));
+
+                    b.Property<DateTime>("AccountDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short?>("CancelById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("CancelDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CancelRemarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ChequeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChequeNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CompanyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CurrencyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("EditVersion")
+                        .HasColumnType("tinyint");
+
+                    b.Property<decimal>("ExhGainLoss")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("ExhRate")
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<bool>("IsCancel")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModuleFrom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("PaymentTypeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("RecCurrencyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<decimal>("RecExhRate")
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<decimal>("RecTotAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("RecTotLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("ReceiptNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReferenceNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TotAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotLocalAmt")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("TrnDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ReceiptId");
+
+                    b.ToTable("ArReceiptHd");
                 });
 
             modelBuilder.Entity("AHHA.Core.Entities.Admin.AdmAuditLog", b =>
@@ -344,8 +1450,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("TblName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("int");
+                    b.Property<short>("TransactionId")
+                        .HasColumnType("smallint");
 
                     b.HasKey("AuditId");
 
@@ -427,8 +1533,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("TblName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("int");
+                    b.Property<short>("TransactionId")
+                        .HasColumnType("smallint");
 
                     b.HasKey("ErrId");
 
@@ -477,8 +1583,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("ModuleId")
                         .HasColumnType("smallint");
 
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("int");
+                    b.Property<short>("TransactionId")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -514,8 +1620,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("ModuleId")
                         .HasColumnType("smallint");
 
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("int");
+                    b.Property<short>("TransactionId")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("CreateBy")
                         .HasColumnType("int");
@@ -535,8 +1641,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SeqNo")
-                        .HasColumnType("int");
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("TransCategoryId")
                         .HasColumnType("int");
@@ -575,8 +1681,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SeqNo")
-                        .HasColumnType("int");
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("TransCategoryCode")
                         .HasColumnType("nvarchar(max)");
@@ -739,9 +1845,6 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("UserGroupId")
-                        .HasColumnType("smallint");
-
                     b.HasKey("CompanyId", "UserId");
 
                     b.ToTable("AdmUserRights");
@@ -861,6 +1964,37 @@ namespace AHHA.Infra.Migrations
                     b.ToTable("M_AccountSetupCategory");
                 });
 
+            modelBuilder.Entity("AHHA.Core.Entities.Masters.M_AccountSetupDt", b =>
+                {
+                    b.Property<short>("CompanyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("AccSetupId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CurrencyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("GLId")
+                        .HasColumnType("smallint");
+
+                    b.Property<bool>("ApplyAllCurr")
+                        .HasColumnType("bit");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CompanyId", "AccSetupId", "CurrencyId", "GLId");
+
+                    b.ToTable("M_AccountSetupDt");
+                });
+
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_AccountType", b =>
                 {
                     b.Property<short>("AccTypeId")
@@ -906,11 +2040,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Bank", b =>
                 {
-                    b.Property<int>("BankId")
+                    b.Property<short>("BankId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BankId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("BankId"));
 
                     b.Property<string>("AccountNo")
                         .HasColumnType("nvarchar(max)");
@@ -936,10 +2070,13 @@ namespace AHHA.Infra.Migrations
                     b.Property<DateTime?>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("GLId")
-                        .HasColumnType("int");
+                    b.Property<short>("GLId")
+                        .HasColumnType("smallint");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsOwnBank")
                         .HasColumnType("bit");
 
                     b.Property<string>("Remarks1")
@@ -956,13 +2093,138 @@ namespace AHHA.Infra.Migrations
                     b.ToTable("M_Bank");
                 });
 
+            modelBuilder.Entity("AHHA.Core.Entities.Masters.M_BankAddress", b =>
+                {
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("AddressId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("Address1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address4")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmailAdd")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FaxNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefaultAdd")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeliveryAdd")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFinAdd")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSalesAdd")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PhoneNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PinCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WebUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("BankId", "AddressId");
+
+                    b.ToTable("M_BankAddress");
+                });
+
+            modelBuilder.Entity("AHHA.Core.Entities.Masters.M_BankContact", b =>
+                {
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("ContactId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("ContactMessType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ContactName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmailAdd")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FaxNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFinance")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSales")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MessId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MobileNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OffNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OtherName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("BankId", "ContactId");
+
+                    b.ToTable("M_BankContact");
+                });
+
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Barge", b =>
                 {
-                    b.Property<int>("BargeId")
+                    b.Property<short>("BargeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BargeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("BargeId"));
 
                     b.Property<string>("BargeCode")
                         .HasColumnType("nvarchar(max)");
@@ -1043,8 +2305,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SeqNo")
-                        .HasColumnType("int");
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
 
                     b.HasKey("COACategoryId");
 
@@ -1083,8 +2345,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SeqNo")
-                        .HasColumnType("int");
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
 
                     b.HasKey("COACategoryId");
 
@@ -1123,8 +2385,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SeqNo")
-                        .HasColumnType("int");
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
 
                     b.HasKey("COACategoryId");
 
@@ -1133,11 +2395,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Category", b =>
                 {
-                    b.Property<int>("CategoryId")
+                    b.Property<short>("CategoryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("CategoryId"));
 
                     b.Property<string>("CategoryCode")
                         .HasColumnType("nvarchar(max)");
@@ -1170,11 +2432,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_ChartOfAccount", b =>
                 {
-                    b.Property<int>("GLId")
+                    b.Property<short>("GLId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GLId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("GLId"));
 
                     b.Property<short>("AccGroupId")
                         .HasColumnType("smallint");
@@ -1218,8 +2480,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SeqNo")
-                        .HasColumnType("int");
+                    b.Property<short>("SeqNo")
+                        .HasColumnType("smallint");
 
                     b.HasKey("GLId");
 
@@ -1228,11 +2490,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Country", b =>
                 {
-                    b.Property<int>("CountryId")
+                    b.Property<short>("CountryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CountryId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("CountryId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -1388,8 +2650,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
 
-                    b.Property<DateOnly>("ValidFrom")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
@@ -1416,8 +2678,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
 
-                    b.Property<DateOnly>("ValidFrom")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
@@ -1443,6 +2705,12 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CustomerId"));
+
+                    b.Property<short>("AccSetupId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -1498,6 +2766,9 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
                     b.HasKey("CustomerId");
 
                     b.ToTable("M_Customer");
@@ -1508,8 +2779,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<int>("AddressId")
-                        .HasColumnType("int");
+                    b.Property<short>("AddressId")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("Address1")
                         .HasColumnType("nvarchar(max)");
@@ -1523,8 +2794,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Address4")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CountryId")
-                        .HasColumnType("int");
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
@@ -1575,8 +2846,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ContactId")
-                        .HasColumnType("int");
+                    b.Property<short>("ContactId")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("ContactMessType")
                         .HasColumnType("nvarchar(max)");
@@ -1636,14 +2907,14 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
 
-                    b.Property<DateOnly>("EffectFrom")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("EffectFrom")
+                        .HasColumnType("datetime2");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
 
                     b.Property<decimal>("CreditLimitAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<short?>("EditById")
                         .HasColumnType("smallint");
@@ -1651,11 +2922,14 @@ namespace AHHA.Infra.Migrations
                     b.Property<DateTime?>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("EffectUntil")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("EffectUntil")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsExpires")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("CustomerId", "CompanyId", "EffectFrom");
 
@@ -1664,11 +2938,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_CustomerGroupCreditLimit", b =>
                 {
-                    b.Property<int>("GroupCreditLimitId")
+                    b.Property<short>("GroupCreditLimitId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GroupCreditLimitId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("GroupCreditLimitId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -1701,11 +2975,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Department", b =>
                 {
-                    b.Property<int>("DepartmentId")
+                    b.Property<short>("DepartmentId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DepartmentId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("DepartmentId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -1775,11 +3049,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Employee", b =>
                 {
-                    b.Property<int>("EmployeeId")
+                    b.Property<short>("EmployeeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("EmployeeId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -1787,14 +3061,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
 
-                    b.Property<string>("DepartmentCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("DepartmentName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<short>("DepartmentId")
+                        .HasColumnType("smallint");
 
                     b.Property<short?>("EditById")
                         .HasColumnType("smallint");
@@ -1851,11 +3119,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_GroupCreditLimit", b =>
                 {
-                    b.Property<int>("GroupCreditLimitId")
+                    b.Property<short>("GroupCreditLimitId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GroupCreditLimitId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("GroupCreditLimitId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -1888,8 +3156,8 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_GroupCreditLimitDt", b =>
                 {
-                    b.Property<int>("GroupCreditLimitId")
-                        .HasColumnType("int");
+                    b.Property<short>("GroupCreditLimitId")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -1901,7 +3169,7 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("smallint");
 
                     b.Property<decimal>("CreditLimitAmt")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<short?>("EditById")
                         .HasColumnType("smallint");
@@ -1915,6 +3183,9 @@ namespace AHHA.Infra.Migrations
                     b.Property<bool>("IsExpires")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("GroupCreditLimitId", "CompanyId", "EffectFrom");
 
                     b.ToTable("M_GroupCreditLimitDt");
@@ -1925,8 +3196,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
 
-                    b.Property<int>("GroupCreditLimitId")
-                        .HasColumnType("int");
+                    b.Property<short>("GroupCreditLimitId")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
@@ -2030,8 +3301,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
 
-                    b.Property<DateOnly>("ValidFrom")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
@@ -2043,7 +3314,7 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("GstPercentahge")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(4,2)");
 
                     b.HasKey("GstId", "CompanyId", "ValidFrom");
 
@@ -2052,11 +3323,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_OrderType", b =>
                 {
-                    b.Property<int>("OrderTypeId")
+                    b.Property<short>("OrderTypeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderTypeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("OrderTypeId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -2129,11 +3400,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_PaymentType", b =>
                 {
-                    b.Property<int>("PaymentTypeId")
+                    b.Property<short>("PaymentTypeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PaymentTypeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("PaymentTypeId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -2166,11 +3437,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Port", b =>
                 {
-                    b.Property<int>("PortId")
+                    b.Property<short>("PortId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PortId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("PortId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -2193,8 +3464,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("PortName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PortRegionId")
-                        .HasColumnType("int");
+                    b.Property<short>("PortRegionId")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
@@ -2206,17 +3477,17 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_PortRegion", b =>
                 {
-                    b.Property<int>("PortRegionId")
+                    b.Property<short>("PortRegionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PortRegionId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("PortRegionId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
 
-                    b.Property<int>("CountryId")
-                        .HasColumnType("int");
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
@@ -2246,11 +3517,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Product", b =>
                 {
-                    b.Property<int>("ProductId")
+                    b.Property<short>("ProductId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("ProductId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -2283,11 +3554,11 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_SubCategory", b =>
                 {
-                    b.Property<int>("SubCategoryId")
+                    b.Property<short>("SubCategoryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubCategoryId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("SubCategoryId"));
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -2326,6 +3597,9 @@ namespace AHHA.Infra.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupplierId"));
 
+                    b.Property<short>("AccSetupId")
+                        .HasColumnType("smallint");
+
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
 
@@ -2337,6 +3611,9 @@ namespace AHHA.Infra.Migrations
 
                     b.Property<short>("CurrencyId")
                         .HasColumnType("smallint");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
 
                     b.Property<short?>("EditById")
                         .HasColumnType("smallint");
@@ -2390,8 +3667,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
-                    b.Property<int>("AddressId")
-                        .HasColumnType("int");
+                    b.Property<short>("AddressId")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("Address1")
                         .HasColumnType("nvarchar(max)");
@@ -2405,8 +3682,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<string>("Address4")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CountryId")
-                        .HasColumnType("int");
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
@@ -2452,13 +3729,80 @@ namespace AHHA.Infra.Migrations
                     b.ToTable("M_SupplierAddress");
                 });
 
+            modelBuilder.Entity("AHHA.Core.Entities.Masters.M_SupplierBank", b =>
+                {
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<short>("SupplierBankId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("AccountNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address4")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("BankId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("BranchName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("CountryId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OtherCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PinCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SwiftCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SupplierId", "SupplierBankId");
+
+                    b.ToTable("M_SupplierBank");
+                });
+
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_SupplierContact", b =>
                 {
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ContactId")
-                        .HasColumnType("int");
+                    b.Property<short>("ContactId")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("ContactMessType")
                         .HasColumnType("nvarchar(max)");
@@ -2595,8 +3939,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
 
-                    b.Property<DateOnly>("ValidFrom")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
 
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
@@ -2608,7 +3952,7 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("TaxPercentage")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(4,2)");
 
                     b.HasKey("TaxId", "CompanyId", "ValidFrom");
 
@@ -2673,7 +4017,7 @@ namespace AHHA.Infra.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("UomFactor")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(9,4)");
 
                     b.HasKey("UomId", "PackUomId");
 
@@ -2737,14 +4081,14 @@ namespace AHHA.Infra.Migrations
 
             modelBuilder.Entity("AHHA.Core.Entities.Masters.M_Voyage", b =>
                 {
-                    b.Property<int>("VoyageId")
+                    b.Property<short>("VoyageId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("smallint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VoyageId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("VoyageId"));
 
-                    b.Property<int>("BargeId")
-                        .HasColumnType("int");
+                    b.Property<short>("BargeId")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("CompanyId")
                         .HasColumnType("smallint");
@@ -2792,6 +4136,9 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("CreateById")
                         .HasColumnType("smallint");
 
+                    b.Property<short>("CtyAmtDec")
+                        .HasColumnType("smallint");
+
                     b.Property<string>("DateFormat")
                         .HasColumnType("nvarchar(max)");
 
@@ -2804,8 +4151,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<short>("ExhRateDec")
                         .HasColumnType("smallint");
 
-                    b.Property<string>("LocAmtDec")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<short>("LocAmtDec")
+                        .HasColumnType("smallint");
 
                     b.Property<short>("PriceDec")
                         .HasColumnType("smallint");
@@ -2870,6 +4217,121 @@ namespace AHHA.Infra.Migrations
                     b.ToTable("S_FinSettings");
                 });
 
+            modelBuilder.Entity("AHHA.Core.Entities.Setting.S_MandatoryFields", b =>
+                {
+                    b.Property<short>("CompanyId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("ModuleId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("TransactionId")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("CreateById")
+                        .HasColumnType("smallint");
+
+                    b.Property<short?>("EditById")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("EditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("M_Address1")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_Address2")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_Address3")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_Address4")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_BankId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_BargeId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_ContactName")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_CountryId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_DeliveryDate")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_DepartmentId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_EmailAdd")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_EmployeeId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_GLId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_GstId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_MobileNo")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_PhoneNo")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_PinCode")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_PortId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_ProductId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_QTY")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_ReferenceNo")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_Remarks")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_Remarks_Hd")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_SuppInvoiceNo")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_SupplyDate")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_TotAmt")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_UnitPrice")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_UomId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_VesselId")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("M_VoyageId")
+                        .HasColumnType("bit");
+
+                    b.HasKey("CompanyId", "ModuleId", "TransactionId");
+
+                    b.ToTable("S_MandatoryFields");
+                });
+
             modelBuilder.Entity("AHHA.Core.Entities.Setting.S_NumberFormat", b =>
                 {
                     b.Property<int>("NumberId")
@@ -2926,8 +4388,8 @@ namespace AHHA.Infra.Migrations
                     b.Property<bool>("ResetYearly")
                         .HasColumnType("bit");
 
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("int");
+                    b.Property<short>("TransactionId")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("YearDelimiter")
                         .HasColumnType("nvarchar(max)");

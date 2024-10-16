@@ -4,6 +4,7 @@ using AHHA.Core.Common;
 using AHHA.Core.Entities.Accounts.AR;
 using AHHA.Core.Helper;
 using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.AP;
 using AHHA.Core.Models.Account.AR;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -18,12 +19,14 @@ namespace AHHA.API.Controllers.Accounts.AR
     {
         private readonly IARCreditNoteService _ARCreditNoteService;
         private readonly ILogger<ARCreditNoteController> _logger;
+        public readonly DateHelperNonStatic _dateHelperNonStatic;
 
-        public ARCreditNoteController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ARCreditNoteController> logger, IARCreditNoteService ARCreditNoteService)
+        public ARCreditNoteController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, DateHelperNonStatic dateHelperNonStatic, ILogger<ARCreditNoteController> logger, IARCreditNoteService ARCreditNoteService)
     : base(memoryCache, mapper, baseServices)
         {
             _logger = logger;
             _ARCreditNoteService = ARCreditNoteService;
+            _dateHelperNonStatic = dateHelperNonStatic;
         }
 
         //All ARCreditNote LIST
@@ -168,10 +171,10 @@ namespace AHHA.API.Controllers.Accounts.AR
                                     CreditNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.CreditNoteId) ? 0 : aRCreditNoteViewModel.CreditNoteId.Trim()),
                                     CreditNoteNo = aRCreditNoteViewModel.CreditNoteNo,
                                     ReferenceNo = aRCreditNoteViewModel.ReferenceNo == null ? string.Empty : aRCreditNoteViewModel.ReferenceNo,
-                                    TrnDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
-                                    AccountDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
-                                    DeliveryDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
-                                    DueDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
+                                    TrnDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
+                                    AccountDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
+                                    DeliveryDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
+                                    DueDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
                                     CustomerId = aRCreditNoteViewModel.CustomerId,
                                     CurrencyId = aRCreditNoteViewModel.CurrencyId,
                                     ExhRate = aRCreditNoteViewModel.ExhRate == null ? 0 : aRCreditNoteViewModel.ExhRate,
@@ -183,7 +186,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                     TotAmt = aRCreditNoteViewModel.TotAmt == null ? 0 : aRCreditNoteViewModel.TotAmt,
                                     TotLocalAmt = aRCreditNoteViewModel.TotLocalAmt == null ? 0 : aRCreditNoteViewModel.TotLocalAmt,
                                     TotCtyAmt = aRCreditNoteViewModel.TotCtyAmt == null ? 0 : aRCreditNoteViewModel.TotCtyAmt,
-                                    GstClaimDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
+                                    GstClaimDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
                                     GstAmt = aRCreditNoteViewModel.GstAmt == null ? 0 : aRCreditNoteViewModel.GstAmt,
                                     GstLocalAmt = aRCreditNoteViewModel.GstLocalAmt == null ? 0 : aRCreditNoteViewModel.GstLocalAmt,
                                     GstCtyAmt = aRCreditNoteViewModel.GstCtyAmt == null ? 0 : aRCreditNoteViewModel.GstCtyAmt,
@@ -228,10 +231,10 @@ namespace AHHA.API.Controllers.Accounts.AR
                                         CreditNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.CreditNoteId) ? 0 : aRCreditNoteViewModel.CreditNoteId.Trim()),
                                         CreditNoteNo = aRCreditNoteViewModel.CreditNoteNo,
                                         ReferenceNo = aRCreditNoteViewModel.ReferenceNo == null ? string.Empty : aRCreditNoteViewModel.ReferenceNo,
-                                        TrnDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
-                                        AccountDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
-                                        DeliveryDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
-                                        DueDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
+                                        TrnDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
+                                        AccountDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
+                                        DeliveryDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
+                                        DueDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
                                         CustomerId = aRCreditNoteViewModel.CustomerId,
                                         CurrencyId = aRCreditNoteViewModel.CurrencyId,
                                         ExhRate = 0,
@@ -243,7 +246,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                         TotAmt = aRCreditNoteViewModel.TotAmt == null ? 0 : aRCreditNoteViewModel.TotAmt,
                                         TotLocalAmt = aRCreditNoteViewModel.TotLocalAmt == null ? 0 : aRCreditNoteViewModel.TotLocalAmt,
                                         TotCtyAmt = aRCreditNoteViewModel.TotCtyAmt == null ? 0 : aRCreditNoteViewModel.TotCtyAmt,
-                                        GstClaimDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
+                                        GstClaimDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
                                         GstAmt = aRCreditNoteViewModel.GstAmt == null ? 0 : aRCreditNoteViewModel.GstAmt,
                                         GstLocalAmt = aRCreditNoteViewModel.GstLocalAmt == null ? 0 : aRCreditNoteViewModel.GstLocalAmt,
                                         GstCtyAmt = aRCreditNoteViewModel.GstCtyAmt == null ? 0 : aRCreditNoteViewModel.GstCtyAmt,
@@ -286,10 +289,10 @@ namespace AHHA.API.Controllers.Accounts.AR
                                         CreditNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.CreditNoteId) ? 0 : aRCreditNoteViewModel.CreditNoteId.Trim()),
                                         CreditNoteNo = aRCreditNoteViewModel.CreditNoteNo,
                                         ReferenceNo = aRCreditNoteViewModel.ReferenceNo == null ? string.Empty : aRCreditNoteViewModel.ReferenceNo,
-                                        TrnDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
-                                        AccountDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
-                                        DeliveryDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
-                                        DueDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
+                                        TrnDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
+                                        AccountDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
+                                        DeliveryDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
+                                        DueDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
                                         CustomerId = aRCreditNoteViewModel.CustomerId,
                                         CurrencyId = aRCreditNoteViewModel.CurrencyId,
                                         ExhRate = aRCreditNoteViewModel.ExhRate,
@@ -301,7 +304,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                         TotAmt = aRCreditNoteViewModel.TotAmt == null ? 0 : aRCreditNoteViewModel.TotAmt,
                                         TotLocalAmt = aRCreditNoteViewModel.TotLocalAmt == null ? 0 : aRCreditNoteViewModel.TotLocalAmt,
                                         TotCtyAmt = aRCreditNoteViewModel.TotCtyAmt == null ? 0 : aRCreditNoteViewModel.TotCtyAmt,
-                                        GstClaimDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
+                                        GstClaimDate = _dateHelperNonStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
                                         GstAmt = aRCreditNoteViewModel.GstAmt == null ? 0 : aRCreditNoteViewModel.GstAmt,
                                         GstLocalAmt = aRCreditNoteViewModel.GstLocalAmt == null ? 0 : aRCreditNoteViewModel.GstLocalAmt,
                                         GstCtyAmt = aRCreditNoteViewModel.GstCtyAmt == null ? 0 : aRCreditNoteViewModel.GstCtyAmt,
@@ -367,7 +370,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                         GstAmt = item.GstAmt,
                                         GstLocalAmt = item.GstLocalAmt,
                                         GstCtyAmt = item.GstCtyAmt,
-                                        DeliveryDate = DateHelperStatic.ParseClientDate(item.DeliveryDate),
+                                        DeliveryDate = _dateHelperNonStatic.ParseClientDate(item.DeliveryDate),
                                         DepartmentId = item.DepartmentId,
                                         EmployeeId = item.EmployeeId,
                                         PortId = item.PortId,
@@ -379,7 +382,7 @@ namespace AHHA.API.Controllers.Accounts.AR
                                         OPRefNo = item.OPRefNo,
                                         SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(item.SalesOrderId.Trim())),
                                         SalesOrderNo = item.SalesOrderNo,
-                                        SupplyDate = DateHelperStatic.ParseClientDate(item.SupplyDate),
+                                        SupplyDate = _dateHelperNonStatic.ParseClientDate(item.SupplyDate),
                                         SupplierName = item.SupplierName,
                                     };
 

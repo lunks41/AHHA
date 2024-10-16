@@ -1,15 +1,11 @@
-﻿using AHHA.Core.Helper;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AHHA.Core.Models.Account.AR
 {
-    public class ARCreditNoteDtViewModel
+    public class ARDebitNoteDtViewModel
     {
-        private DateTime _supplyDate;
-        private DateTime _deliveryDate;
-
-        public string CreditNoteId { get; set; }
-        public string CreditNoteNo { get; set; }
+        public string DebitNoteId { get; set; }
+        public string DebitNoteNo { get; set; }
         public Int32 ItemNo { get; set; }
         public Int16 SeqNo { get; set; }
         public Int32 DocItemNo { get; set; }
@@ -54,12 +50,7 @@ namespace AHHA.Core.Models.Account.AR
         [Column(TypeName = "decimal(18,4)")]
         public decimal GstCtyAmt { get; set; }
 
-        public string DeliveryDate
-        {
-            get { return DateHelperStatic.FormatDate(_deliveryDate); }
-            set { _deliveryDate = DateHelperStatic.ParseDBDate(value); }
-        }
-
+        public DateTime DeliveryDate { get; set; }
         public Int16 DepartmentId { get; set; }
         public Int16 EmployeeId { get; set; }
         public Int16 PortId { get; set; }
@@ -71,17 +62,11 @@ namespace AHHA.Core.Models.Account.AR
         public string OPRefNo { get; set; }
         public string SalesOrderId { get; set; }
         public string SalesOrderNo { get; set; }
-
-        public string SupplyDate
-        {
-            get { return DateHelperStatic.FormatDate(_supplyDate); }
-            set { _supplyDate = DateHelperStatic.ParseDBDate(value); }
-        }
-
+        public DateTime SupplyDate { get; set; }
         public string SupplierName { get; set; }
-        public string SuppCreditNoteNo { get; set; }
-        public string APCreditNoteId { get; set; }
-        public string APCreditNoteNo { get; set; }
+        public string SuppDebitNoteNo { get; set; }
+        public string APDebitNoteId { get; set; }
+        public string APDebitNoteNo { get; set; }
         public byte EditVersion { get; set; }
     }
 }

@@ -1,45 +1,17 @@
-﻿using AHHA.Core.Helper;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AHHA.Core.Models.Account.AR
 {
-    public class ARCreditNoteViewModel
+    public class ARDebitNoteViewModel
     {
-        private DateTime _trnDate;
-        private DateTime _accountDate;
-        private DateTime _deliveryDate;
-        private DateTime _dueDate;
-        private DateTime _gstClaimDate;
-
         public Int16 CompanyId { get; set; }
-        public string CreditNoteId { get; set; }
-        public string CreditNoteNo { get; set; }
+        public string DebitNoteId { get; set; }
+        public string DebitNoteNo { get; set; }
         public string ReferenceNo { get; set; }
-
-        public string TrnDate
-        {
-            get { return DateHelperStatic.FormatDate(_trnDate); }
-            set { _trnDate = DateHelperStatic.ParseDBDate(value); }
-        }
-
-        public string AccountDate
-        {
-            get { return DateHelperStatic.FormatDate(_accountDate); }
-            set { _accountDate = DateHelperStatic.ParseDBDate(value); }
-        }
-
-        public string DeliveryDate
-        {
-            get { return DateHelperStatic.FormatDate(_deliveryDate); }
-            set { _deliveryDate = DateHelperStatic.ParseDBDate(value); }
-        }
-
-        public string DueDate
-        {
-            get { return DateHelperStatic.FormatDate(_dueDate); }
-            set { _dueDate = DateHelperStatic.ParseDBDate(value); }
-        }
-
+        public DateTime TrnDate { get; set; }
+        public DateTime AccountDate { get; set; }
+        public DateTime DeliveryDate { get; set; }
+        public DateTime DueDate { get; set; }
         public Int32 CustomerId { get; set; }
         public Int16 CurrencyId { get; set; }
 
@@ -63,11 +35,7 @@ namespace AHHA.Core.Models.Account.AR
         [Column(TypeName = "decimal(18,4)")]
         public decimal TotCtyAmt { get; set; }
 
-        public string GstClaimDate
-        {
-            get { return DateHelperStatic.FormatDate(_gstClaimDate); }
-            set { _gstClaimDate = DateHelperStatic.ParseDBDate(value); }
-        }
+        public DateTime GstClaimDate { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal GstAmt { get; set; }
@@ -120,9 +88,9 @@ namespace AHHA.Core.Models.Account.AR
         public string EmailAdd { get; set; }
         public string ModuleFrom { get; set; }
         public string SupplierName { get; set; }
-        public string SuppCreditNoteNo { get; set; }
-        public string APCreditNoteId { get; set; }
-        public string APCreditNoteNo { get; set; }
+        public string SuppDebitNoteNo { get; set; }
+        public string APDebitNoteId { get; set; }
+        public string APDebitNoteNo { get; set; }
         public Int16 CreateById { get; set; }
         public DateTime CreateDate { get; set; }
         public Int16? EditById { get; set; }
@@ -132,6 +100,6 @@ namespace AHHA.Core.Models.Account.AR
         public DateTime? CancelDate { get; set; }
         public string CancelRemarks { get; set; }
         public byte EditVersion { get; set; }
-        public List<ARCreditNoteDtViewModel> data_details { get; set; }
+        public List<ARDebitNoteDtViewModel> data_details { get; set; }
     }
 }

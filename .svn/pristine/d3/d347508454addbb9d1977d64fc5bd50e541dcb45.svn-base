@@ -10,36 +10,43 @@ namespace AHHA.Core.Models.Account.AR
         private DateTime _deliveryDate;
         private DateTime _dueDate;
         private DateTime _gstClaimDate;
+        private readonly DateHelperNonStatic _dateHelperNonStatic;
 
+        public ARCreditNoteViewModel()
+        {
+        }
+
+        public ARCreditNoteViewModel(DateHelperNonStatic dateHelperNonStatic)
+        {
+            _dateHelperNonStatic = dateHelperNonStatic;
+        }
         public Int16 CompanyId { get; set; }
         public string CreditNoteId { get; set; }
         public string CreditNoteNo { get; set; }
         public string ReferenceNo { get; set; }
-
         public string TrnDate
         {
-            get { return DateHelperStatic.FormatDate(_trnDate); }
+            get { return DateHelperStatic.FormatDate(_trnDate, _dateHelperNonStatic); }
             set { _trnDate = DateHelperStatic.ParseDBDate(value); }
         }
 
         public string AccountDate
         {
-            get { return DateHelperStatic.FormatDate(_accountDate); }
+            get { return DateHelperStatic.FormatDate(_accountDate, _dateHelperNonStatic); }
             set { _accountDate = DateHelperStatic.ParseDBDate(value); }
         }
 
         public string DeliveryDate
         {
-            get { return DateHelperStatic.FormatDate(_deliveryDate); }
+            get { return DateHelperStatic.FormatDate(_deliveryDate, _dateHelperNonStatic); }
             set { _deliveryDate = DateHelperStatic.ParseDBDate(value); }
         }
 
         public string DueDate
         {
-            get { return DateHelperStatic.FormatDate(_dueDate); }
+            get { return DateHelperStatic.FormatDate(_dueDate, _dateHelperNonStatic); }
             set { _dueDate = DateHelperStatic.ParseDBDate(value); }
         }
-
         public Int32 CustomerId { get; set; }
         public Int16 CurrencyId { get; set; }
 
@@ -65,7 +72,7 @@ namespace AHHA.Core.Models.Account.AR
 
         public string GstClaimDate
         {
-            get { return DateHelperStatic.FormatDate(_gstClaimDate); }
+            get { return DateHelperStatic.FormatDate(_gstClaimDate, _dateHelperNonStatic); }
             set { _gstClaimDate = DateHelperStatic.ParseDBDate(value); }
         }
 

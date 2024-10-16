@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -18,7 +19,7 @@ namespace AHHA.Infra.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     ModuleId = table.Column<short>(type: "smallint", nullable: false),
-                    TransactionId = table.Column<int>(type: "int", nullable: false),
+                    TransactionId = table.Column<short>(type: "smallint", nullable: false),
                     DocumentId = table.Column<long>(type: "bigint", nullable: false),
                     DocumentNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TblName = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -61,7 +62,7 @@ namespace AHHA.Infra.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     ModuleId = table.Column<short>(type: "smallint", nullable: false),
-                    TransactionId = table.Column<int>(type: "int", nullable: false),
+                    TransactionId = table.Column<short>(type: "smallint", nullable: false),
                     DocumentId = table.Column<long>(type: "bigint", nullable: false),
                     DocumentNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TblName = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -99,7 +100,7 @@ namespace AHHA.Infra.Migrations
                 columns: table => new
                 {
                     ModuleId = table.Column<short>(type: "smallint", nullable: false),
-                    TransactionId = table.Column<int>(type: "int", nullable: false),
+                    TransactionId = table.Column<short>(type: "smallint", nullable: false),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     SetId = table.Column<short>(type: "smallint", nullable: false),
                     ShareToAll = table.Column<bool>(type: "bit", nullable: false),
@@ -118,13 +119,13 @@ namespace AHHA.Infra.Migrations
                 name: "AdmTransaction",
                 columns: table => new
                 {
-                    TransactionId = table.Column<int>(type: "int", nullable: false),
+                    TransactionId = table.Column<short>(type: "smallint", nullable: false),
                     ModuleId = table.Column<short>(type: "smallint", nullable: false),
                     TransactionCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TransactionName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TransCategoryId = table.Column<int>(type: "int", nullable: false),
                     IsNumber = table.Column<bool>(type: "bit", nullable: false),
-                    SeqNo = table.Column<int>(type: "int", nullable: false),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreateBy = table.Column<int>(type: "int", nullable: false),
@@ -144,7 +145,7 @@ namespace AHHA.Infra.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TransCategoryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TransCategoryName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SeqNo = table.Column<int>(type: "int", nullable: false),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreateBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -239,12 +240,367 @@ namespace AHHA.Infra.Migrations
                 {
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     UserId = table.Column<short>(type: "smallint", nullable: false),
-                    CreateById = table.Column<short>(type: "smallint", nullable: false),
-                    UserGroupId = table.Column<short>(type: "smallint", nullable: false)
+                    CreateById = table.Column<short>(type: "smallint", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AdmUserRights", x => new { x.CompanyId, x.UserId });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ApInvoiceDt",
+                columns: table => new
+                {
+                    InvoiceId = table.Column<long>(type: "bigint", nullable: false),
+                    ItemNo = table.Column<int>(type: "int", nullable: false),
+                    InvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
+                    DocItemNo = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<short>(type: "smallint", nullable: false),
+                    GLId = table.Column<short>(type: "smallint", nullable: false),
+                    QTY = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    BillQTY = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    UomId = table.Column<short>(type: "smallint", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GstId = table.Column<short>(type: "smallint", nullable: false),
+                    GstPercentage = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DepartmentId = table.Column<short>(type: "smallint", nullable: false),
+                    EmployeeId = table.Column<short>(type: "smallint", nullable: false),
+                    PortId = table.Column<short>(type: "smallint", nullable: false),
+                    VesselId = table.Column<int>(type: "int", nullable: false),
+                    BargeId = table.Column<short>(type: "smallint", nullable: false),
+                    VoyageId = table.Column<short>(type: "smallint", nullable: false),
+                    OperationId = table.Column<long>(type: "bigint", nullable: false),
+                    OperationNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OPRefNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PurOrderId = table.Column<long>(type: "bigint", nullable: false),
+                    PurOrderNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SupplyDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CustomerName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CustInvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ArInvoiceId = table.Column<long>(type: "bigint", nullable: false),
+                    ArInvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApInvoiceDt", x => new { x.InvoiceId, x.ItemNo });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ApInvoiceHd",
+                columns: table => new
+                {
+                    InvoiceId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyId = table.Column<short>(type: "smallint", nullable: false),
+                    InvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ReferenceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SuppInvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TrnDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AccountDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SupplierId = table.Column<int>(type: "int", nullable: false),
+                    CurrencyId = table.Column<short>(type: "smallint", nullable: false),
+                    ExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
+                    CtyExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
+                    CreditTermId = table.Column<short>(type: "smallint", nullable: false),
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstClaimDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    GstAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotCtyAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    BalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    BalLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    PayAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    PayLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    ExGainLoss = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    PurchaseOrderId = table.Column<long>(type: "bigint", nullable: false),
+                    PurchaseOrderNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OperationId = table.Column<long>(type: "bigint", nullable: false),
+                    OperationNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PinCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
+                    PhoneNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FaxNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContactName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MobileNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailAdd = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ModuleFrom = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CustomerName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ArInvoiceId = table.Column<long>(type: "bigint", nullable: false),
+                    ArInvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsCancel = table.Column<bool>(type: "bit", nullable: false),
+                    CancelById = table.Column<short>(type: "smallint", nullable: false),
+                    CancelRemarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApInvoiceHd", x => x.InvoiceId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArCreditNoteDt",
+                columns: table => new
+                {
+                    CreditNoteId = table.Column<long>(type: "bigint", nullable: false),
+                    ItemNo = table.Column<int>(type: "int", nullable: false),
+                    CreditNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
+                    DocItemNo = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<short>(type: "smallint", nullable: false),
+                    GLId = table.Column<short>(type: "smallint", nullable: false),
+                    QTY = table.Column<decimal>(type: "decimal(9,4)", nullable: false),
+                    BillQTY = table.Column<decimal>(type: "decimal(9,4)", nullable: false),
+                    UomId = table.Column<short>(type: "smallint", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(9,4)", nullable: false),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GstId = table.Column<short>(type: "smallint", nullable: false),
+                    GstPercentage = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
+                    GstAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DepartmentId = table.Column<short>(type: "smallint", nullable: false),
+                    EmployeeId = table.Column<short>(type: "smallint", nullable: false),
+                    PortId = table.Column<short>(type: "smallint", nullable: false),
+                    VesselId = table.Column<int>(type: "int", nullable: false),
+                    BargeId = table.Column<short>(type: "smallint", nullable: false),
+                    VoyageId = table.Column<short>(type: "smallint", nullable: false),
+                    OperationId = table.Column<long>(type: "bigint", nullable: false),
+                    OperationNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OPRefNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SalesOrderId = table.Column<long>(type: "bigint", nullable: false),
+                    SalesOrderNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SupplyDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SupplierName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SuppCreditNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    APCreditNoteId = table.Column<long>(type: "bigint", nullable: false),
+                    APCreditNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArCreditNoteDt", x => new { x.CreditNoteId, x.ItemNo });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArCreditNoteHd",
+                columns: table => new
+                {
+                    CreditNoteId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyId = table.Column<short>(type: "smallint", nullable: false),
+                    CreditNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ReferenceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TrnDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AccountDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    CurrencyId = table.Column<short>(type: "smallint", nullable: false),
+                    ExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
+                    CtyExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
+                    CreditTermId = table.Column<short>(type: "smallint", nullable: false),
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
+                    InvoiceId = table.Column<long>(type: "bigint", nullable: false),
+                    InvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstClaimDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    GstAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotCtyAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    BalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    BalLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    PayAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    PayLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    ExGainLoss = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    SalesOrderId = table.Column<long>(type: "bigint", nullable: false),
+                    SalesOrderNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OperationId = table.Column<long>(type: "bigint", nullable: false),
+                    OperationNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PinCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
+                    PhoneNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FaxNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContactName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MobileNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailAdd = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ModuleFrom = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SupplierName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SuppCreditNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    APCreditNoteId = table.Column<long>(type: "bigint", nullable: false),
+                    APCreditNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsCancel = table.Column<bool>(type: "bit", nullable: false),
+                    CancelById = table.Column<short>(type: "smallint", nullable: false),
+                    CancelDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CancelRemarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArCreditNoteHd", x => x.CreditNoteId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArDebitNoteDt",
+                columns: table => new
+                {
+                    DebitNoteId = table.Column<long>(type: "bigint", nullable: false),
+                    ItemNo = table.Column<int>(type: "int", nullable: false),
+                    DebitNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
+                    DocItemNo = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<short>(type: "smallint", nullable: false),
+                    GLId = table.Column<short>(type: "smallint", nullable: false),
+                    QTY = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    BillQTY = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    UomId = table.Column<short>(type: "smallint", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GstId = table.Column<short>(type: "smallint", nullable: false),
+                    GstPercentage = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DepartmentId = table.Column<short>(type: "smallint", nullable: false),
+                    EmployeeId = table.Column<short>(type: "smallint", nullable: false),
+                    PortId = table.Column<short>(type: "smallint", nullable: false),
+                    VesselId = table.Column<int>(type: "int", nullable: false),
+                    BargeId = table.Column<short>(type: "smallint", nullable: false),
+                    VoyageId = table.Column<short>(type: "smallint", nullable: false),
+                    OperationId = table.Column<long>(type: "bigint", nullable: false),
+                    OperationNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OPRefNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SalesOrderId = table.Column<long>(type: "bigint", nullable: false),
+                    SalesOrderNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SupplyDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SupplierName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SuppDebitNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    APDebitNoteId = table.Column<long>(type: "bigint", nullable: false),
+                    APDebitNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArDebitNoteDt", x => new { x.DebitNoteId, x.ItemNo });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArDebitNoteHd",
+                columns: table => new
+                {
+                    DebitNoteId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyId = table.Column<short>(type: "smallint", nullable: false),
+                    DebitNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ReferenceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TrnDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AccountDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    CurrencyId = table.Column<short>(type: "smallint", nullable: false),
+                    ExhRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CtyExhRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CreditTermId = table.Column<short>(type: "smallint", nullable: false),
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
+                    InvoiceId = table.Column<long>(type: "bigint", nullable: false),
+                    InvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstClaimDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    GstAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotAmtAftGst = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotLocalAmtAftGst = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotCtyAmtAftGst = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    BalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    BalLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PayAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PayLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ExGainLoss = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SalesOrderId = table.Column<long>(type: "bigint", nullable: false),
+                    SalesOrderNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OperationId = table.Column<long>(type: "bigint", nullable: false),
+                    OperationNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PinCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
+                    PhoneNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FaxNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContactName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MobileNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailAdd = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ModuleFrom = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SupplierName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SuppDebitNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    APDebitNoteId = table.Column<long>(type: "bigint", nullable: false),
+                    APDebitNoteNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsCancel = table.Column<bool>(type: "bit", nullable: false),
+                    CancelById = table.Column<short>(type: "smallint", nullable: false),
+                    CancelDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CancelRemarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArDebitNoteHd", x => x.DebitNoteId);
                 });
 
             migrationBuilder.CreateTable(
@@ -256,28 +612,28 @@ namespace AHHA.Infra.Migrations
                     InvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SeqNo = table.Column<short>(type: "smallint", nullable: false),
                     DocItemNo = table.Column<short>(type: "smallint", nullable: false),
-                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<short>(type: "smallint", nullable: false),
                     GLId = table.Column<short>(type: "smallint", nullable: false),
-                    QTY = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    BillQTY = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    UomId = table.Column<byte>(type: "tinyint", nullable: false),
-                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotCurAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    QTY = table.Column<decimal>(type: "decimal(9,4)", nullable: false),
+                    BillQTY = table.Column<decimal>(type: "decimal(9,4)", nullable: false),
+                    UomId = table.Column<short>(type: "smallint", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(9,4)", nullable: false),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     GstId = table.Column<byte>(type: "tinyint", nullable: false),
-                    GstPercentage = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    GstAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    GstCurAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    DeliveryDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    GstPercentage = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
+                    GstAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DepartmentId = table.Column<short>(type: "smallint", nullable: false),
                     EmployeeId = table.Column<short>(type: "smallint", nullable: false),
                     PortId = table.Column<short>(type: "smallint", nullable: false),
                     VesselId = table.Column<int>(type: "int", nullable: false),
                     BargeId = table.Column<short>(type: "smallint", nullable: false),
-                    VoyageId = table.Column<int>(type: "int", nullable: false),
+                    VoyageId = table.Column<short>(type: "smallint", nullable: false),
                     OperationId = table.Column<long>(type: "bigint", nullable: false),
                     OperationNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OPRefNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -304,26 +660,26 @@ namespace AHHA.Infra.Migrations
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     InvoiceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ReferenceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TrnDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    AccountDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    DeliveryDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    DueDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    TrnDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AccountDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     CurrencyId = table.Column<short>(type: "smallint", nullable: false),
-                    ExhRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CtyExhRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
+                    CtyExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
                     CreditTermId = table.Column<short>(type: "smallint", nullable: false),
-                    BankId = table.Column<int>(type: "int", nullable: false),
-                    TotAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    GstClaimDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    GstAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotAmtAftGst = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotLocalAmtAftGst = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotCtyAmtAftGst = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstClaimDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    GstAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    GstCtyAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotCtyAmtAftGst = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     SalesOrderId = table.Column<long>(type: "bigint", nullable: false),
                     SalesOrderNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OperationId = table.Column<long>(type: "bigint", nullable: false),
@@ -334,7 +690,7 @@ namespace AHHA.Infra.Migrations
                     Address3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PinCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CountryId = table.Column<int>(type: "int", nullable: false),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
                     PhoneNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FaxNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ContactName = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -349,7 +705,7 @@ namespace AHHA.Infra.Migrations
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsCancel = table.Column<bool>(type: "bit", nullable: false),
-                    CancelById = table.Column<int>(type: "int", nullable: true),
+                    CancelById = table.Column<short>(type: "smallint", nullable: true),
                     CancelDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CancelRemarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
@@ -357,6 +713,80 @@ namespace AHHA.Infra.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ArInvoiceHd", x => x.InvoiceId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArReceiptDt",
+                columns: table => new
+                {
+                    ReceiptId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyId = table.Column<short>(type: "smallint", nullable: false),
+                    ReceiptNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ItemNo = table.Column<short>(type: "smallint", nullable: false),
+                    TransactionId = table.Column<short>(type: "smallint", nullable: false),
+                    DocumentId = table.Column<long>(type: "bigint", nullable: false),
+                    DocumentNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DocCurrencyId = table.Column<short>(type: "smallint", nullable: false),
+                    DocExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
+                    DocAccountDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DocDueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DocTotAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    DocTotLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    DocBalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    DocBalLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    AllocAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    AllocLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    DocAllocAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    DocAllocLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    CentDiff = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    ExhGainLoss = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArReceiptDt", x => x.ReceiptId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArReceiptHd",
+                columns: table => new
+                {
+                    ReceiptId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyId = table.Column<short>(type: "smallint", nullable: false),
+                    ReceiptNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ReferenceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TrnDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AccountDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
+                    PaymentTypeId = table.Column<short>(type: "smallint", nullable: false),
+                    ChequeNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ChequeDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    CurrencyId = table.Column<short>(type: "smallint", nullable: false),
+                    ExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
+                    TotAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    TotLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    RecCurrencyId = table.Column<short>(type: "smallint", nullable: false),
+                    RecExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
+                    RecTotAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    RecTotLocalAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    ExhGainLoss = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ModuleFrom = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsCancel = table.Column<bool>(type: "bit", nullable: false),
+                    CancelById = table.Column<short>(type: "smallint", nullable: true),
+                    CancelDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CancelRemarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EditVersion = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArReceiptHd", x => x.ReceiptId);
                 });
 
             migrationBuilder.CreateTable(
@@ -421,6 +851,24 @@ namespace AHHA.Infra.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "M_AccountSetupDt",
+                columns: table => new
+                {
+                    CompanyId = table.Column<short>(type: "smallint", nullable: false),
+                    AccSetupId = table.Column<short>(type: "smallint", nullable: false),
+                    CurrencyId = table.Column<short>(type: "smallint", nullable: false),
+                    GLId = table.Column<short>(type: "smallint", nullable: false),
+                    ApplyAllCurr = table.Column<bool>(type: "bit", nullable: false),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_M_AccountSetupDt", x => new { x.CompanyId, x.AccSetupId, x.CurrencyId, x.GLId });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "M_AccountType",
                 columns: table => new
                 {
@@ -446,7 +894,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_Bank",
                 columns: table => new
                 {
-                    BankId = table.Column<int>(type: "int", nullable: false)
+                    BankId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     BankCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -456,8 +904,9 @@ namespace AHHA.Infra.Migrations
                     SwiftCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Remarks1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Remarks2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    GLId = table.Column<int>(type: "int", nullable: false),
+                    GLId = table.Column<short>(type: "smallint", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsOwnBank = table.Column<bool>(type: "bit", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -468,10 +917,67 @@ namespace AHHA.Infra.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "M_BankAddress",
+                columns: table => new
+                {
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
+                    AddressId = table.Column<short>(type: "smallint", nullable: false),
+                    Address1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PinCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
+                    PhoneNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FaxNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailAdd = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    WebUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDefaultAdd = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeliveryAdd = table.Column<bool>(type: "bit", nullable: false),
+                    IsFinAdd = table.Column<bool>(type: "bit", nullable: false),
+                    IsSalesAdd = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_M_BankAddress", x => new { x.BankId, x.AddressId });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "M_BankContact",
+                columns: table => new
+                {
+                    ContactId = table.Column<short>(type: "smallint", nullable: false),
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
+                    ContactName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OtherName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MobileNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OffNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FaxNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailAdd = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MessId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContactMessType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
+                    IsFinance = table.Column<bool>(type: "bit", nullable: false),
+                    IsSales = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_M_BankContact", x => new { x.BankId, x.ContactId });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "M_Barge",
                 columns: table => new
                 {
-                    BargeId = table.Column<int>(type: "int", nullable: false)
+                    BargeId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     BargeCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -497,7 +1003,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_Category",
                 columns: table => new
                 {
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                    CategoryId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     CategoryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -517,7 +1023,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_ChartOfAccount",
                 columns: table => new
                 {
-                    GLId = table.Column<int>(type: "int", nullable: false)
+                    GLId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     GLCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -528,7 +1034,7 @@ namespace AHHA.Infra.Migrations
                     COACategoryId2 = table.Column<short>(type: "smallint", nullable: false),
                     COACategoryId3 = table.Column<short>(type: "smallint", nullable: false),
                     IsSysControl = table.Column<bool>(type: "bit", nullable: false),
-                    SeqNo = table.Column<int>(type: "int", nullable: false),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
@@ -549,7 +1055,7 @@ namespace AHHA.Infra.Migrations
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     COACategoryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     COACategoryName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SeqNo = table.Column<int>(type: "int", nullable: false),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
@@ -570,7 +1076,7 @@ namespace AHHA.Infra.Migrations
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     COACategoryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     COACategoryName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SeqNo = table.Column<int>(type: "int", nullable: false),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
@@ -591,7 +1097,7 @@ namespace AHHA.Infra.Migrations
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     COACategoryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     COACategoryName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SeqNo = table.Column<int>(type: "int", nullable: false),
+                    SeqNo = table.Column<short>(type: "smallint", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
@@ -607,7 +1113,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_Country",
                 columns: table => new
                 {
-                    CountryId = table.Column<int>(type: "int", nullable: false)
+                    CountryId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CountryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CountryName = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -691,8 +1197,8 @@ namespace AHHA.Infra.Migrations
                 {
                     CurrencyId = table.Column<short>(type: "smallint", nullable: false),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
-                    ExhRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ValidFrom = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -708,8 +1214,8 @@ namespace AHHA.Infra.Migrations
                 {
                     CurrencyId = table.Column<short>(type: "smallint", nullable: false),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
-                    ExhRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ValidFrom = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExhRate = table.Column<decimal>(type: "decimal(18,10)", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -734,6 +1240,9 @@ namespace AHHA.Infra.Migrations
                     CurrencyId = table.Column<short>(type: "smallint", nullable: false),
                     CreditTermId = table.Column<short>(type: "smallint", nullable: false),
                     ParentCustomerId = table.Column<int>(type: "int", nullable: false),
+                    AccSetupId = table.Column<short>(type: "smallint", nullable: false),
+                    SupplierId = table.Column<int>(type: "int", nullable: false),
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
                     IsCustomer = table.Column<bool>(type: "bit", nullable: false),
                     IsVendor = table.Column<bool>(type: "bit", nullable: false),
                     IsTrader = table.Column<bool>(type: "bit", nullable: false),
@@ -754,13 +1263,13 @@ namespace AHHA.Infra.Migrations
                 columns: table => new
                 {
                     CustomerId = table.Column<int>(type: "int", nullable: false),
-                    AddressId = table.Column<int>(type: "int", nullable: false),
+                    AddressId = table.Column<short>(type: "smallint", nullable: false),
                     Address1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PinCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CountryId = table.Column<int>(type: "int", nullable: false),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
                     PhoneNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FaxNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EmailAdd = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -783,7 +1292,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_CustomerContact",
                 columns: table => new
                 {
-                    ContactId = table.Column<int>(type: "int", nullable: false),
+                    ContactId = table.Column<short>(type: "smallint", nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     ContactName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OtherName = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -812,10 +1321,11 @@ namespace AHHA.Infra.Migrations
                 {
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    EffectFrom = table.Column<DateOnly>(type: "date", nullable: false),
-                    EffectUntil = table.Column<DateOnly>(type: "date", nullable: false),
+                    EffectFrom = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EffectUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsExpires = table.Column<bool>(type: "bit", nullable: false),
-                    CreditLimitAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreditLimitAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -829,7 +1339,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_CustomerGroupCreditLimit",
                 columns: table => new
                 {
-                    GroupCreditLimitId = table.Column<int>(type: "int", nullable: false)
+                    GroupCreditLimitId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     GroupCreditLimitCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -849,7 +1359,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_Department",
                 columns: table => new
                 {
-                    DepartmentId = table.Column<int>(type: "int", nullable: false)
+                    DepartmentId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     DepartmentCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -889,7 +1399,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_Employee",
                 columns: table => new
                 {
-                    EmployeeId = table.Column<int>(type: "int", nullable: false)
+                    EmployeeId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     EmployeeCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -897,9 +1407,7 @@ namespace AHHA.Infra.Migrations
                     EmployeeOtherName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EmployeePhoto = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EmployeeSignature = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    DepartmentId = table.Column<int>(type: "int", nullable: false),
-                    DepartmentCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    DepartmentName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DepartmentId = table.Column<short>(type: "smallint", nullable: false),
                     EmployeeSex = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MartialStatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EmployeeDOB = table.Column<DateOnly>(type: "date", nullable: false),
@@ -922,7 +1430,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_GroupCreditLimit",
                 columns: table => new
                 {
-                    GroupCreditLimitId = table.Column<int>(type: "int", nullable: false)
+                    GroupCreditLimitId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     GroupCreditLimitCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -943,7 +1451,7 @@ namespace AHHA.Infra.Migrations
                 columns: table => new
                 {
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    GroupCreditLimitId = table.Column<int>(type: "int", nullable: false),
+                    GroupCreditLimitId = table.Column<short>(type: "smallint", nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
@@ -959,11 +1467,12 @@ namespace AHHA.Infra.Migrations
                 columns: table => new
                 {
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    GroupCreditLimitId = table.Column<int>(type: "int", nullable: false),
+                    GroupCreditLimitId = table.Column<short>(type: "smallint", nullable: false),
                     EffectFrom = table.Column<DateOnly>(type: "date", nullable: false),
                     EffectUntil = table.Column<DateOnly>(type: "date", nullable: false),
                     IsExpires = table.Column<bool>(type: "bit", nullable: false),
-                    CreditLimitAmt = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreditLimitAmt = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -1020,8 +1529,8 @@ namespace AHHA.Infra.Migrations
                 {
                     GstId = table.Column<short>(type: "smallint", nullable: false),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
-                    GstPercentahge = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ValidFrom = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    GstPercentahge = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -1035,7 +1544,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_OrderType",
                 columns: table => new
                 {
-                    OrderTypeId = table.Column<int>(type: "int", nullable: false)
+                    OrderTypeId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     OrderTypeCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1076,7 +1585,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_PaymentType",
                 columns: table => new
                 {
-                    PaymentTypeId = table.Column<int>(type: "int", nullable: false)
+                    PaymentTypeId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     PaymentTypeCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1096,10 +1605,10 @@ namespace AHHA.Infra.Migrations
                 name: "M_Port",
                 columns: table => new
                 {
-                    PortId = table.Column<int>(type: "int", nullable: false)
+                    PortId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    PortRegionId = table.Column<int>(type: "int", nullable: false),
+                    PortRegionId = table.Column<short>(type: "smallint", nullable: false),
                     PortCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PortName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1117,12 +1626,12 @@ namespace AHHA.Infra.Migrations
                 name: "M_PortRegion",
                 columns: table => new
                 {
-                    PortRegionId = table.Column<int>(type: "int", nullable: false)
+                    PortRegionId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     PortRegionCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PortRegionName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CountryId = table.Column<int>(type: "int", nullable: false),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
@@ -1138,7 +1647,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_Product",
                 columns: table => new
                 {
-                    ProductId = table.Column<int>(type: "int", nullable: false)
+                    ProductId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     ProductCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1158,7 +1667,7 @@ namespace AHHA.Infra.Migrations
                 name: "M_SubCategory",
                 columns: table => new
                 {
-                    SubCategoryId = table.Column<int>(type: "int", nullable: false)
+                    SubCategoryId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     SubCategoryCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1189,6 +1698,8 @@ namespace AHHA.Infra.Migrations
                     CurrencyId = table.Column<short>(type: "smallint", nullable: false),
                     CreditTermId = table.Column<short>(type: "smallint", nullable: false),
                     ParentSupplierId = table.Column<int>(type: "int", nullable: false),
+                    AccSetupId = table.Column<short>(type: "smallint", nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
                     IsCustomer = table.Column<bool>(type: "bit", nullable: false),
                     IsVendor = table.Column<bool>(type: "bit", nullable: false),
                     IsTrader = table.Column<bool>(type: "bit", nullable: false),
@@ -1209,13 +1720,13 @@ namespace AHHA.Infra.Migrations
                 columns: table => new
                 {
                     SupplierId = table.Column<int>(type: "int", nullable: false),
-                    AddressId = table.Column<int>(type: "int", nullable: false),
+                    AddressId = table.Column<short>(type: "smallint", nullable: false),
                     Address1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PinCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CountryId = table.Column<int>(type: "int", nullable: false),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
                     PhoneNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FaxNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EmailAdd = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1235,10 +1746,40 @@ namespace AHHA.Infra.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "M_SupplierBank",
+                columns: table => new
+                {
+                    SupplierBankId = table.Column<short>(type: "smallint", nullable: false),
+                    SupplierId = table.Column<int>(type: "int", nullable: false),
+                    BankId = table.Column<short>(type: "smallint", nullable: false),
+                    BranchName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AccountNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SwiftCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OtherCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PinCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CountryId = table.Column<short>(type: "smallint", nullable: false),
+                    Remarks1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Remarks2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_M_SupplierBank", x => new { x.SupplierId, x.SupplierBankId });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "M_SupplierContact",
                 columns: table => new
                 {
-                    ContactId = table.Column<int>(type: "int", nullable: false),
+                    ContactId = table.Column<short>(type: "smallint", nullable: false),
                     SupplierId = table.Column<int>(type: "int", nullable: false),
                     ContactName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OtherName = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1308,8 +1849,8 @@ namespace AHHA.Infra.Migrations
                 {
                     TaxId = table.Column<short>(type: "smallint", nullable: false),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
-                    TaxPercentage = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ValidFrom = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TaxPercentage = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -1346,7 +1887,7 @@ namespace AHHA.Infra.Migrations
                     UomId = table.Column<short>(type: "smallint", nullable: false),
                     PackUomId = table.Column<short>(type: "smallint", nullable: false),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
-                    UomFactor = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    UomFactor = table.Column<decimal>(type: "decimal(9,4)", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -1386,13 +1927,13 @@ namespace AHHA.Infra.Migrations
                 name: "M_Voyage",
                 columns: table => new
                 {
-                    VoyageId = table.Column<int>(type: "int", nullable: false)
+                    VoyageId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     VoyageNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ReferenceNo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VesselId = table.Column<int>(type: "int", nullable: false),
-                    BargeId = table.Column<int>(type: "int", nullable: false),
+                    BargeId = table.Column<short>(type: "smallint", nullable: false),
                     Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
@@ -1411,7 +1952,8 @@ namespace AHHA.Infra.Migrations
                     CompanyId = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     AmtDec = table.Column<short>(type: "smallint", nullable: false),
-                    LocAmtDec = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LocAmtDec = table.Column<short>(type: "smallint", nullable: false),
+                    CtyAmtDec = table.Column<short>(type: "smallint", nullable: false),
                     PriceDec = table.Column<short>(type: "smallint", nullable: false),
                     QtyDec = table.Column<short>(type: "smallint", nullable: false),
                     ExhRateDec = table.Column<short>(type: "smallint", nullable: false),
@@ -1451,6 +1993,52 @@ namespace AHHA.Infra.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "S_MandatoryFields",
+                columns: table => new
+                {
+                    CompanyId = table.Column<short>(type: "smallint", nullable: false),
+                    ModuleId = table.Column<short>(type: "smallint", nullable: false),
+                    TransactionId = table.Column<short>(type: "smallint", nullable: false),
+                    M_ProductId = table.Column<bool>(type: "bit", nullable: false),
+                    M_GLId = table.Column<bool>(type: "bit", nullable: false),
+                    M_QTY = table.Column<bool>(type: "bit", nullable: false),
+                    M_UomId = table.Column<bool>(type: "bit", nullable: false),
+                    M_UnitPrice = table.Column<bool>(type: "bit", nullable: false),
+                    M_TotAmt = table.Column<bool>(type: "bit", nullable: false),
+                    M_Remarks = table.Column<bool>(type: "bit", nullable: false),
+                    M_GstId = table.Column<bool>(type: "bit", nullable: false),
+                    M_DeliveryDate = table.Column<bool>(type: "bit", nullable: false),
+                    M_DepartmentId = table.Column<bool>(type: "bit", nullable: false),
+                    M_EmployeeId = table.Column<bool>(type: "bit", nullable: false),
+                    M_PortId = table.Column<bool>(type: "bit", nullable: false),
+                    M_VesselId = table.Column<bool>(type: "bit", nullable: false),
+                    M_BargeId = table.Column<bool>(type: "bit", nullable: false),
+                    M_VoyageId = table.Column<bool>(type: "bit", nullable: false),
+                    M_SupplyDate = table.Column<bool>(type: "bit", nullable: false),
+                    M_ReferenceNo = table.Column<bool>(type: "bit", nullable: false),
+                    M_SuppInvoiceNo = table.Column<bool>(type: "bit", nullable: false),
+                    M_BankId = table.Column<bool>(type: "bit", nullable: false),
+                    M_Remarks_Hd = table.Column<bool>(type: "bit", nullable: false),
+                    M_Address1 = table.Column<bool>(type: "bit", nullable: false),
+                    M_Address2 = table.Column<bool>(type: "bit", nullable: false),
+                    M_Address3 = table.Column<bool>(type: "bit", nullable: false),
+                    M_Address4 = table.Column<bool>(type: "bit", nullable: false),
+                    M_PinCode = table.Column<bool>(type: "bit", nullable: false),
+                    M_CountryId = table.Column<bool>(type: "bit", nullable: false),
+                    M_PhoneNo = table.Column<bool>(type: "bit", nullable: false),
+                    M_ContactName = table.Column<bool>(type: "bit", nullable: false),
+                    M_MobileNo = table.Column<bool>(type: "bit", nullable: false),
+                    M_EmailAdd = table.Column<bool>(type: "bit", nullable: false),
+                    CreateById = table.Column<short>(type: "smallint", nullable: false),
+                    EditById = table.Column<short>(type: "smallint", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_S_MandatoryFields", x => new { x.CompanyId, x.ModuleId, x.TransactionId });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "S_NumberFormat",
                 columns: table => new
                 {
@@ -1458,7 +2046,7 @@ namespace AHHA.Infra.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     ModuleId = table.Column<short>(type: "smallint", nullable: false),
-                    TransactionId = table.Column<int>(type: "int", nullable: false),
+                    TransactionId = table.Column<short>(type: "smallint", nullable: false),
                     Prefix = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PrefixSeq = table.Column<short>(type: "smallint", nullable: false),
                     PrefixDelimiter = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1523,10 +2111,34 @@ namespace AHHA.Infra.Migrations
                 name: "AdmUserRights");
 
             migrationBuilder.DropTable(
+                name: "ApInvoiceDt");
+
+            migrationBuilder.DropTable(
+                name: "ApInvoiceHd");
+
+            migrationBuilder.DropTable(
+                name: "ArCreditNoteDt");
+
+            migrationBuilder.DropTable(
+                name: "ArCreditNoteHd");
+
+            migrationBuilder.DropTable(
+                name: "ArDebitNoteDt");
+
+            migrationBuilder.DropTable(
+                name: "ArDebitNoteHd");
+
+            migrationBuilder.DropTable(
                 name: "ArInvoiceDt");
 
             migrationBuilder.DropTable(
                 name: "ArInvoiceHd");
+
+            migrationBuilder.DropTable(
+                name: "ArReceiptDt");
+
+            migrationBuilder.DropTable(
+                name: "ArReceiptHd");
 
             migrationBuilder.DropTable(
                 name: "M_AccountGroup");
@@ -1538,10 +2150,19 @@ namespace AHHA.Infra.Migrations
                 name: "M_AccountSetupCategory");
 
             migrationBuilder.DropTable(
+                name: "M_AccountSetupDt");
+
+            migrationBuilder.DropTable(
                 name: "M_AccountType");
 
             migrationBuilder.DropTable(
                 name: "M_Bank");
+
+            migrationBuilder.DropTable(
+                name: "M_BankAddress");
+
+            migrationBuilder.DropTable(
+                name: "M_BankContact");
 
             migrationBuilder.DropTable(
                 name: "M_Barge");
@@ -1649,6 +2270,9 @@ namespace AHHA.Infra.Migrations
                 name: "M_SupplierAddress");
 
             migrationBuilder.DropTable(
+                name: "M_SupplierBank");
+
+            migrationBuilder.DropTable(
                 name: "M_SupplierContact");
 
             migrationBuilder.DropTable(
@@ -1677,6 +2301,9 @@ namespace AHHA.Infra.Migrations
 
             migrationBuilder.DropTable(
                 name: "S_FinSettings");
+
+            migrationBuilder.DropTable(
+                name: "S_MandatoryFields");
 
             migrationBuilder.DropTable(
                 name: "S_NumberFormat");
