@@ -255,12 +255,16 @@ namespace AHHA.Infra.Services.Accounts.AR
             }
         }
 
-        public async Task<SqlResponce> DeleteARReceiptAsync(string RegId, Int16 CompanyId, Int64 ReceiptId, string ReceiptNo, string CanacelRemarks, Int16 UserId)
+        public async Task<SqlResponce> DeleteARReceiptAsync(string RegId, Int16 CompanyId, Int64 ReceiptId, string CanacelRemarks, Int16 UserId)
         {
+            string ReceiptNo = string.Empty;
             try
             {
                 using (TransactionScope TScope = new TransactionScope())
                 {
+                    //Get Invoice Number
+                    ReceiptNo = await _repository.GetQuerySingleOrDefaultAsync<string>(RegId, $"SELECT ReceiptNo FROM dbo.ArReceiptHd WHERE ReceiptId={ReceiptId}");
+
                     if (ReceiptId > 0)
                     {
                         var ARReceiptToRemove = _context.ArReceiptHd.Where(b => b.ReceiptId == ReceiptId).ExecuteUpdate(setPropertyCalls: setters => setters.SetProperty(b => b.IsCancel, true).SetProperty(b => b.CancelById, UserId).SetProperty(b => b.CancelDate, DateTime.Now).SetProperty(b => b.CancelRemarks, CanacelRemarks));
@@ -298,7 +302,7 @@ namespace AHHA.Infra.Services.Accounts.AR
                     }
                     else
                     {
-                        return new SqlResponce { Result = -1, Message = "Receipt Not exists" };
+                        return new SqlResponce { Result = -1, Message = "Invoice Not exists" };
                     }
                     return new SqlResponce();
                 }
