@@ -1,0 +1,126 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class DynamicLookupController : BaseController
+    {
+        private readonly IDynamicLookupService _DynamicLookupService;
+        private readonly ILogger<DynamicLookupController> _logger;
+
+        public DynamicLookupController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<DynamicLookupController> logger, IDynamicLookupService DynamicLookupService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _DynamicLookupService = DynamicLookupService;
+        }
+
+        //DynamicLookup screen
+
+        //get --companyid
+        //upsert  --company/model
+
+        [HttpGet, Route("GetDynamicLookup")]
+        [Authorize]
+        public async Task<ActionResult<DynamicLookupViewModel>> GetDynamicLookup([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    //var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.DynamicLookup, headerViewModel.UserId);
+
+                    //if (userGroupRight != null)
+                    //{
+                        var DynamicLookupViewModel = await _DynamicLookupService.GetDynamicLookupAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                        if (DynamicLookupViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, DynamicLookupViewModel);
+                    //}
+                    //else
+                    //{
+                    //    return NotFound(GenrateMessage.authenticationfailed);
+                    //}
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("UpsertDynamicLookup")]
+        [Authorize]
+        public async Task<ActionResult<DynamicLookupViewModel>> UpsertDynamicLookup(DynamicLookupViewModel DynamicLookupViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.DynamicLookup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (DynamicLookupViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var FinEntity = new S_DynamicLookup
+                            {
+                                CompanyId = headerViewModel.CompanyId,
+                                IsBarge = DynamicLookupViewModel.IsBarge,
+                                IsVessel = DynamicLookupViewModel.IsVessel,
+                                IsVoyage = DynamicLookupViewModel.IsVoyage,
+                                IsCustomer = DynamicLookupViewModel.IsCustomer,
+                                IsSupplier = DynamicLookupViewModel.IsSupplier,
+                                IsProduct = DynamicLookupViewModel.IsProduct,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var createdFin = await _DynamicLookupService.UpsertDynamicLookupAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdFin);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Fin record");
+            }
+        }
+    }
+}

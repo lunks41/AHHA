@@ -1,0 +1,332 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Accounts;
+using AHHA.Application.IServices.Accounts.AP;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AP;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Account.AP;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Transactions;
+
+namespace AHHA.Infra.Services.Accounts.AP
+{
+    public sealed class APCreditNoteService : IAPCreditNoteService
+    {
+        private readonly IRepository<ApCreditNoteHd> _repository;
+        private ApplicationDbContext _context;
+        private readonly IAccountService _accountService;
+
+        public APCreditNoteService(IRepository<ApCreditNoteHd> repository, ApplicationDbContext context, IAccountService accountService)
+        {
+            _repository = repository;
+            _context = context;
+            _accountService = accountService;
+        }
+
+        public async Task<APCreditNoteViewModelCount> GetAPCreditNoteListAsync(string RegId, Int16 CompanyId, short pageSize, short pageNumber, string searchString, Int16 UserId)
+        {
+            APCreditNoteViewModelCount countViewModel = new APCreditNoteViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.ApCreditNoteHd crdhd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = crdhd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = crdhd.CurrencyId INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = crdhd.CreditTermId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = crdhd.BankId LEFT JOIN dbo.M_Country M_Cun ON M_Cun.CountryId = crdhd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = crdhd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = crdhd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = crdhd.CancelById WHERE (crdhd.CreditNoteNo LIKE '%{searchString}%' OR crdhd.ReferenceNo LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%')");
+
+                var result = await _repository.GetQueryAsync<APCreditNoteViewModel>(RegId, $"SELECT crdhd.CompanyId,crdhd.CreditNoteId,crdhd.CreditNoteNo,crdhd.ReferenceNo,crdhd.TrnDate,crdhd.AccountDate,crdhd.DeliveryDate,crdhd.DueDate,crdhd.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,crdhd.CurrencyId,M_Cur.CurrencyCode,M_Cur.CurrencyCode,crdhd.ExhRate,crdhd.CtyExhRate,crdhd.CreditTermId,M_Crd.CreditTermCode,M_Crd.CreditTermName,crdhd.BankId,M_Ban.BankCode,M_Ban.BankName,crdhd.TotAmt,crdhd.TotLocalAmt,crdhd.TotCtyAmt,crdhd.GstClaimDate,crdhd.GstAmt,crdhd.GstLocalAmt,crdhd.GstCtyAmt,crdhd.TotAmtAftGst,crdhd.TotLocalAmtAftGst,crdhd.TotCtyAmtAftGst,crdhd.BalAmt,crdhd.BalLocalAmt,crdhd.PayAmt,crdhd.PayLocalAmt,crdhd.ExGainLoss,crdhd.SalesOrderId,crdhd.SalesOrderNo,crdhd.OperationId,crdhd.OperationNo,crdhd.Remarks,crdhd.Address1,crdhd.Address2,crdhd.Address3,crdhd.Address4,crdhd.PinCode,crdhd.CountryId,M_Cun.CountryCode,M_Cun.CountryName,crdhd.PhoneNo,crdhd.FaxNo,crdhd.ContactName,crdhd.MobileNo,crdhd.EmailAdd,crdhd.ModuleFrom,crdhd.SupplierName,crdhd.CreateById,crdhd.CreateDate,crdhd.EditById,crdhd.EditDate,crdhd.CancelById,crdhd.CancelDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy,Usr2.UserName AS CancelBy FROM dbo.ApCreditNoteHd crdhd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = crdhd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = crdhd.CurrencyId INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = crdhd.CreditTermId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = crdhd.BankId LEFT JOIN dbo.M_Country M_Cun ON M_Cun.CountryId = crdhd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = crdhd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = crdhd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = crdhd.CancelById WHERE (crdhd.CreditNoteNo LIKE '%{searchString}%' OR crdhd.ReferenceNo LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%') ORDER BY crdhd.CreditNoteNo,crdhd.AccountDate OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "Success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AP,
+                    TransactionId = (short)E_AR.CreditNote,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "ApCreditNoteHd",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<APCreditNoteViewModel> GetAPCreditNoteByIdAsync(string RegId, Int16 CompanyId, Int64 CreditNoteId, string CreditNoteNo, Int16 UserId)
+        {
+            APCreditNoteViewModel APCreditNoteViewModel = new APCreditNoteViewModel();
+            try
+            {
+                APCreditNoteViewModel = await _repository.GetQuerySingleOrDefaultAsync<APCreditNoteViewModel>(RegId, $"SELECT crdhd.CompanyId,crdhd.CreditNoteId,crdhd.CreditNoteNo,crdhd.ReferenceNo,crdhd.TrnDate,crdhd.AccountDate,crdhd.DeliveryDate,crdhd.DueDate,crdhd.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,crdhd.CurrencyId,M_Cur.CurrencyCode,M_Cur.CurrencyCode,crdhd.ExhRate,crdhd.CtyExhRate,crdhd.CreditTermId,M_Crd.CreditTermCode,M_Crd.CreditTermName,crdhd.BankId,M_Ban.BankCode,M_Ban.BankName,crdhd.TotAmt,crdhd.TotLocalAmt,crdhd.TotCtyAmt,crdhd.GstClaimDate,crdhd.GstAmt,crdhd.GstLocalAmt,crdhd.GstCtyAmt,crdhd.TotAmtAftGst,crdhd.TotLocalAmtAftGst,crdhd.TotCtyAmtAftGst,crdhd.BalAmt,crdhd.BalLocalAmt,crdhd.PayAmt,crdhd.PayLocalAmt,crdhd.ExGainLoss,crdhd.SalesOrderId,crdhd.SalesOrderNo,crdhd.OperationId,crdhd.OperationNo,crdhd.Remarks,crdhd.Address1,crdhd.Address2,crdhd.Address3,crdhd.Address4,crdhd.PinCode,crdhd.CountryId,M_Cun.CountryCode,M_Cun.CountryName,crdhd.PhoneNo,crdhd.FaxNo,crdhd.ContactName,crdhd.MobileNo,crdhd.EmailAdd,crdhd.ModuleFrom,crdhd.SupplierName,crdhd.CreateById,crdhd.CreateDate,crdhd.EditById,crdhd.EditDate,crdhd.CancelById,crdhd.CancelDate,crdhd.CancelRemarks,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy,Usr2.UserName AS CancelBy FROM dbo.ApCreditNoteHd crdhd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = crdhd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = crdhd.CurrencyId INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = crdhd.CreditTermId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = crdhd.BankId LEFT JOIN dbo.M_Country M_Cun ON M_Cun.CountryId = crdhd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = crdhd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = crdhd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = crdhd.CancelById WHERE (crdhd.CreditNoteId={CreditNoteId} OR {CreditNoteId}=0) AND (crdhd.CreditNoteNo='{CreditNoteNo}' OR '{CreditNoteNo}'='{string.Empty}')");
+
+                if (APCreditNoteViewModel == null)
+                    return APCreditNoteViewModel;
+
+                var result = await _repository.GetQueryAsync<APCreditNoteDtViewModel>(RegId, $"SELECT crddt.CreditNoteId,crddt.CreditNoteNo,crddt.ItemNo,crddt.SeqNo,crddt.DocItemNo,crddt.ProductId,M_Pro.ProductCode,M_Pro.ProductName,crddt.GLId,M_Gs.GstCode,M_Gs.GstName,crddt.QTY,crddt.BillQTY,crddt.UomId,M_um.UomCode,M_um.UomName,crddt.UnitPrice,crddt.TotAmt,crddt.TotLocalAmt,crddt.TotCtyAmt,crddt.Remarks,crddt.GstId,M_Gs.GstCode,M_Gs.GstName,crddt.GstPercentage,crddt.GstAmt,crddt.GstLocalAmt,crddt.GstCtyAmt,crddt.DeliveryDate,crddt.DepartmentId,M_Dep.DepartmentCode,M_Dep.DepartmentName,crddt.EmployeeId,M_Emp.EmployeeCode,M_Emp.EmployeeName,crddt.PortId,M_Po.PortCode,M_Po.PortName,crddt.VesselId,M_Vel.VesselCode,M_Vel.VesselName,crddt.BargeId,M_Brg.BargeCode,M_Brg.BargeName,crddt.VoyageId,M_Vo.VoyageNo,M_Vo.ReferenceNo as VoyageReferenceNo,crddt.OperationId,crddt.OperationNo,crddt.OPRefNo,crddt.SalesOrderId,crddt.SalesOrderNo,crddt.SupplyDate,crddt.SupplierName FROM dbo.APCreditNoteDt crddt LEFT JOIN dbo.M_Uom M_um ON M_um.UomId = crddt.UomId LEFT JOIN dbo.M_ChartOfAccount M_chra ON M_chra.GLId = crddt.GLId LEFT JOIN dbo.M_Product M_Pro ON M_Pro.ProductId = crddt.ProductId LEFT JOIN dbo.M_Gst M_Gs ON M_Gs.GstId = crddt.GstId LEFT JOIN dbo.M_Department M_Dep ON M_Dep.DepartmentId = crddt.DepartmentId LEFT JOIN dbo.M_Employee M_Emp ON M_Emp.EmployeeId = crddt.EmployeeId LEFT JOIN dbo.M_Port M_Po ON M_Po.PortId = crddt.PortId LEFT JOIN dbo.M_Vessel M_Vel ON M_Vel.VesselId = crddt.VesselId LEFT JOIN dbo.M_Barge M_Brg ON M_Brg.BargeId = crddt.BargeId LEFT JOIN dbo.M_Voyage M_Vo ON M_Vo.VoyageId = crddt.VoyageId  WHERE crddt.CreditNoteId={APCreditNoteViewModel.CreditNoteId}");
+
+                APCreditNoteViewModel.data_details = result == null ? null : result.ToList();
+
+                return APCreditNoteViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AP,
+                    TransactionId = (short)E_AR.CreditNote,
+                    DocumentId = CreditNoteId,
+                    DocumentNo = CreditNoteNo,
+                    TblName = "ApCreditNoteHd",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> SaveAPCreditNoteAsync(string RegId, Int16 CompanyId, ApCreditNoteHd apCreditNoteHd, List<ApCreditNoteDt> apCreditNoteDt, Int16 UserId)
+        {
+            bool IsEdit = false;
+            string accountDate = apCreditNoteHd.AccountDate.ToString("dd/MMM/yyyy");
+            try
+            {
+                using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    if (apCreditNoteHd.CreditNoteId != 0)
+                    {
+                        IsEdit = true;
+                    }
+                    if (IsEdit)
+                    {
+                        var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.ApCreditNoteHd WHERE IsCancel=0 And CompanyId={CompanyId} And CreditNoteId={apCreditNoteHd.CreditNoteId}");
+
+                        if (DataExist.Count() == 0)
+                            return new SqlResponce { Result = -1, Message = "Invoice Not Exist" };
+                    }
+
+                    if (!IsEdit)
+                    {
+                        var documentIdNo = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec S_GENERATE_NUMBER_NOANDID {CompanyId},{(short)E_Modules.AP},{(short)E_AR.CreditNote},'{accountDate}'");
+
+                        if (documentIdNo.ToList()[0].DocumentId > 0 && documentIdNo.ToList()[0].DocumentNo != string.Empty)
+                        {
+                            apCreditNoteHd.CreditNoteId = documentIdNo.ToList()[0].DocumentId;
+                            apCreditNoteHd.CreditNoteNo = documentIdNo.ToList()[0].DocumentNo;
+                        }
+                        else
+                            return new SqlResponce { Result = -1, Message = "Invoice Number can't generate" };
+                    }
+                    else
+                    {
+                        //Insert the previous APCreditNote record to APCreditNote history table as well as editversion also.
+                        await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_CreateHistoryRec {CompanyId},{UserId},{apCreditNoteHd.CreditNoteId},{(short)E_AR.CreditNote}");
+                    }
+
+                    //Saving Header
+                    if (IsEdit)
+                    {
+                        var entityHead = _context.Update(apCreditNoteHd);
+                        entityHead.Property(b => b.CreateById).IsModified = false;
+                        entityHead.Property(b => b.CompanyId).IsModified = false;
+                        entityHead.Property(b => b.EditVersion).IsModified = false;
+
+                        entityHead.Property(b => b.IsCancel).IsModified = false;
+                        entityHead.Property(b => b.CancelById).IsModified = false;
+                        entityHead.Property(b => b.CancelDate).IsModified = false;
+                        entityHead.Property(b => b.CancelRemarks).IsModified = false;
+                    }
+                    else
+                    {
+                        apCreditNoteHd.EditDate = null;
+                        apCreditNoteHd.EditById = null;
+
+                        var entityHead = _context.Add(apCreditNoteHd);
+
+                        entityHead.Property(b => b.IsCancel).IsModified = false;
+                        entityHead.Property(b => b.CancelById).IsModified = false;
+                        entityHead.Property(b => b.CancelDate).IsModified = false;
+                        entityHead.Property(b => b.CancelRemarks).IsModified = false;
+                    }
+
+                    var SaveHeader = _context.SaveChanges();
+
+                    //Saving Details
+                    if (SaveHeader > 0)
+                    {
+                        if (IsEdit)
+                            _context.ApCreditNoteDt.Where(x => x.CreditNoteId == apCreditNoteHd.CreditNoteId).ExecuteDelete();
+
+                        foreach (var item in apCreditNoteDt)
+                        {
+                            item.CreditNoteId = apCreditNoteHd.CreditNoteId;
+                            item.CreditNoteNo = apCreditNoteHd.CreditNoteNo;
+                            //item.EditVersion = apCreditNoteHd.EditVersion;
+                            _context.Add(item);
+                        }
+
+                        var SaveDetails = _context.SaveChanges();
+
+                        #region Save AuditLog
+
+                        if (SaveDetails > 0)
+                        {
+                            //Inserting the records into AR CreateStatement
+                            await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_CreateStatement {CompanyId},{UserId},{apCreditNoteHd.CreditNoteId},{(short)E_AR.CreditNote}");
+
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.AP,
+                                TransactionId = (short)E_AR.CreditNote,
+                                DocumentId = apCreditNoteHd.CreditNoteId,
+                                DocumentNo = apCreditNoteHd.CreditNoteNo,
+                                TblName = "ApCreditNoteHd",
+                                ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                                Remarks = apCreditNoteHd.Remarks,
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                //Update Edit Version
+                                if (IsEdit)
+                                    await _repository.UpsertExecuteScalarAsync(RegId, $"update ApCreditNoteHd set EditVersion=EditVersion+1 where CreditNoteId={apCreditNoteHd.CreditNoteId}; Update APCreditNoteDt set EditVersion=(SELECT TOP 1 EditVersion FROM dbo.ApCreditNoteHd where CreditNoteId={apCreditNoteHd.CreditNoteId}) where CreditNoteId={apCreditNoteHd.CreditNoteId}");
+
+                                //Create / Update Ar Statement
+                                await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_CreateStatement {CompanyId},{UserId},{apCreditNoteHd.CreditNoteId},{(short)E_AR.CreditNote}");
+
+                                TScope.Complete();
+                                return new SqlResponce { Result = apCreditNoteHd.CreditNoteId, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "Id Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AP,
+                    TransactionId = (short)E_AR.CreditNote,
+                    DocumentId = apCreditNoteHd.CreditNoteId,
+                    DocumentNo = apCreditNoteHd.CreditNoteNo,
+                    TblName = "ApCreditNoteHd",
+                    ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+                _context.Add(errorLog);
+                _context.SaveChanges();
+                throw ex;
+            }
+        }
+
+        public async Task<SqlResponce> DeleteAPCreditNoteAsync(string RegId, Int16 CompanyId, Int64 CreditNoteId, string CreditNoteNo,string CanacelRemarks, Int16 UserId)
+        {
+            try
+            {
+                using (TransactionScope TScope = new TransactionScope())
+                {
+                    if (CreditNoteId > 0)
+                    {
+                        //Update IsCancle=1,Cancelby=userid,Canceldate=now,CancelRemarks=CancelRemarks
+                        var APCreditNoteToRemove = _context.ApCreditNoteHd.Where(b => b.CreditNoteId == CreditNoteId).ExecuteUpdate(setPropertyCalls: setters => setters.SetProperty(b => b.IsCancel, true).SetProperty(b => b.CancelById, UserId).SetProperty(b => b.CancelDate, DateTime.Now).SetProperty(b => b.CancelRemarks, CanacelRemarks));
+
+                        if (APCreditNoteToRemove > 0)
+                        {
+                            //Cancel the Ar Transactions.
+                            await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_DeleteStatement {CompanyId},{UserId},{CreditNoteId},{(short)E_AR.CreditNote}");
+
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.AP,
+                                TransactionId = (short)E_AR.CreditNote,
+                                DocumentId = CreditNoteId,
+                                DocumentNo = CreditNoteNo,
+                                TblName = "ApCreditNoteHd",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = CanacelRemarks,
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                TScope.Complete();
+                                return new SqlResponce { Result = 1, Message = "Cancel Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Cancel Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "Invoice Not exists" };
+                    }
+                    return new SqlResponce();
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AP,
+                    TransactionId = (short)E_AR.CreditNote,
+                    DocumentId = CreditNoteId,
+                    DocumentNo = CreditNoteNo,
+                    TblName = "ApCreditNoteHd",
+                    ModeId = (short)E_Mode.Delete,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+    }
+}

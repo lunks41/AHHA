@@ -1,0 +1,332 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Accounts;
+using AHHA.Application.IServices.Accounts.AP;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AP;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Account.AP;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Transactions;
+
+namespace AHHA.Infra.Services.Accounts.AP
+{
+    public sealed class APDebitNoteService : IAPDebitNoteService
+    {
+        private readonly IRepository<ApDebitNoteHd> _repository;
+        private ApplicationDbContext _context;
+        private readonly IAccountService _accountService;
+
+        public APDebitNoteService(IRepository<ApDebitNoteHd> repository, ApplicationDbContext context, IAccountService accountService)
+        {
+            _repository = repository;
+            _context = context;
+            _accountService = accountService;
+        }
+
+        public async Task<APDebitNoteViewModelCount> GetAPDebitNoteListAsync(string RegId, Int16 CompanyId, short pageSize, short pageNumber, string searchString, Int16 UserId)
+        {
+            APDebitNoteViewModelCount countViewModel = new APDebitNoteViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.APDebitNoteHd Dethd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = Dethd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = Dethd.CurrencyId INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = Dethd.CreditTermId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = Dethd.BankId LEFT JOIN dbo.M_Country M_Cun ON M_Cun.CountryId = Dethd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = Dethd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = Dethd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = Dethd.CancelById WHERE (Dethd.DebitNoteNo LIKE '%{searchString}%' OR Dethd.ReferenceNo LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%')");
+
+                var result = await _repository.GetQueryAsync<APDebitNoteViewModel>(RegId, $"SELECT Dethd.CompanyId,Dethd.DebitNoteId,Dethd.DebitNoteNo,Dethd.ReferenceNo,Dethd.TrnDate,Dethd.AccountDate,Dethd.DeliveryDate,Dethd.DueDate,Dethd.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,Dethd.CurrencyId,M_Cur.CurrencyCode,M_Cur.CurrencyCode,Dethd.ExhRate,Dethd.CtyExhRate,Dethd.CreditTermId,M_Crd.CreditTermCode,M_Crd.CreditTermName,Dethd.BankId,M_Ban.BankCode,M_Ban.BankName,Dethd.TotAmt,Dethd.TotLocalAmt,Dethd.TotCtyAmt,Dethd.GstClaimDate,Dethd.GstAmt,Dethd.GstLocalAmt,Dethd.GstCtyAmt,Dethd.TotAmtAftGst,Dethd.TotLocalAmtAftGst,Dethd.TotCtyAmtAftGst,Dethd.BalAmt,Dethd.BalLocalAmt,Dethd.PayAmt,Dethd.PayLocalAmt,Dethd.ExGainLoss,Dethd.SalesOrderId,Dethd.SalesOrderNo,Dethd.OperationId,Dethd.OperationNo,Dethd.Remarks,Dethd.Address1,Dethd.Address2,Dethd.Address3,Dethd.Address4,Dethd.PinCode,Dethd.CountryId,M_Cun.CountryCode,M_Cun.CountryName,Dethd.PhoneNo,Dethd.FaxNo,Dethd.ContactName,Dethd.MobileNo,Dethd.EmailAdd,Dethd.ModuleFrom,Dethd.SupplierName,Dethd.CreateById,Dethd.CreateDate,Dethd.EditById,Dethd.EditDate,Dethd.CancelById,Dethd.CancelDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy,Usr2.UserName AS CancelBy FROM dbo.APDebitNoteHd Dethd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = Dethd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = Dethd.CurrencyId INNER JOIN dbo.M_CreditTerm M_Crd ON M_Crd.CreditTermId = Dethd.CreditTermId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = Dethd.BankId LEFT JOIN dbo.M_Country M_Cun ON M_Cun.CountryId = Dethd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = Dethd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = Dethd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = Dethd.CancelById WHERE (Dethd.DebitNoteNo LIKE '%{searchString}%' OR Dethd.ReferenceNo LIKE '%{searchString}%' OR M_Cus.CustomerCode LIKE '%{searchString}%' OR M_Cus.CustomerName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Crd.CreditTermCode LIKE '%{searchString}%' OR M_Crd.CreditTermName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%') ORDER BY Dethd.DebitNoteNo,Dethd.AccountDate OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "Success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AP,
+                    TransactionId = (short)E_AR.DebitNote,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "ApDebitNoteHd",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<APDebitNoteViewModel> GetAPDebitNoteByIdAsync(string RegId, Int16 CompanyId, Int64 DebitNoteId, string DebitNoteNo, Int16 UserId)
+        {
+            APDebitNoteViewModel APDebitNoteViewModel = new APDebitNoteViewModel();
+            try
+            {
+                APDebitNoteViewModel = await _repository.GetQuerySingleOrDefaultAsync<APDebitNoteViewModel>(RegId, $"SELECT Dethd.CompanyId,Dethd.DebitNoteId,Dethd.DebitNoteNo,Dethd.ReferenceNo,Dethd.TrnDate,Dethd.AccountDate,Dethd.DeliveryDate,Dethd.DueDate,Dethd.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,Dethd.CurrencyId,M_Cur.CurrencyCode,M_Cur.CurrencyCode,Dethd.ExhRate,Dethd.CtyExhRate,Dethd.DebitTermId,M_Crd.DebitTermCode,M_Crd.DebitTermName,Dethd.BankId,M_Ban.BankCode,M_Ban.BankName,Dethd.TotAmt,Dethd.TotLocalAmt,Dethd.TotCtyAmt,Dethd.GstClaimDate,Dethd.GstAmt,Dethd.GstLocalAmt,Dethd.GstCtyAmt,Dethd.TotAmtAftGst,Dethd.TotLocalAmtAftGst,Dethd.TotCtyAmtAftGst,Dethd.BalAmt,Dethd.BalLocalAmt,Dethd.PayAmt,Dethd.PayLocalAmt,Dethd.ExGainLoss,Dethd.SalesOrderId,Dethd.SalesOrderNo,Dethd.OperationId,Dethd.OperationNo,Dethd.Remarks,Dethd.Address1,Dethd.Address2,Dethd.Address3,Dethd.Address4,Dethd.PinCode,Dethd.CountryId,M_Cun.CountryCode,M_Cun.CountryName,Dethd.PhoneNo,Dethd.FaxNo,Dethd.ContactName,Dethd.MobileNo,Dethd.EmailAdd,Dethd.ModuleFrom,Dethd.SupplierName,Dethd.CreateById,Dethd.CreateDate,Dethd.EditById,Dethd.EditDate,Dethd.CancelById,Dethd.CancelDate,Dethd.CancelRemarks,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy,Usr2.UserName AS CancelBy FROM dbo.APDebitNoteHd Dethd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = Dethd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = Dethd.CurrencyId INNER JOIN dbo.M_DebitTerm M_Crd ON M_Crd.DebitTermId = Dethd.DebitTermId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = Dethd.BankId LEFT JOIN dbo.M_Country M_Cun ON M_Cun.CountryId = Dethd.CountryId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = Dethd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = Dethd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = Dethd.CancelById WHERE (Dethd.DebitNoteId={DebitNoteId} OR {DebitNoteId}=0) AND (Dethd.DebitNoteNo='{DebitNoteNo}' OR '{DebitNoteNo}'='{string.Empty}')");
+
+                if (APDebitNoteViewModel == null)
+                    return APDebitNoteViewModel;
+
+                var result = await _repository.GetQueryAsync<APDebitNoteDtViewModel>(RegId, $"SELECT Detdt.DebitNoteId,Detdt.DebitNoteNo,Detdt.ItemNo,Detdt.SeqNo,Detdt.DocItemNo,Detdt.ProductId,M_Pro.ProductCode,M_Pro.ProductName,Detdt.GLId,M_Gs.GstCode,M_Gs.GstName,Detdt.QTY,Detdt.BillQTY,Detdt.UomId,M_um.UomCode,M_um.UomName,Detdt.UnitPrice,Detdt.TotAmt,Detdt.TotLocalAmt,Detdt.TotCtyAmt,Detdt.Remarks,Detdt.GstId,M_Gs.GstCode,M_Gs.GstName,Detdt.GstPercentage,Detdt.GstAmt,Detdt.GstLocalAmt,Detdt.GstCtyAmt,Detdt.DeliveryDate,Detdt.DepartmentId,M_Dep.DepartmentCode,M_Dep.DepartmentName,Detdt.EmployeeId,M_Emp.EmployeeCode,M_Emp.EmployeeName,Detdt.PortId,M_Po.PortCode,M_Po.PortName,Detdt.VesselId,M_Vel.VesselCode,M_Vel.VesselName,Detdt.BargeId,M_Brg.BargeCode,M_Brg.BargeName,Detdt.VoyageId,M_Vo.VoyageNo,M_Vo.ReferenceNo as VoyageReferenceNo,Detdt.OperationId,Detdt.OperationNo,Detdt.OPRefNo,Detdt.SalesOrderId,Detdt.SalesOrderNo,Detdt.SupplyDate,Detdt.SupplierName FROM dbo.APDebitNoteDt Detdt LEFT JOIN dbo.M_Uom M_um ON M_um.UomId = Detdt.UomId LEFT JOIN dbo.M_ChartOfAccount M_chra ON M_chra.GLId = Detdt.GLId LEFT JOIN dbo.M_Product M_Pro ON M_Pro.ProductId = Detdt.ProductId LEFT JOIN dbo.M_Gst M_Gs ON M_Gs.GstId = Detdt.GstId LEFT JOIN dbo.M_Department M_Dep ON M_Dep.DepartmentId = Detdt.DepartmentId LEFT JOIN dbo.M_Employee M_Emp ON M_Emp.EmployeeId = Detdt.EmployeeId LEFT JOIN dbo.M_Port M_Po ON M_Po.PortId = Detdt.PortId LEFT JOIN dbo.M_Vessel M_Vel ON M_Vel.VesselId = Detdt.VesselId LEFT JOIN dbo.M_Barge M_Brg ON M_Brg.BargeId = Detdt.BargeId LEFT JOIN dbo.M_Voyage M_Vo ON M_Vo.VoyageId = Detdt.VoyageId  WHERE Detdt.DebitNoteId={APDebitNoteViewModel.DebitNoteId}");
+
+                APDebitNoteViewModel.data_details = result == null ? null : result.ToList();
+
+                return APDebitNoteViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AP,
+                    TransactionId = (short)E_AR.DebitNote,
+                    DocumentId = DebitNoteId,
+                    DocumentNo = DebitNoteNo,
+                    TblName = "ApDebitNoteHd",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> SaveAPDebitNoteAsync(string RegId, Int16 CompanyId, ApDebitNoteHd ApDebitNoteHd, List<ApDebitNoteDt> APDebitNoteDt, Int16 UserId)
+        {
+            bool IsEdit = false;
+            string accountDate = ApDebitNoteHd.AccountDate.ToString("dd/MMM/yyyy");
+            try
+            {
+                using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    if (ApDebitNoteHd.DebitNoteId != 0)
+                    {
+                        IsEdit = true;
+                    }
+                    if (IsEdit)
+                    {
+                        var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.APDebitNoteHd WHERE IsCancel=0 And CompanyId={CompanyId} And DebitNoteId={ApDebitNoteHd.DebitNoteId}");
+
+                        if (DataExist.Count() == 0)
+                            return new SqlResponce { Result = -1, Message = "Invoice Not Exist" };
+                    }
+
+                    if (!IsEdit)
+                    {
+                        var documentIdNo = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec S_GENERATE_NUMBER_NOANDID {CompanyId},{(short)E_Modules.AP},{(short)E_AR.DebitNote},'{accountDate}'");
+
+                        if (documentIdNo.ToList()[0].DocumentId > 0 && documentIdNo.ToList()[0].DocumentNo != string.Empty)
+                        {
+                            ApDebitNoteHd.DebitNoteId = documentIdNo.ToList()[0].DocumentId;
+                            ApDebitNoteHd.DebitNoteNo = documentIdNo.ToList()[0].DocumentNo;
+                        }
+                        else
+                            return new SqlResponce { Result = -1, Message = "Invoice Number can't generate" };
+                    }
+                    else
+                    {
+                        //Insert the previous APDebitNote record to APDebitNote history table as well as editversion also.
+                        await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_CreateHistoryRec {CompanyId},{UserId},{ApDebitNoteHd.DebitNoteId},{(short)E_AR.DebitNote}");
+                    }
+
+                    //Saving Header
+                    if (IsEdit)
+                    {
+                        var entityHead = _context.Update(ApDebitNoteHd);
+                        entityHead.Property(b => b.CreateById).IsModified = false;
+                        entityHead.Property(b => b.CompanyId).IsModified = false;
+                        entityHead.Property(b => b.EditVersion).IsModified = false;
+
+                        entityHead.Property(b => b.IsCancel).IsModified = false;
+                        entityHead.Property(b => b.CancelById).IsModified = false;
+                        entityHead.Property(b => b.CancelDate).IsModified = false;
+                        entityHead.Property(b => b.CancelRemarks).IsModified = false;
+                    }
+                    else
+                    {
+                        ApDebitNoteHd.EditDate = null;
+                        ApDebitNoteHd.EditById = null;
+
+                        var entityHead = _context.Add(ApDebitNoteHd);
+
+                        entityHead.Property(b => b.IsCancel).IsModified = false;
+                        entityHead.Property(b => b.CancelById).IsModified = false;
+                        entityHead.Property(b => b.CancelDate).IsModified = false;
+                        entityHead.Property(b => b.CancelRemarks).IsModified = false;
+                    }
+
+                    var SaveHeader = _context.SaveChanges();
+
+                    //Saving Details
+                    if (SaveHeader > 0)
+                    {
+                        if (IsEdit)
+                            _context.ApDebitNoteDt.Where(x => x.DebitNoteId == ApDebitNoteHd.DebitNoteId).ExecuteDelete();
+
+                        foreach (var item in APDebitNoteDt)
+                        {
+                            item.DebitNoteId = ApDebitNoteHd.DebitNoteId;
+                            item.DebitNoteNo = ApDebitNoteHd.DebitNoteNo;
+                            //item.EditVersion = ApDebitNoteHd.EditVersion;
+                            _context.Add(item);
+                        }
+
+                        var SaveDetails = _context.SaveChanges();
+
+                        #region Save AuditLog
+
+                        if (SaveDetails > 0)
+                        {
+                            //Inserting the records into AR CreateStatement
+                            await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_CreateStatement {CompanyId},{UserId},{ApDebitNoteHd.DebitNoteId},{(short)E_AR.DebitNote}");
+
+                            //Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.AP,
+                                TransactionId = (short)E_AR.DebitNote,
+                                DocumentId = ApDebitNoteHd.DebitNoteId,
+                                DocumentNo = ApDebitNoteHd.DebitNoteNo,
+                                TblName = "ApDebitNoteHd",
+                                ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                                Remarks = ApDebitNoteHd.Remarks,
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = _context.SaveChanges();
+
+                            if (auditLogSave > 0)
+                            {
+                                //Update Edit Version
+                                if (IsEdit)
+                                    await _repository.UpsertExecuteScalarAsync(RegId, $"update ApDebitNoteHd set EditVersion=EditVersion+1 where DebitNoteId={ApDebitNoteHd.DebitNoteId}; Update APDebitNoteDt set EditVersion=(SELECT TOP 1 EditVersion FROM dbo.APDebitNoteHd where DebitNoteId={ApDebitNoteHd.DebitNoteId}) where DebitNoteId={ApDebitNoteHd.DebitNoteId}");
+
+                                //Create / Update Ar Statement
+                                await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_CreateStatement {CompanyId},{UserId},{ApDebitNoteHd.DebitNoteId},{(short)E_AR.DebitNote}");
+
+                                TScope.Complete();
+                                return new SqlResponce { Result = ApDebitNoteHd.DebitNoteId, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = 1, Message = "Save Failed" };
+                        }
+
+                        #endregion Save AuditLog
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "Id Should not be zero" };
+                    }
+                    return new SqlResponce();
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AP,
+                    TransactionId = (short)E_AR.DebitNote,
+                    DocumentId = ApDebitNoteHd.DebitNoteId,
+                    DocumentNo = ApDebitNoteHd.DebitNoteNo,
+                    TblName = "ApDebitNoteHd",
+                    ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+                _context.Add(errorLog);
+                _context.SaveChanges();
+                throw ex;
+            }
+        }
+
+        public async Task<SqlResponce> DeleteAPDebitNoteAsync(string RegId, Int16 CompanyId, Int64 DebitNoteId,string DebitNoteNo, string CanacelRemarks, Int16 UserId)
+        {
+            try
+            {
+                using (TransactionScope TScope = new TransactionScope())
+                {
+                    if (DebitNoteId > 0)
+                    {
+                        //Update IsCancle=1,Cancelby=userid,Canceldate=now,CancelRemarks=CancelRemarks
+                        var APDebitNoteToRemove = _context.ApDebitNoteHd.Where(b => b.DebitNoteId == DebitNoteId).ExecuteUpdate(setPropertyCalls: setters => setters.SetProperty(b => b.IsCancel, true).SetProperty(b => b.CancelById, UserId).SetProperty(b => b.CancelDate, DateTime.Now).SetProperty(b => b.CancelRemarks, CanacelRemarks));
+
+                        if (APDebitNoteToRemove > 0)
+                        {
+                            //Cancel the Ar Transactions.
+                            await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"exec FIN_AR_DeleteStatement {CompanyId},{UserId},{DebitNoteId},{(short)E_AR.DebitNote}");
+
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.AP,
+                                TransactionId = (short)E_AR.DebitNote,
+                                DocumentId = DebitNoteId,
+                                DocumentNo = DebitNoteNo,
+                                TblName = "ApDebitNoteHd",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = CanacelRemarks,
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                TScope.Complete();
+                                return new SqlResponce { Result = 1, Message = "Cancel Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponce { Result = -1, Message = "Cancel Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponce { Result = -1, Message = "Invoice Not exists" };
+                    }
+                    return new SqlResponce();
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.AP,
+                    TransactionId = (short)E_AR.DebitNote,
+                    DocumentId = DebitNoteId,
+                    DocumentNo = DebitNoteNo,
+                    TblName = "ApDebitNoteHd",
+                    ModeId = (short)E_Mode.Delete,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+    }
+}

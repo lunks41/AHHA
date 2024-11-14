@@ -1,0 +1,17 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AP;
+using AHHA.Core.Models.Account.AP;
+
+namespace AHHA.Application.IServices.Accounts.AP
+{
+    public interface IAPDebitNoteService
+    {
+        public Task<APDebitNoteViewModelCount> GetAPDebitNoteListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId);
+
+        public Task<APDebitNoteViewModel> GetAPDebitNoteByIdAsync(string RegId, Int16 CompanyId, Int64 DebitNoteId, string DebitNoteNo, Int16 UserId);
+
+        public Task<SqlResponce> SaveAPDebitNoteAsync(string RegId, Int16 CompanyId, ApDebitNoteHd APDebitNoteHd, List<ApDebitNoteDt> APDebitNoteDts, Int16 UserId);
+
+        public Task<SqlResponce> DeleteAPDebitNoteAsync(string RegId, Int16 CompanyId, Int64 DebitNoteId,string DebitNoteNo, string CanacelRemarks, Int16 UserId);
+    }
+}
