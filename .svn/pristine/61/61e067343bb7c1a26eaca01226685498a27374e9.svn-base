@@ -1,0 +1,17 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.CB;
+using AHHA.Core.Models.Account.CB;
+
+namespace AHHA.Application.IServices.Accounts.CB
+{
+    public interface ICBGeneralReceiptService
+    {
+        public Task<CBGenReceiptViewModel> GetCBGeneralReceiptListAsync(string RegId, short CompanyId, short pageSize, short pageNumber, string searchString, short UserId);
+
+        public Task<CBGenReceiptHdViewModel> GetCBGeneralReceiptByIdAsync(string RegId, short CompanyId, long ReceiptId, string ReceiptNo, short UserId);
+
+        public Task<SqlResponce> SaveCBGeneralReceiptAsync(string RegId, short CompanyId, CBGenReceiptHd cBGenReceiptHd, List<CBGenReceiptDt> cBGenReceiptDts, short UserId);
+
+        public Task<SqlResponce> DeleteCBGeneralReceiptAsync(string RegId, short CompanyId, long ReceiptId, string ReceiptNo, string CanacelRemarks, short UserId);
+    }
+}

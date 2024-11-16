@@ -1,0 +1,93 @@
+﻿using AHHA.Core.Helper;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AHHA.Core.Models.Account.CB
+{
+    public class CBBankTransferViewModel
+    {
+        private DateTime _trnDate;
+        private DateTime _accountDate;
+        private DateTime _chequeDate;
+        public Int16 CompanyId { get; set; }
+        public string TransferId { get; set; }
+        public string TransferNo { get; set; }
+        public string ReferenceNo { get; set; }
+
+        public string TrnDate
+        {
+            get { return DateHelperStatic.FormatDate(_trnDate); }
+            set { _trnDate = DateHelperStatic.ParseDBDate(value); }
+        }
+
+        public string AccountDate
+        {
+            get { return DateHelperStatic.FormatDate(_accountDate); }
+            set { _accountDate = DateHelperStatic.ParseDBDate(value); }
+        }
+
+        public Int16 FromBankId { get; set; }
+        public Int16 FromCurrencyId { get; set; }
+
+        [Column(TypeName = "decimal(18,10)")]
+        public decimal FromExhRate { get; set; }
+
+        public Int16 PaymentTypeId { get; set; }
+        public string ChequeNo { get; set; }
+
+        public string ChequeDate
+        {
+            get { return DateHelperStatic.FormatDate(_chequeDate); }
+            set { _chequeDate = DateHelperStatic.ParseDBDate(value); }
+        }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal FromBankChgAmt { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal FromBankChgLocalAmt { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal FromTotAmt { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal FromTotLocalAmt { get; set; }
+
+        public Int16 ToBankId { get; set; }
+        public Int16 ToCurrencyId { get; set; }
+
+        [Column(TypeName = "decimal(18,10)")]
+        public decimal ToExhRate { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal ToBankChgAmt { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal ToBankChgLocalAmt { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal ToTotAmt { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal ToTotLocalAmt { get; set; }
+
+        public string Remarks { get; set; }
+        public string PayeeTo { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal ExhGainLoss { get; set; }
+
+        public string ModuleFrom { get; set; }
+        public Int16 CreateById { get; set; }
+        public DateTime CreateDate { get; set; }
+        public Int16? EditById { get; set; }
+        public DateTime? EditDate { get; set; }
+        public bool IsCancel { get; set; }
+        public Int16 CancelById { get; set; }
+        public DateTime? CancelDate { get; set; }
+        public string CancelRemarks { get; set; }
+        public string CreateBy { get; set; }
+        public string EditBy { get; set; }
+        public string CancelBy { get; set; }
+        public byte EditVersion { get; set; }
+    }
+}

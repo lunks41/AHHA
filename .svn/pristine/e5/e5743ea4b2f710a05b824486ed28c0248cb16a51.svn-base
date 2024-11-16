@@ -1,0 +1,17 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.CB;
+using AHHA.Core.Models.Account.CB;
+
+namespace AHHA.Application.IServices.Accounts.CB
+{
+    public interface ICBGeneralPaymentService
+    {
+        public Task<CBGenPaymentViewModel> GetCBGeneralPaymentListAsync(string RegId, short CompanyId, short pageSize, short pageNumber, string searchString, short UserId);
+
+        public Task<CBGenPaymentHdViewModel> GetCBGeneralPaymentByIdAsync(string RegId, short CompanyId, long PaymentId, string PaymentNo, short UserId);
+
+        public Task<SqlResponce> SaveCBGeneralPaymentAsync(string RegId, short CompanyId, CBGenPaymentHd cBGenPaymentHd, List<CBGenPaymentDt> cBGenPaymentDts, short UserId);
+
+        public Task<SqlResponce> DeleteCBGeneralPaymentAsync(string RegId, short CompanyId, long PaymentId, string PaymentNo, string CanacelRemarks, short UserId);
+    }
+}

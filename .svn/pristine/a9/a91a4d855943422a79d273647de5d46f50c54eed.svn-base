@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Entities\Accounts\Settings\" />
+    <Folder Include="Entities\Dashboard\" />
+    <Folder Include="Entities\Report\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dado.ComponentModel.Mutations" Version="0.5.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>
