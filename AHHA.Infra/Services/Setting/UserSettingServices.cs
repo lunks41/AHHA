@@ -8,22 +8,23 @@ using AHHA.Infra.Data;
 
 namespace AHHA.Infra.Services.Setting
 {
-    public sealed class DynamicLookupServices : IDynamicLookupService
+    public sealed class UserSettingServices : IUserSettingService
     {
-        private readonly IRepository<S_DynamicLookup> _repository;
+        private readonly IRepository<S_UserSettings> _repository;
         private ApplicationDbContext _context;
 
-        public DynamicLookupServices(IRepository<S_DynamicLookup> repository, ApplicationDbContext context)
+        public UserSettingServices(IRepository<S_UserSettings> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        public async Task<DynamicLookupViewModel> GetDynamicLookupAsync(string RegId, Int16 CompanyId, Int16 UserId)
+        // add the number id
+        public async Task<UserSettingViewModel> GetUserSettingAsync(string RegId, Int16 CompanyId, Int16 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<DynamicLookupViewModel>(RegId, $"SELECT CompanyId,IsBarge,IsVessel,IsVoyage,IsCustomer,IsSupplier,IsProduct,CreateById,CreateDate,EditById,EditDate FROM S_DynamicLookup WHERE CompanyId={CompanyId}");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<UserSettingViewModel>(RegId, $"SELECT CompanyId,UserId,Trn_Grd_TotRec,M_Grd_TotRec,Ar_IN_GLId,Ar_CN_GLId,Ar_DN_GLId,Ap_IN_GLId,Ap_CN_GLId,Ap_DN_GLId FROM dbo.S_UserSettings WHERE CompanyId={CompanyId} AND UserId={UserId}");
 
                 return result;
             }
@@ -32,11 +33,11 @@ namespace AHHA.Infra.Services.Setting
                 var errorLog = new AdmErrorLog
                 {
                     CompanyId = CompanyId,
-                    ModuleId = (short)E_Modules.Setting,
-                    TransactionId = (short)E_Setting.DynamicLookup,
+                    ModuleId = (short)E_Modules.Admin,
+                    TransactionId = (short)E_Setting.UserSetting,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "S_DynamicLookup",
+                    TblName = "S_UserSettings",
                     ModeId = (short)E_Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId,
@@ -49,44 +50,44 @@ namespace AHHA.Infra.Services.Setting
             }
         }
 
-        public async Task<SqlResponce> SaveDynamicLookupAsync(string RegId, Int16 CompanyId, S_DynamicLookup s_DynamicLookup, Int16 UserId)
+        public async Task<SqlResponce> SaveUserSettingAsync(string RegId, Int16 CompanyId, S_UserSettings S_UserSettings, Int16 UserId)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM S_DynamicLookup WHERE CompanyId = {s_DynamicLookup.CompanyId}");
+                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.S_UserSettings WHERE CompanyId = {S_UserSettings.CompanyId}");
 
                     if (DataExist.Count() > 0 && DataExist.ToList()[0].IsExist == 1)
                     {
-                        var entity = _context.Update(s_DynamicLookup);
+                        var entity = _context.Update(S_UserSettings);
                         entity.Property(b => b.CreateById).IsModified = false;
                         entity.Property(b => b.CompanyId).IsModified = false;
                     }
                     else
                     {
-                        var entity = _context.Add(s_DynamicLookup);
+                        var entity = _context.Add(S_UserSettings);
                         entity.Property(b => b.EditDate).IsModified = false;
                         entity.Property(b => b.EditById).IsModified = false;
                     }
 
-                    var FinSettingsToSave = _context.SaveChanges();
+                    var UserSettingsToSave = _context.SaveChanges();
 
                     #region Save AuditLog
 
-                    if (FinSettingsToSave > 0)
+                    if (UserSettingsToSave > 0)
                     {
                         //Saving Audit log
                         var auditLog = new AdmAuditLog
                         {
                             CompanyId = CompanyId,
-                            ModuleId = (short)E_Modules.Setting,
-                            TransactionId = (short)E_Setting.DynamicLookup,
+                            ModuleId = (short)E_Modules.Admin,
+                            TransactionId = (short)E_Setting.UserSetting,
                             DocumentId = 0,
                             DocumentNo = "",
-                            TblName = "S_DynamicLookup",
+                            TblName = "S_UserSettings",
                             ModeId = (short)E_Mode.Create,
-                            Remarks = "Dynamic Lookup Settings Save Successfully",
+                            Remarks = "UserSettings Save Successfully",
                             CreateById = UserId,
                             CreateDate = DateTime.Now
                         };
@@ -117,11 +118,11 @@ namespace AHHA.Infra.Services.Setting
                     var errorLog = new AdmErrorLog
                     {
                         CompanyId = CompanyId,
-                        ModuleId = (short)E_Modules.Setting,
-                        TransactionId = (short)E_Setting.DynamicLookup,
+                        ModuleId = (short)E_Modules.Admin,
+                        TransactionId = (short)E_Setting.UserSetting,
                         DocumentId = 0,
                         DocumentNo = "",
-                        TblName = "S_DynamicLookup",
+                        TblName = "S_UserSettings",
                         ModeId = (short)E_Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId

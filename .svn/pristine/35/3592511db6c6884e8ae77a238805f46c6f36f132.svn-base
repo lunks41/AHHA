@@ -30,7 +30,5 @@ namespace AHHA.Core.Common
 
         [FromHeader]
         public Int16 TransactionId { get; set; }
-        [FromHeader]
-        public string DocumentId { get; set; }
     }
 }

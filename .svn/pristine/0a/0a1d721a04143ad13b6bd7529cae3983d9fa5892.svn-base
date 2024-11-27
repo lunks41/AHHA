@@ -25,7 +25,7 @@ namespace AHHA.Infra.Services.Masters
         {
             try
             {
-                var result = await _repository.GetQueryAsync<SupplierContactViewModel>(RegId, $"SELECT M_SupCon.ContactId,M_SupCon.SupplierId,M_Sup.SupplierCode,M_Sup.SupplierName,M_SupCon.ContactName,M_SupCon.OtherName,M_SupCon.MobileNo,M_SupCon.OffNo,M_SupCon.FaxNo,M_SupCon.EmailAdd,M_SupCon.MessId,M_SupCon.ContactMessType,M_SupCon.IsDefault,M_SupCon.IsFinance,M_SupCon.IsSales,M_SupCon.IsActive,M_SupCon.CreateById,M_SupCon.CreateDate,M_SupCon.EditById,M_SupCon.EditDate FROM dbo.M_SupplierContact M_SupCon INNER JOIN dbo.M_Supplier M_Sup ON M_Sup.SupplierId = M_SupCon.SupplierId WHERE M_SupCon.SupplierId = {SupplierId}");
+                var result = await _repository.GetQueryAsync<SupplierContactViewModel>(RegId, $"M_SupCon.ContactId,M_SupCon.SupplierId,M_Sup.SupplierCode,M_Sup.SupplierName,M_SupCon.ContactName,M_SupCon.OtherName,M_SupCon.MobileNo,M_SupCon.OffNo,M_SupCon.FaxNo,M_SupCon.EmailAdd,M_SupCon.MessId,M_SupCon.ContactMessType,M_SupCon.IsDefault,M_SupCon.IsFinance,M_SupCon.IsSales,M_SupCon.IsActive,M_SupCon.CreateById,M_SupCon.CreateDate,M_SupCon.EditById,M_SupCon.EditDate FROM dbo.M_SupplierContact M_SupCon INNER JOIN dbo.M_Supplier M_Sup ON M_Sup.SupplierId = M_SupCon.SupplierId WHERE M_SupCon.SupplierId = {SupplierId}");
 
                 return result;
             }

@@ -12,37 +12,35 @@ namespace AHHA.API.Controllers.Setting
 {
     [Route("api/Setting")]
     [ApiController]
-    public class DecimalSettingController : BaseController
+    public class UserSettingController : BaseController
     {
-        private readonly IDecimalSettingService _DecimalSettingService;
-        private readonly ILogger<DecimalSettingController> _logger;
+        private readonly IUserSettingService _UserSettingService;
+        private readonly ILogger<UserSettingController> _logger;
 
-        public DecimalSettingController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<DecimalSettingController> logger, IDecimalSettingService DecimalSettingService)
+        public UserSettingController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<UserSettingController> logger, IUserSettingService UserSettingService)
     : base(memoryCache, mapper, baseServices)
         {
             _logger = logger;
-            _DecimalSettingService = DecimalSettingService;
+            _UserSettingService = UserSettingService;
         }
 
-        //decimal screen
-
         //get --companyid
-        //Save  --company/model
+        //upsert  --company/model
 
-        [HttpGet, Route("GetDecSetting")]
+        [HttpGet, Route("GetUserSetting")]
         [Authorize]
-        public async Task<ActionResult<DecimalSettingViewModel>> GetDecSetting([FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<UserSettingViewModel>> GetUserSetting([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    var DecSettingViewModel = await _DecimalSettingService.GetDecSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+                    var UserSettingViewModel = await _UserSettingService.GetUserSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
 
-                    if (DecSettingViewModel == null)
+                    if (UserSettingViewModel == null)
                         return NotFound(GenrateMessage.datanotfound);
 
-                    return StatusCode(StatusCodes.Status202Accepted, DecSettingViewModel);
+                    return StatusCode(StatusCodes.Status202Accepted, UserSettingViewModel);
                 }
                 else
                 {
@@ -57,34 +55,35 @@ namespace AHHA.API.Controllers.Setting
             }
         }
 
-        [HttpPost, Route("SaveDecSetting")]
+        [HttpPost, Route("SaveUserSetting")]
         [Authorize]
-        public async Task<ActionResult<DecimalSettingViewModel>> SaveDecSetting(DecimalSettingViewModel decSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<UserSettingViewModel>> SaveUserSetting(UserSettingViewModel UserSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
                 if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    if (decSettingViewModel == null)
+                    if (UserSettingViewModel == null)
                         return NotFound(GenrateMessage.datanotfound);
 
-                    var FinEntity = new S_DecSettings
+                    var FinEntity = new S_UserSettings
                     {
                         CompanyId = headerViewModel.CompanyId,
-                        AmtDec = Convert.ToInt16(decSettingViewModel.AmtDec),
-                        LocAmtDec = Convert.ToInt16(decSettingViewModel.LocAmtDec),
-                        CtyAmtDec = Convert.ToInt16(decSettingViewModel.CtyAmtDec),
-                        PriceDec = Convert.ToInt16(decSettingViewModel.PriceDec),
-                        QtyDec = Convert.ToInt16(decSettingViewModel.QtyDec),
-                        ExhRateDec = Convert.ToInt16(decSettingViewModel.ExhRateDec),
-                        DateFormat = decSettingViewModel.DateFormat,
-                        longDateFormat = decSettingViewModel.LongDateFormat,
+                        UserId = headerViewModel.UserId,
+                        Trn_Grd_TotRec = UserSettingViewModel.Trn_Grd_TotRec,
+                        M_Grd_TotRec = UserSettingViewModel.M_Grd_TotRec,
+                        Ar_IN_GLId = UserSettingViewModel.Ar_IN_GLId,
+                        Ar_CN_GLId = UserSettingViewModel.Ar_CN_GLId,
+                        Ar_DN_GLId = UserSettingViewModel.Ar_DN_GLId,
+                        Ap_IN_GLId = UserSettingViewModel.Ap_IN_GLId,
+                        Ap_CN_GLId = UserSettingViewModel.Ap_CN_GLId,
+                        Ap_DN_GLId = UserSettingViewModel.Ap_DN_GLId,
                         CreateById = headerViewModel.UserId,
                         EditById = headerViewModel.UserId,
                         EditDate = DateTime.Now,
                     };
 
-                    var createdFin = await _DecimalSettingService.SaveDecSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
+                    var createdFin = await _UserSettingService.SaveUserSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
                     return StatusCode(StatusCodes.Status202Accepted, createdFin);
                 }
                 else
