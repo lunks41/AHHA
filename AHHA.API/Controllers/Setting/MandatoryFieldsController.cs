@@ -61,6 +61,43 @@ namespace AHHA.API.Controllers.Setting
             }
         }
 
+        [HttpGet, Route("GetMandatoryFieldsbyidV1/{ModuleId}/{TransactionId}")]
+        [Authorize]
+        public async Task<ActionResult<MandatoryFieldsViewModel>> GetMandatoryFieldsByIdV1(Int16 ModuleId, Int16 TransactionId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.MandatoryFields, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var MandatoryFieldsViewModel = await _MandatoryFieldsServices.GetMandatoryFieldsByIdAsyncV1(headerViewModel.RegId, headerViewModel.CompanyId, ModuleId, TransactionId, headerViewModel.UserId);
+
+                        if (MandatoryFieldsViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, MandatoryFieldsViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
         [HttpGet, Route("GetMandatoryFieldsbyid/{ModuleId}/{TransactionId}")]
         [Authorize]
         public async Task<ActionResult<MandatoryFieldsViewModel>> GetMandatoryFieldsById(Int16 ModuleId, Int16 TransactionId, [FromHeader] HeaderViewModel headerViewModel)
@@ -98,87 +135,149 @@ namespace AHHA.API.Controllers.Setting
             }
         }
 
+        [HttpPost, Route("SaveMandatoryFieldsV1")]
+        [Authorize]
+        public async Task<ActionResult<MandatoryFieldsViewModel>> SaveMandatoryFieldsV1(List<MandatoryFieldsViewModel> mandatoryFieldsViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                // Validate headers
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                // Check user group rights
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.MandatoryFields, headerViewModel.UserId);
+
+                if (userGroupRight == null || !userGroupRight.IsCreate)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                // Validate input data
+                if (mandatoryFieldsViewModel == null || !mandatoryFieldsViewModel.Any())
+                    return NotFound(GenrateMessage.datanotfound);
+
+                // Map the view model to the entity
+                var mandatoryFieldsEntities = mandatoryFieldsViewModel.Select(item => new S_MandatoryFields
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    ModuleId = headerViewModel.ModuleId,
+                    TransactionId = headerViewModel.TransactionId,
+                    M_ProductId = item.M_ProductId,
+                    M_GLId = item.M_GLId,
+                    M_QTY = item.M_QTY,
+                    M_UomId = item.M_UomId,
+                    M_UnitPrice = item.M_UnitPrice,
+                    M_TotAmt = item.M_TotAmt,
+                    M_Remarks = item.M_Remarks,
+                    M_GstId = item.M_GstId,
+                    M_DeliveryDate = item.M_DeliveryDate,
+                    M_DepartmentId = item.M_DepartmentId,
+                    M_EmployeeId = item.M_EmployeeId,
+                    M_PortId = item.M_PortId,
+                    M_VesselId = item.M_VesselId,
+                    M_BargeId = item.M_BargeId,
+                    M_VoyageId = item.M_VoyageId,
+                    M_SupplyDate = item.M_SupplyDate,
+                    M_ReferenceNo = item.M_ReferenceNo,
+                    M_SuppInvoiceNo = item.M_SuppInvoiceNo,
+                    M_BankId = item.M_BankId,
+                    M_Remarks_Hd = item.M_Remarks_Hd,
+                    M_Address1 = item.M_Address1,
+                    M_Address2 = item.M_Address2,
+                    M_Address3 = item.M_Address3,
+                    M_Address4 = item.M_Address4,
+                    M_PinCode = item.M_PinCode,
+                    M_CountryId = item.M_CountryId,
+                    M_PhoneNo = item.M_PhoneNo,
+                    M_ContactName = item.M_ContactName,
+                    M_MobileNo = item.M_MobileNo,
+                    M_EmailAdd = item.M_EmailAdd,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                }).ToList();
+
+                // Save the mapped entities
+                var createdMandatoryFields = await _MandatoryFieldsServices.SaveMandatoryFieldsAsyncV1(headerViewModel.RegId, headerViewModel.CompanyId, mandatoryFieldsEntities, headerViewModel.UserId);
+
+                return StatusCode(StatusCodes.Status202Accepted, createdMandatoryFields);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving MandatoryFields records");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request");
+            }
+        }
+
         [HttpPost, Route("SaveMandatoryFields")]
         [Authorize]
         public async Task<ActionResult<MandatoryFieldsViewModel>> SaveMandatoryFields(MandatoryFieldsViewModel mandatoryFieldsViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.MandatoryFields, headerViewModel.UserId);
-
-                    if (userGroupRight != null)
-                    {
-                        if (userGroupRight.IsCreate)
-                        {
-                            if (mandatoryFieldsViewModel == null)
-                                return NotFound(GenrateMessage.datanotfound);
-
-                            var MandatoryFieldsEntity = new S_MandatoryFields
-                            {
-                                CompanyId = headerViewModel.CompanyId,
-                                ModuleId = mandatoryFieldsViewModel.ModuleId,
-                                TransactionId = mandatoryFieldsViewModel.TransactionId,
-                                M_ProductId = mandatoryFieldsViewModel.M_ProductId,
-                                M_GLId = mandatoryFieldsViewModel.M_GLId,
-                                M_QTY = mandatoryFieldsViewModel.M_QTY,
-                                M_UomId = mandatoryFieldsViewModel.M_UomId,
-                                M_UnitPrice = mandatoryFieldsViewModel.M_UnitPrice,
-                                M_TotAmt = mandatoryFieldsViewModel.M_TotAmt,
-                                M_Remarks = mandatoryFieldsViewModel.M_Remarks,
-                                M_GstId = mandatoryFieldsViewModel.M_GstId,
-                                M_DeliveryDate = mandatoryFieldsViewModel.M_DeliveryDate,
-                                M_DepartmentId = mandatoryFieldsViewModel.M_DepartmentId,
-                                M_EmployeeId = mandatoryFieldsViewModel.M_EmployeeId,
-                                M_PortId = mandatoryFieldsViewModel.M_PortId,
-                                M_VesselId = mandatoryFieldsViewModel.M_VesselId,
-                                M_BargeId = mandatoryFieldsViewModel.M_BargeId,
-                                M_VoyageId = mandatoryFieldsViewModel.M_VoyageId,
-                                M_SupplyDate = mandatoryFieldsViewModel.M_SupplyDate,
-                                M_ReferenceNo = mandatoryFieldsViewModel.M_ReferenceNo,
-                                M_SuppInvoiceNo = mandatoryFieldsViewModel.M_SuppInvoiceNo,
-                                M_BankId = mandatoryFieldsViewModel.M_BankId,
-                                M_Remarks_Hd = mandatoryFieldsViewModel.M_Remarks_Hd,
-                                M_Address1 = mandatoryFieldsViewModel.M_Address1,
-                                M_Address2 = mandatoryFieldsViewModel.M_Address2,
-                                M_Address3 = mandatoryFieldsViewModel.M_Address3,
-                                M_Address4 = mandatoryFieldsViewModel.M_Address4,
-                                M_PinCode = mandatoryFieldsViewModel.M_PinCode,
-                                M_CountryId = mandatoryFieldsViewModel.M_CountryId,
-                                M_PhoneNo = mandatoryFieldsViewModel.M_PhoneNo,
-                                M_ContactName = mandatoryFieldsViewModel.M_ContactName,
-                                M_MobileNo = mandatoryFieldsViewModel.M_MobileNo,
-                                M_EmailAdd = mandatoryFieldsViewModel.M_EmailAdd,
-                                CreateById = headerViewModel.UserId,
-                                EditById = headerViewModel.UserId,
-                                EditDate = DateTime.Now,
-                            };
-
-                            var createdMandatoryFields = await _MandatoryFieldsServices.SaveMandatoryFieldsAsync(headerViewModel.RegId, headerViewModel.CompanyId, MandatoryFieldsEntity, headerViewModel.UserId);
-
-                            return StatusCode(StatusCodes.Status202Accepted, createdMandatoryFields);
-                        }
-                        else
-                        {
-                            return NotFound(GenrateMessage.authenticationfailed);
-                        }
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
+                // Validate headers
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                     return NoContent();
-                }
+
+                // Check user group rights
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.MandatoryFields, headerViewModel.UserId);
+
+                if (userGroupRight == null || !userGroupRight.IsCreate)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                // Validate input data
+                if (mandatoryFieldsViewModel == null)
+                    return NotFound(GenrateMessage.datanotfound);
+
+                // Map the view model to the entity
+                var mandatoryFieldsEntities = new S_MandatoryFields
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    ModuleId = headerViewModel.ModuleId,
+                    TransactionId = headerViewModel.TransactionId,
+                    M_ProductId = mandatoryFieldsViewModel.M_ProductId,
+                    M_GLId = mandatoryFieldsViewModel.M_GLId,
+                    M_QTY = mandatoryFieldsViewModel.M_QTY,
+                    M_UomId = mandatoryFieldsViewModel.M_UomId,
+                    M_UnitPrice = mandatoryFieldsViewModel.M_UnitPrice,
+                    M_TotAmt = mandatoryFieldsViewModel.M_TotAmt,
+                    M_Remarks = mandatoryFieldsViewModel.M_Remarks,
+                    M_GstId = mandatoryFieldsViewModel.M_GstId,
+                    M_DeliveryDate = mandatoryFieldsViewModel.M_DeliveryDate,
+                    M_DepartmentId = mandatoryFieldsViewModel.M_DepartmentId,
+                    M_EmployeeId = mandatoryFieldsViewModel.M_EmployeeId,
+                    M_PortId = mandatoryFieldsViewModel.M_PortId,
+                    M_VesselId = mandatoryFieldsViewModel.M_VesselId,
+                    M_BargeId = mandatoryFieldsViewModel.M_BargeId,
+                    M_VoyageId = mandatoryFieldsViewModel.M_VoyageId,
+                    M_SupplyDate = mandatoryFieldsViewModel.M_SupplyDate,
+                    M_ReferenceNo = mandatoryFieldsViewModel.M_ReferenceNo,
+                    M_SuppInvoiceNo = mandatoryFieldsViewModel.M_SuppInvoiceNo,
+                    M_BankId = mandatoryFieldsViewModel.M_BankId,
+                    M_Remarks_Hd = mandatoryFieldsViewModel.M_Remarks_Hd,
+                    M_Address1 = mandatoryFieldsViewModel.M_Address1,
+                    M_Address2 = mandatoryFieldsViewModel.M_Address2,
+                    M_Address3 = mandatoryFieldsViewModel.M_Address3,
+                    M_Address4 = mandatoryFieldsViewModel.M_Address4,
+                    M_PinCode = mandatoryFieldsViewModel.M_PinCode,
+                    M_CountryId = mandatoryFieldsViewModel.M_CountryId,
+                    M_PhoneNo = mandatoryFieldsViewModel.M_PhoneNo,
+                    M_ContactName = mandatoryFieldsViewModel.M_ContactName,
+                    M_MobileNo = mandatoryFieldsViewModel.M_MobileNo,
+                    M_EmailAdd = mandatoryFieldsViewModel.M_EmailAdd,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Save the mapped entities
+                var createdMandatoryFields = await _MandatoryFieldsServices.SaveMandatoryFieldsAsync(headerViewModel.RegId, headerViewModel.CompanyId, mandatoryFieldsEntities, headerViewModel.UserId);
+
+                return StatusCode(StatusCodes.Status202Accepted, createdMandatoryFields);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error creating new MandatoryFields record");
+                _logger.LogError(ex, "Error saving MandatoryFields records");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request");
             }
         }
     }

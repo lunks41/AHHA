@@ -6,9 +6,7 @@ namespace AHHA.Application.IServices.Setting
 {
     public interface IVisibleFieldsServices
     {
-        //public Task<VisibleFieldsViewModelCount> GetVisibleFieldsListAsync(string RegId, Int16 CompanyId, Int16 UserId);
-
-        public Task<VisibleFieldsViewModel> GetVisibleFieldsByIdAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 TransactionId, Int16 UserId);
+        public Task<IEnumerable<VisibleFieldsViewModel>> GetVisibleFieldsByIdAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 TransactionId, Int16 UserId);
 
         public Task<SqlResponce> SaveVisibleFieldsAsync(string RegId, Int16 CompanyId, S_VisibleFields s_VisibleFields, Int16 UserId);
     }

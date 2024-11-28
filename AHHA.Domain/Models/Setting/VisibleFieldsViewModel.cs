@@ -2,9 +2,6 @@
 {
     public class VisibleFieldsViewModel
     {
-        public Int16 CompanyId { get; set; }
-        public Int16 ModuleId { get; set; }
-        public Int16 TransactionId { get; set; }
         public bool M_ProductId { get; set; }
         public bool M_QTY { get; set; }
         public bool M_BillQTY { get; set; }
@@ -21,11 +18,5 @@
         public bool M_SupplyDate { get; set; }
         public bool M_BankId { get; set; }
         public bool M_CtyCurr { get; set; }
-        public Int16 CreateById { get; set; }
-        public DateTime CreateDate { get; set; }
-        public Int16? EditById { get; set; }
-        public DateTime? EditDate { get; set; }
-        public string CreateBy { get; set; }
-        public string EditBy { get; set; }
     }
 }

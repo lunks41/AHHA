@@ -3,6 +3,7 @@ using AHHA.Application.IServices.Setting;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Masters;
 using AHHA.Core.Models.Setting;
 using AHHA.Infra.Data;
 
@@ -27,7 +28,7 @@ namespace AHHA.Infra.Services.Setting
             {
                 var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.S_MandatoryFields where CompanyId={CompanyId}");
 
-                var result = await _repository.GetQueryAsync<MandatoryFieldsViewModel>(RegId, $"SELECT CompanyId,ModuleId,TransactionId,M_ProductId,M_GLId,M_QTY,M_UomId,M_UnitPrice,M_TotAmt,M_Remarks,M_GstId,M_DeliveryDate,M_DepartmentId,M_EmployeeId,M_PortId,M_VesselId,M_BargeId,M_VoyageId,M_SupplyDate,M_ReferenceNo,M_SuppInvoiceNo,M_BankId,M_Remarks_Hd,M_Address1,M_Address2,M_Address3,M_Address4,M_PinCode,M_CountryId,M_PhoneNo,M_ContactName,M_MobileNo,M_EmailAdd FROM dbo.S_MandatoryFields S_Man LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = S_Man.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = S_Man.EditById WHERE CompanyId={CompanyId}");
+                var result = await _repository.GetQueryAsync<MandatoryFieldsViewModel>(RegId, $"SELECT M_ProductId,M_GLId,M_QTY,M_UomId,M_UnitPrice,M_TotAmt,M_Remarks,M_GstId,M_DeliveryDate,M_DepartmentId,M_EmployeeId,M_PortId,M_VesselId,M_BargeId,M_VoyageId,M_SupplyDate,M_ReferenceNo,M_SuppInvoiceNo,M_BankId,M_Remarks_Hd,M_Address1,M_Address2,M_Address3,M_Address4,M_PinCode,M_CountryId,M_PhoneNo,M_ContactName,M_MobileNo,M_EmailAdd FROM dbo.S_MandatoryFields S_Man  WHERE CompanyId={CompanyId}");
 
                 countViewModel.responseCode = 200;
                 countViewModel.responseMessage = "success";
@@ -58,11 +59,11 @@ namespace AHHA.Infra.Services.Setting
             }
         }
 
-        public async Task<MandatoryFieldsViewModel> GetMandatoryFieldsByIdAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 TransactionId, Int16 UserId)
+        public async Task<IEnumerable<MandatoryFieldsViewModel>> GetMandatoryFieldsByIdAsyncV1(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 TransactionId, Int16 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<MandatoryFieldsViewModel>(RegId, $"SELECT CompanyId,ModuleId,TransactionId,M_ProductId,M_GLId,M_QTY,M_UomId,M_UnitPrice,M_TotAmt,M_Remarks,M_GstId,M_DeliveryDate,M_DepartmentId,M_EmployeeId,M_PortId,M_VesselId,M_BargeId,M_VoyageId,M_SupplyDate,M_ReferenceNo,M_SuppInvoiceNo,M_BankId,M_Remarks_Hd,M_Address1,M_Address2,M_Address3,M_Address4,M_PinCode,M_CountryId,M_PhoneNo,M_ContactName,M_MobileNo,M_EmailAdd FROM dbo.S_MandatoryFields S_Man LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = S_Man.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = S_Man.EditById WHERE ModuleId={ModuleId} AND CompanyId={CompanyId} AND TransactionId={TransactionId}");
+                var result = await _repository.GetQueryAsync<MandatoryFieldsViewModel>(RegId, $"SELECT M_ProductId,M_GLId,M_QTY,M_UomId,M_UnitPrice,M_TotAmt,M_Remarks,M_GstId,M_DeliveryDate,M_DepartmentId,M_EmployeeId,M_PortId,M_VesselId,M_BargeId,M_VoyageId,M_SupplyDate,M_ReferenceNo,M_SuppInvoiceNo,M_BankId,M_Remarks_Hd,M_Address1,M_Address2,M_Address3,M_Address4,M_PinCode,M_CountryId,M_PhoneNo,M_ContactName,M_MobileNo,M_EmailAdd FROM dbo.S_MandatoryFields S_Man WHERE CompanyId={CompanyId} AND ModuleId={ModuleId} AND TransactionId={TransactionId}");
 
                 return result;
             }
@@ -88,73 +89,93 @@ namespace AHHA.Infra.Services.Setting
             }
         }
 
-        public async Task<SqlResponce> SaveMandatoryFieldsAsync(string RegId, Int16 CompanyId, S_MandatoryFields s_MandatoryFields, Int16 UserId)
+        public async Task<MandatoryFieldsViewModel> GetMandatoryFieldsByIdAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 TransactionId, Int16 UserId)
         {
-            using (var transaction = _context.Database.BeginTransaction())
+            try
             {
-                bool IsEdit = false;
+                var result = await _repository.GetQuerySingleOrDefaultAsync<MandatoryFieldsViewModel>(RegId, $"SELECT M_ProductId,M_GLId,M_QTY,M_UomId,M_UnitPrice,M_TotAmt,M_Remarks,M_GstId,M_DeliveryDate,M_DepartmentId,M_EmployeeId,M_PortId,M_VesselId,M_BargeId,M_VoyageId,M_SupplyDate,M_ReferenceNo,M_SuppInvoiceNo,M_BankId,M_Remarks_Hd,M_Address1,M_Address2,M_Address3,M_Address4,M_PinCode,M_CountryId,M_PhoneNo,M_ContactName,M_MobileNo,M_EmailAdd FROM dbo.S_MandatoryFields S_Man WHERE CompanyId={CompanyId} AND ModuleId={ModuleId} AND TransactionId={TransactionId}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Setting,
+                    TransactionId = (short)E_Setting.MandatoryFields,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_MandatoryFields",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> SaveMandatoryFieldsAsyncV1(string RegId, short CompanyId, List<S_MandatoryFields> s_MandatoryFields, short UserId)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
                 try
                 {
-                    if (s_MandatoryFields.CompanyId > 0 && s_MandatoryFields.ModuleId > 0 && s_MandatoryFields.TransactionId > 0)
-                    {
-                        IsEdit = true;
-                    }
-                    if (IsEdit)
-                    {
-                        var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.S_MandatoryFields WHERE ModuleId={s_MandatoryFields.ModuleId} AND TransactionId={s_MandatoryFields.TransactionId} AND CompanyId={CompanyId}");
+                    var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId,
+                        $"DELETE dbo.S_MandatoryFields WHERE ModuleId={s_MandatoryFields[0].ModuleId} AND TransactionId={s_MandatoryFields[0].TransactionId} AND CompanyId={CompanyId}");
 
-                        if (DataExist.Count() > 0 && DataExist.ToList()[0].IsExist == 1)
+                    if (DataExist == null)
+                    {
+                        _context.AddRange(s_MandatoryFields);
+
+                        var mandatoryToSave = await _context.SaveChangesAsync();
+
+                        #region Save AuditLog
+
+                        if (mandatoryToSave > 0)
                         {
-                            _context.Update(s_MandatoryFields);
+                            // Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Setting,
+                                TransactionId = (short)E_Setting.MandatoryFields,
+                                DocumentId = 0,
+                                DocumentNo = "",
+                                TblName = "S_MandatoryFields",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "MandatoryFields Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                await transaction.CommitAsync();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
                         }
                         else
                         {
-                            _context.Add(s_MandatoryFields);
+                            await transaction.RollbackAsync();
+                            return new SqlResponce { Result = 0, Message = "Save Failed" };
                         }
-                    }
-
-                    var mandatoryToSave = _context.SaveChanges();
-
-                    #region Save AuditLog
-
-                    if (mandatoryToSave > 0)
-                    {
-                        //Saving Audit log
-                        var auditLog = new AdmAuditLog
-                        {
-                            CompanyId = CompanyId,
-                            ModuleId = (short)E_Modules.Setting,
-                            TransactionId = (short)E_Setting.MandatoryFields,
-                            DocumentId = 0,
-                            DocumentNo = "",
-                            TblName = "S_MandatoryFields",
-                            ModeId = (short)E_Mode.Create,
-                            Remarks = "MandatoryFields Save Successfully",
-                            CreateById = UserId,
-                            CreateDate = DateTime.Now
-                        };
-
-                        _context.Add(auditLog);
-                        var auditLogSave = _context.SaveChanges();
-
-                        if (auditLogSave > 0)
-                        {
-                            transaction.Commit();
-                            return new SqlResponce { Result = 1, Message = "Save Successfully" };
-                        }
-                    }
-                    else
-                    {
-                        return new SqlResponce { Result = 1, Message = "Save Failed" };
                     }
 
                     #endregion Save AuditLog
 
-                    return new SqlResponce();
+                    return new SqlResponce { Result = 0, Message = "Save Failed" };
                 }
                 catch (Exception ex)
                 {
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                     _context.ChangeTracker.Clear();
 
                     var errorLog = new AdmErrorLog
@@ -166,15 +187,171 @@ namespace AHHA.Infra.Services.Setting
                         DocumentNo = "",
                         TblName = "S_MandatoryFields",
                         ModeId = (short)E_Mode.Create,
-                        Remarks = ex.Message + ex.InnerException,
-                        CreateById = UserId
+                        Remarks = ex.Message + (ex.InnerException != null ? ex.InnerException.Message : string.Empty),
+                        CreateById = UserId,
+                        CreateDate = DateTime.Now
                     };
                     _context.Add(errorLog);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
-                    throw new Exception(ex.ToString());
+                    throw;
                 }
             }
         }
+
+        public async Task<SqlResponce> SaveMandatoryFieldsAsync(string RegId, short CompanyId, S_MandatoryFields s_MandatoryFields, short UserId)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var DataExist = await _repository.GetQuerySingleOrDefaultAsync<SqlResponceIds>(RegId,
+                        $"DELETE dbo.S_MandatoryFields WHERE ModuleId={s_MandatoryFields.ModuleId} AND TransactionId={s_MandatoryFields.TransactionId} AND CompanyId={CompanyId}");
+
+                    if (DataExist == null)
+                    {
+                        _context.Add(s_MandatoryFields);
+
+                        var mandatoryToSave = await _context.SaveChangesAsync();
+
+                        #region Save AuditLog
+
+                        if (mandatoryToSave > 0)
+                        {
+                            // Saving Audit log
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Setting,
+                                TransactionId = (short)E_Setting.MandatoryFields,
+                                DocumentId = 0,
+                                DocumentNo = "",
+                                TblName = "S_MandatoryFields",
+                                ModeId = (short)E_Mode.Create,
+                                Remarks = "MandatoryFields Save Successfully",
+                                CreateById = UserId,
+                                CreateDate = DateTime.Now
+                            };
+
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                await transaction.CommitAsync();
+                                return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            await transaction.RollbackAsync();
+                            return new SqlResponce { Result = 0, Message = "Save Failed" };
+                        }
+                    }
+
+                    #endregion Save AuditLog
+
+                    return new SqlResponce { Result = 0, Message = "Save Failed" };
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Setting,
+                        TransactionId = (short)E_Setting.MandatoryFields,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "S_MandatoryFields",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + (ex.InnerException != null ? ex.InnerException.Message : string.Empty),
+                        CreateById = UserId,
+                        CreateDate = DateTime.Now
+                    };
+                    _context.Add(errorLog);
+                    await _context.SaveChangesAsync();
+
+                    throw;
+                }
+            }
+        }
+
+        //public async Task<SqlResponce> SaveMandatoryFieldsAsync(string RegId, Int16 CompanyId, List<S_MandatoryFields> s_MandatoryFields, Int16 UserId)
+        //{
+        //    using (var transaction = _context.Database.BeginTransaction())
+        //    {
+        //        bool IsEdit = false;
+        //        try
+        //        {
+        //            var DataExist = await _repository.GetQueryAsync<SqlResponceIds>(RegId, $"DELETE dbo.S_MandatoryFields WHERE ModuleId={s_MandatoryFields[0].ModuleId} AND TransactionId={s_MandatoryFields[0].TransactionId} AND CompanyId={CompanyId}");
+
+        //            _context.AddRange(s_MandatoryFields);
+
+        //            var mandatoryToSave = _context.SaveChanges();
+
+        //            #region Save AuditLog
+
+        //            if (mandatoryToSave > 0)
+        //            {
+        //                //Saving Audit log
+        //                var auditLog = new AdmAuditLog
+        //                {
+        //                    CompanyId = CompanyId,
+        //                    ModuleId = (short)E_Modules.Setting,
+        //                    TransactionId = (short)E_Setting.MandatoryFields,
+        //                    DocumentId = 0,
+        //                    DocumentNo = "",
+        //                    TblName = "S_MandatoryFields",
+        //                    ModeId = (short)E_Mode.Create,
+        //                    Remarks = "MandatoryFields Save Successfully",
+        //                    CreateById = UserId,
+        //                    CreateDate = DateTime.Now
+        //                };
+
+        //                _context.Add(auditLog);
+        //                var auditLogSave = _context.SaveChanges();
+
+        //                if (auditLogSave > 0)
+        //                {
+        //                    transaction.Commit();
+        //                    return new SqlResponce { Result = 1, Message = "Save Successfully" };
+        //                }
+        //            }
+        //            else
+        //            {
+        //                return new SqlResponce { Result = 1, Message = "Save Failed" };
+        //            }
+
+        //            #endregion Save AuditLog
+
+        //            return new SqlResponce();
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            transaction.Rollback();
+        //            _context.ChangeTracker.Clear();
+
+        //            var errorLog = new AdmErrorLog
+        //            {
+        //                CompanyId = CompanyId,
+        //                ModuleId = (short)E_Modules.Setting,
+        //                TransactionId = (short)E_Setting.MandatoryFields,
+        //                DocumentId = 0,
+        //                DocumentNo = "",
+        //                TblName = "S_MandatoryFields",
+        //                ModeId = (short)E_Mode.Create,
+        //                Remarks = ex.Message + ex.InnerException,
+        //                CreateById = UserId
+        //            };
+        //            _context.Add(errorLog);
+        //            _context.SaveChanges();
+
+        //            throw new Exception(ex.ToString());
+        //        }
+        //    }
+        //}
     }
 }

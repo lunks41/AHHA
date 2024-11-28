@@ -24,43 +24,6 @@ namespace AHHA.API.Controllers.Setting
             _VisibleFieldsServices = VisibleFieldsServices;
         }
 
-        //[HttpGet, Route("GetVisibleFields")]
-        //[Authorize]
-        //public async Task<ActionResult> GetVisibleFields([FromHeader] HeaderViewModel headerViewModel)
-        //{
-        //    try
-        //    {
-        //        if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-        //        {
-        //            var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.VisibleFields, headerViewModel.UserId);
-
-        //            if (userGroupRight != null)
-        //            {
-        //                var cacheData = await _VisibleFieldsServices.GetVisibleFieldsListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
-
-        //                if (cacheData == null)
-        //                    return NotFound(GenrateMessage.datanotfound);
-
-        //                return StatusCode(StatusCodes.Status202Accepted, cacheData);
-        //            }
-        //            else
-        //            {
-        //                return NotFound(GenrateMessage.authenticationfailed);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            return NotFound(GenrateMessage.authenticationfailed);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex.Message);
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //         "Error retrieving data from the database");
-        //    }
-        //}
-
         [HttpGet, Route("GetVisibleFieldsbyid/{ModuleId}/{TransactionId}")]
         [Authorize]
         public async Task<ActionResult<VisibleFieldsViewModel>> GetVisibleFieldsById(Int16 ModuleId, Int16 TransactionId, [FromHeader] HeaderViewModel headerViewModel)
@@ -118,8 +81,8 @@ namespace AHHA.API.Controllers.Setting
                             var VisibleFieldsEntity = new S_VisibleFields
                             {
                                 CompanyId = headerViewModel.CompanyId,
-                                ModuleId = VisibleFieldsViewModel.ModuleId,
-                                TransactionId = VisibleFieldsViewModel.TransactionId,
+                                ModuleId = headerViewModel.ModuleId,
+                                TransactionId = headerViewModel.TransactionId,
                                 M_ProductId = VisibleFieldsViewModel.M_ProductId,
                                 M_QTY = VisibleFieldsViewModel.M_QTY,
                                 M_BillQTY = VisibleFieldsViewModel.M_BillQTY,

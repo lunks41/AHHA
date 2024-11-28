@@ -2,9 +2,6 @@
 {
     public class MandatoryFieldsViewModel
     {
-        public Int16 CompanyId { get; set; }
-        public Int16 ModuleId { get; set; }
-        public Int16 TransactionId { get; set; }
         public bool M_ProductId { get; set; }
         public bool M_GLId { get; set; }
         public bool M_QTY { get; set; }
@@ -35,11 +32,5 @@
         public bool M_ContactName { get; set; }
         public bool M_MobileNo { get; set; }
         public bool M_EmailAdd { get; set; }
-        public Int16 CreateById { get; set; }
-        public DateTime CreateDate { get; set; }
-        public Int16? EditById { get; set; }
-        public DateTime? EditDate { get; set; }
-        public string CreateBy { get; set; }
-        public string EditBy { get; set; }
     }
 }
