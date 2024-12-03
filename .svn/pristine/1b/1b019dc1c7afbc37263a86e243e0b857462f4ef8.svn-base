@@ -139,6 +139,6 @@ namespace AHHA.Core.Common
         VisibleFields = 6,
         DynamicLookup = 7,
         DocSeqNo = 8,
-        UserSetting = 9
+        UserSetting=9
     }
 }

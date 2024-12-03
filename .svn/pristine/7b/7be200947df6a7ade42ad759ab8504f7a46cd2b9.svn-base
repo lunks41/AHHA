@@ -19,41 +19,11 @@ namespace AHHA.Infra.Services.Setting
             _context = context;
         }
 
-        public async Task<VisibleFieldsViewModel> GetVisibleFieldsByIdAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 TransactionId, Int16 UserId)
+        public async Task<IEnumerable<VisibleFieldsViewModel>> GetVisibleFieldsByIdAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 TransactionId, Int16 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<VisibleFieldsViewModel>(RegId, $"SELECT  S_Vis.M_ProductId,S_Vis.M_QTY,S_Vis.M_BillQTY,S_Vis.M_UomId,S_Vis.M_UnitPrice,S_Vis.M_GstId,S_Vis.M_DeliveryDate,S_Vis.M_DepartmentId,S_Vis.M_EmployeeId,S_Vis.M_PortId,S_Vis.M_VesselId,S_Vis.M_BargeId,S_Vis.M_VoyageId,S_Vis.M_SupplyDate,S_Vis.M_BankId,S_Vis.M_CtyCurr FROM S_VisibleFields S_Vis WHERE ModuleId={ModuleId} AND CompanyId={CompanyId} AND TransactionId={TransactionId}");
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)E_Modules.Setting,
-                    TransactionId = (short)E_Setting.VisibleFields,
-                    DocumentId = 0,
-                    DocumentNo = "",
-                    TblName = "S_VisibleFields",
-                    ModeId = (short)E_Mode.View,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
-            }
-        }
-
-        public async Task<IEnumerable<VisibleFieldsViewModel>> GetVisibleFieldsByIdAsyncV1(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 TransactionId, Int16 UserId)
-        {
-            try
-            {
-                var result = await _repository.GetQueryAsync<VisibleFieldsViewModel>(RegId, $"SELECT  S_Vis.M_ProductId,S_Vis.M_QTY,S_Vis.M_BillQTY,S_Vis.M_UomId,S_Vis.M_UnitPrice,S_Vis.M_GstId,S_Vis.M_DeliveryDate,S_Vis.M_DepartmentId,S_Vis.M_EmployeeId,S_Vis.M_PortId,S_Vis.M_VesselId,S_Vis.M_BargeId,S_Vis.M_VoyageId,S_Vis.M_SupplyDate,S_Vis.M_BankId,S_Vis.M_CtyCurr FROM S_VisibleFields S_Vis WHERE ModuleId={ModuleId} AND CompanyId={CompanyId} AND TransactionId={TransactionId}");
+                var result = await _repository.GetQueryAsync<VisibleFieldsViewModel>(RegId, $"SELECT  S_Vis.M_ProductId,S_Vis.M_QTY,S_Vis.M_BillQTY,S_Vis.M_UomId,S_Vis.M_UnitPrice,S_Vis.M_GstId,S_Vis.M_DeliveryDate,S_Vis.M_DepartmentId,S_Vis.M_EmployeeId,S_Vis.M_PortId,S_Vis.M_VesselId,S_Vis.M_BargeId,S_Vis.M_VoyageId,S_Vis.M_SupplyDate,S_Vis.M_BankId,S_Vis.M_CtyCurr,S_Vis.CreateById,Usr.UserCode CreateBy ,S_Vis.CreateDate,S_Vis.EditById,Usr1.UserCode EditBy,S_Vis.EditDate FROM S_VisibleFields S_Vis WHERE ModuleId={ModuleId} AND CompanyId={CompanyId} AND TransactionId={TransactionId}");
 
                 return result;
             }
