@@ -326,33 +326,5 @@ namespace AHHA.Infra.Services.Accounts.AR
                 throw new Exception(ex.ToString());
             }
         }
-
-        public async Task<IEnumerable<ARReceiptViewModel>> GetHistoryARReceiptByIdAsync(string RegId, Int16 CompanyId, Int64 ReceiptId, string ReceiptNo, Int16 UserId)
-        {
-            try
-            {
-                return await _repository.GetQueryAsync<ARReceiptViewModel>(RegId, $"SELECT Rpthd.CompanyId,Rpthd.ReceiptId,Rpthd.ReceiptNo,Rpthd.ReferenceNo,Rpthd.TrnDate,Rpthd.AccountDate,Rpthd.BankId,M_Ban.BankCode,M_Ban.BankName,Rpthd.PaymentTypeId,M_Pay.PaymentTypeCode,M_Pay.PaymentTypeName,Rpthd.ChequeNo,Rpthd.ChequeDate,Rpthd.CustomerId,M_Cus.CustomerCode,M_Cus.CustomerName,Rpthd.CurrencyId,M_Cur.CurrencyCode,M_Cur.CurrencyCode,Rpthd.ExhRate,Rpthd.TotAmt,Rpthd.TotLocalAmt,Rpthd.UnAllocTotAmt,Rpthd.UnAllocTotLocalAmt,Rpthd.RecCurrencyId,R_Cur.CurrencyCode RecCurrencyCode,R_Cur.CurrencyName RecCurrencyName,Rpthd.RecExhRate,Rpthd.RecTotAmt,Rpthd.RecTotLocalAmt,Rpthd.ExhGainLoss,Rpthd.AllocTotAmt,Rpthd.AllocTotLocalAmt,Rpthd.BankChargeGLId,M_chr.GLCode BankChargeGLCode,M_chr.GLName BankChargeGLName,Rpthd.BankChargesAmt,Rpthd.BankChargesLocalAmt,Rpthd.ModuleFrom,Rpthd.CreateById,Rpthd.CreateDate,Rpthd.EditById,Rpthd.EditDate,Rpthd.CancelById,Rpthd.CancelDate,Rpthd.CancelRemarks,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy,Usr2.UserName AS CancelBy,Rpthd.EditVersion FROM dbo.ArReceiptHd Rpthd INNER JOIN dbo.M_Customer M_Cus ON M_Cus.CustomerId = Rpthd.CustomerId INNER JOIN dbo.M_Currency M_Cur ON M_Cur.CurrencyId = Rpthd.CurrencyId INNER JOIN dbo.M_Currency R_Cur ON R_Cur.CurrencyId = Rpthd.RecCurrencyId INNER JOIN dbo.M_PaymentType M_Pay ON M_Pay.PaymentTypeId = Rpthd.PaymentTypeId INNER JOIN dbo.M_Bank M_Ban ON M_Ban.BankId = Rpthd.BankId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = Rpthd.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = Rpthd.EditById LEFT JOIN dbo.AdmUser Usr2 ON Usr2.UserId = Rpthd.CancelById LEFT JOIN dbo.M_ChartOfAccount M_chr ON M_chr.GLId = Rpthd.BankChargeGLId WHERE (Rpthd.ReceiptId={ReceiptId})");
-            }
-            catch (Exception ex)
-            {
-                var errorLog = new AdmErrorLog
-                {
-                    CompanyId = CompanyId,
-                    ModuleId = (short)E_Modules.AR,
-                    TransactionId = (short)E_AR.Receipt,
-                    DocumentId = ReceiptId,
-                    DocumentNo = ReceiptNo,
-                    TblName = "ArReceiptHd",
-                    ModeId = (short)E_Mode.View,
-                    Remarks = ex.Message + ex.InnerException,
-                    CreateById = UserId,
-                };
-
-                _context.Add(errorLog);
-                _context.SaveChanges();
-
-                throw new Exception(ex.ToString());
-            }
-        }
     }
 }

@@ -7,7 +7,7 @@ namespace AHHA.Core.Models.Account.AR
     {
         private DateTime _trnDate;
         private DateTime _accountDate;
-        private DateTime? _chequeDate;
+        private DateTime _chequeDate;
 
         public Int16 CompanyId { get; set; }
         public string ReceiptId { get; set; }
@@ -36,8 +36,8 @@ namespace AHHA.Core.Models.Account.AR
 
         public string ChequeDate
         {
-            get { return _chequeDate.HasValue ? DateHelperStatic.FormatDate(_chequeDate.Value) : ""; }
-            set { _chequeDate = string.IsNullOrEmpty(value) ? (DateTime?)null : DateHelperStatic.ParseDBDate(value); }
+            get { return DateHelperStatic.FormatDate(_chequeDate); }
+            set { _chequeDate = DateHelperStatic.ParseDBDate(value); }
         }
 
         public Int32 CustomerId { get; set; }

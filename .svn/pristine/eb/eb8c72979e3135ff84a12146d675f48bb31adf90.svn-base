@@ -321,49 +321,5 @@ namespace AHHA.API.Controllers.Accounts.AR
                     "Error deleting data");
             }
         }
-
-        [HttpGet, Route("GetHistoryReceiptbyId/{ReceiptId}")]
-        [Authorize]
-        public async Task<ActionResult<ARReceiptViewModel>> GetHistoryARReceiptById(string ReceiptId, [FromHeader] HeaderViewModel headerViewModel)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(ReceiptId) || ReceiptId != "0")
-                {
-                    if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                    {
-                        var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Receipt, headerViewModel.UserId);
-
-                        if (userGroupRight != null)
-                        {
-                            var ARReceiptViewModel = await _ARReceiptService.GetHistoryARReceiptByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(ReceiptId) ? 0 : ReceiptId.Trim()), string.Empty, headerViewModel.UserId);
-
-                            if (ARReceiptViewModel == null)
-                                return NotFound(GenrateMessage.datanotfound);
-
-                            return StatusCode(StatusCodes.Status202Accepted, ARReceiptViewModel);
-                        }
-                        else
-                        {
-                            return NotFound(GenrateMessage.authenticationfailed);
-                        }
-                    }
-                    else
-                    {
-                        return NoContent();
-                    }
-                }
-                else
-                {
-                    return NoContent();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error retrieving data from the database");
-            }
-        }
     }
 }

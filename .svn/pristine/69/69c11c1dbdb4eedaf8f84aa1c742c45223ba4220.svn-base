@@ -1,0 +1,108 @@
+﻿using AHHA.Application.IServices.Accounts.GL;
+using AHHA.Application.IServices;
+using AHHA.Core.Common;
+using AHHA.Core.Models.Account.GL;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Accounts.GL
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class GLOpeningBalanceController : BaseController
+    {
+        private readonly IGLOpeningBalanceService _GLOpeningBalanceService;
+        private readonly ILogger<GLOpeningBalanceController> _logger;
+
+        public GLOpeningBalanceController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<GLOpeningBalanceController> logger, IGLOpeningBalanceService GLOpeningBalanceService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _GLOpeningBalanceService = GLOpeningBalanceService;
+        }
+
+        [HttpGet, Route("GetGLOpeningBalance")]
+        [Authorize]
+        public async Task<ActionResult> GetGLOpeningBalance([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Receipt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _GLOpeningBalanceService.GetGLOpeningBalanceListAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt32(headerViewModel.searchString.Trim() == "" ? 0 : headerViewModel.searchString.Trim()), headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        ////SAVE ONE GLOpeningBalance BY INVOICEID
+        //[HttpPost, Route("SaveGLOpeningBalance")]
+        //[Authorize]
+        //public async Task<ActionResult<GLOpeningBalanceViewModel>> SaveGLOpeningBalance(OpeningBalanceViewModel OpeningBalanceViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        //{
+        //    try
+        //    {
+        //        if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+        //        {
+        //            var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Receipt, headerViewModel.UserId);
+
+        //            if (userGroupRight != null)
+        //            {
+        //                if (userGroupRight.IsCreate || userGroupRight.IsEdit)
+        //                {
+        //                    if (OpeningBalanceViewModel == null)
+        //                        return NotFound(GenrateMessage.datanotfound);
+
+        //                    var sqlResponce = await _GLOpeningBalanceService.SaveGLOpeningBalanceAsync(headerViewModel.RegId, headerViewModel.CompanyId, OpeningBalanceViewModel, headerViewModel.UserId);
+
+        //                    return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+        //                }
+        //                else
+        //                {
+        //                    return NotFound(GenrateMessage.authenticationfailed);
+        //                }
+        //            }
+        //            else
+        //            {
+        //                return NotFound(GenrateMessage.authenticationfailed);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            return NoContent();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex.Message);
+        //        return StatusCode(StatusCodes.Status500InternalServerError,
+        //            "Error creating new GLOpeningBalance record");
+        //    }
+        //}
+    }
+}

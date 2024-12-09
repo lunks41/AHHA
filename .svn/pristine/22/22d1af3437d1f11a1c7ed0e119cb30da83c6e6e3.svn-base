@@ -13,7 +13,5 @@ namespace AHHA.Application.IServices.Accounts.AR
         public Task<SqlResponce> SaveARReceiptAsync(string RegId, Int16 CompanyId, ArReceiptHd ARReceiptHd, List<ArReceiptDt> ARReceiptDt, Int16 UserId);
 
         public Task<SqlResponce> DeleteARReceiptAsync(string RegId, Int16 CompanyId, Int64 ReceiptId, string ReceiptNo, string CanacelRemarks, Int16 UserId);
-
-        public Task<IEnumerable<ARReceiptViewModel>> GetHistoryARReceiptByIdAsync(string RegId, Int16 CompanyId, Int64 ReceiptId, string ReceiptNo, Int16 UserId);
     }
 }

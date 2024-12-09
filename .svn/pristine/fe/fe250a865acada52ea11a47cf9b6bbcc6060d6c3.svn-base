@@ -2,7 +2,7 @@
 
 namespace AHHA.Core.Models.Account.GL
 {
-    public class GLBalances_GLCodeViewModel
+    public class GLOpeningBalanceViewModel
     {
         public short CompanyId { get; set; }
         public short CurrencyId { get; set; }
