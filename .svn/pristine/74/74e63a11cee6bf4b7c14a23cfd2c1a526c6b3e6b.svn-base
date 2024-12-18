@@ -1,0 +1,105 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Admin;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Models.Admin;
+using AHHA.Infra.Services.Admin;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Admin
+{
+    [Route("api/Admin")]
+    [ApiController]
+    public class UserRightsController : BaseController
+    {
+        private readonly IUserRightsService _UserRightsService;
+        private readonly ILogger<UserRightsController> _logger;
+
+        public UserRightsController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<UserRightsController> logger, IUserRightsService UserRightsService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _UserRightsService = UserRightsService;
+        }
+
+        [HttpGet, Route("GetUserRightsbyid/{UserId}")]
+        [Authorize]
+        public async Task<ActionResult<UserRightsViewModel>> GetUserRightsById(Int16 UserId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int32)Core.Common.E_Admin.User, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var UserViewModel = await _UserRightsService.GetUserRightsByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserId, headerViewModel.UserId);
+
+                        if (UserViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, UserViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveUserRights")]
+        [Authorize]
+        public async Task<ActionResult> SaveUserRights([FromBody] List<UserRightsViewModel> userRightsViewModels, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                // Validate headers
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                // Check user group rights
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Admin, (Int16)E_Admin.UserRights, headerViewModel.UserId);
+
+                if (userGroupRight == null || !userGroupRight.IsCreate)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                // Validate input data
+                if (userRightsViewModels == null || !userRightsViewModels.Any())
+                    return NotFound(GenrateMessage.datanotfound);
+
+                // Map the view model to the entity
+                var UserRightsEntities = userRightsViewModels.Where(item => item.IsAccess).Select(item => new AdmUserRights
+                {
+                    CompanyId = item.CompanyId,
+                    UserId = item.UserId,
+                    CreateById = headerViewModel.UserId,
+                }).ToList();
+
+                // Save the mapped entities
+                var createdUserRights = await _UserRightsService.SaveUserRightsAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserRightsEntities, headerViewModel.UserId);
+
+                return StatusCode(StatusCodes.Status202Accepted, createdUserRights);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving UserRights records");
+                return StatusCode(StatusCodes.Status500InternalServerError, new SqlResponce { Result = -1, Message = "An error occurred while processing your request", Data = null });
+            }
+        }
+    }
+}

@@ -4,7 +4,6 @@
     {
         public Int16 UserGroupId { get; set; }
         public Int16 ModuleId { get; set; }
-        public string ModuleCode { get; set; }
         public string ModuleName { get; set; }
         public Int16 TransactionId { get; set; }
         public string TransactionName { get; set; }

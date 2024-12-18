@@ -1,0 +1,134 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace AHHA.Infra.Services.Setting
+{
+    public sealed class VisibleFieldsServices : IVisibleFieldsServices
+    {
+        private readonly IRepository<S_VisibleFields> _repository;
+        private ApplicationDbContext _context;
+
+        public VisibleFieldsServices(IRepository<S_VisibleFields> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<IEnumerable<VisibleFieldsViewModel>> GetVisibleFieldsByIdAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQueryAsync<VisibleFieldsViewModel>(RegId, $"SELECT ammod.ModuleId,ammod.ModuleName,amtrns.TransactionId,amtrns.TransactionName, ISNULL(S_man.M_ProductId,0) M_ProductId,ISNULL(S_man.M_QTY,0) M_QTY,ISNULL(S_man.M_BillQTY,0) M_BillQTY,ISNULL(S_man.M_UomId,0) M_UomId,ISNULL(S_man.M_UnitPrice,0) M_UnitPrice,ISNULL(S_man.M_Remarks,0) M_Remarks,ISNULL(S_man.M_GstId,0) M_GstId,ISNULL(S_man.M_DeliveryDate,0) M_DeliveryDate,ISNULL(S_man.M_DepartmentId,0) M_DepartmentId,ISNULL(S_man.M_EmployeeId,0) M_EmployeeId,ISNULL(S_man.M_PortId,0) M_PortId,ISNULL(S_man.M_VesselId,0) M_VesselId,ISNULL(S_man.M_BargeId,0) M_BargeId,ISNULL(S_man.M_VoyageId,0) M_VoyageId,ISNULL(S_man.M_SupplyDate,0) M_SupplyDate,ISNULL(S_man.M_BankId,0) M_BankId,ISNULL(S_man.M_CtyCurr,0) M_CtyCurr FROM  dbo.AdmTransaction amtrns INNER JOIN dbo.AdmModule ammod ON ammod.ModuleId = amtrns.ModuleId LEFT JOIN dbo.S_VisibleFields S_man ON amtrns.TransactionId = S_man.TransactionId WHERE amtrns.ModuleId ={ModuleId} GROUP BY ISNULL(S_man.M_ProductId, 0), ISNULL(S_man.M_QTY, 0),ISNULL(S_man.M_BillQTY,0),ISNULL(S_man.M_UomId, 0),ISNULL(S_man.M_UnitPrice, 0),ISNULL(S_man.M_Remarks, 0),ISNULL(S_man.M_GstId, 0),ISNULL(S_man.M_DeliveryDate, 0),ISNULL(S_man.M_DepartmentId, 0),ISNULL(S_man.M_EmployeeId, 0),ISNULL(S_man.M_PortId, 0),ISNULL(S_man.M_VesselId, 0),ISNULL(S_man.M_BargeId, 0),ISNULL(S_man.M_VoyageId, 0), ISNULL(S_man.M_SupplyDate, 0),ISNULL(S_man.M_BankId, 0),ISNULL(S_man.M_CtyCurr,0),ammod.ModuleId, ammod.ModuleName, amtrns.TransactionId, amtrns.TransactionName");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Setting,
+                    TransactionId = (short)E_Setting.VisibleFields,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "S_VisibleFields",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponce> SaveVisibleFieldsAsync(string RegId, short CompanyId, List<S_VisibleFields> s_VisibleFields, short UserId)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // Clear existing tracked entities
+                    var trackedEntities = _context.ChangeTracker.Entries<S_VisibleFields>().ToList();
+                    foreach (var entry in trackedEntities)
+                    {
+                        entry.State = EntityState.Detached;
+                    }
+
+                    // Remove existing records
+                    var existingEntities = await _context.S_VisibleFields
+                        .Where(x => x.ModuleId == s_VisibleFields[0].ModuleId && x.CompanyId == CompanyId)
+                        .ToListAsync();
+
+                    if (existingEntities.Any())
+                    {
+                        _context.S_VisibleFields.RemoveRange(existingEntities);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    // Add new records
+                    _context.S_VisibleFields.AddRange(s_VisibleFields);
+                    var saveResult = await _context.SaveChangesAsync();
+
+                    #region Audit Log
+
+                    if (saveResult > 0)
+                    {
+                        var auditLog = new AdmAuditLog
+                        {
+                            CompanyId = CompanyId,
+                            ModuleId = (short)E_Modules.Setting,
+                            TransactionId = (short)E_Setting.VisibleFields,
+                            TblName = "S_VisibleFields",
+                            ModeId = (short)E_Mode.Create,
+                            Remarks = "VisibleFields Save Successfully",
+                            CreateById = UserId,
+                            CreateDate = DateTime.Now
+                        };
+
+                        _context.AdmAuditLog.Add(auditLog);
+                        await _context.SaveChangesAsync();
+
+                        await transaction.CommitAsync();
+                        return new SqlResponce { Result = 1, Message = "Save Successfully" };
+                    }
+
+                    #endregion Audit Log
+
+                    await transaction.RollbackAsync();
+                    return new SqlResponce { Result = 0, Message = "Save Failed" };
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Setting,
+                        TransactionId = (short)E_Setting.VisibleFields,
+                        TblName = "S_VisibleFields",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = ex.Message + (ex.InnerException != null ? ex.InnerException.Message : string.Empty),
+                        CreateById = UserId,
+                        CreateDate = DateTime.Now
+                    };
+
+                    _context.AdmErrorLog.Add(errorLog);
+                    await _context.SaveChangesAsync();
+
+                    throw;
+                }
+            }
+        }
+    }
+}

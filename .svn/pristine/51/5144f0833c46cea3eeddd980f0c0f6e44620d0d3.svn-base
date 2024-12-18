@@ -1,0 +1,13 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+
+namespace AHHA.Application.IServices.Setting
+{
+    public interface IVisibleFieldsServices
+    {
+        public Task<IEnumerable<VisibleFieldsViewModel>> GetVisibleFieldsByIdAsync(string RegId, Int16 CompanyId, Int16 ModuleId, Int16 UserId);
+
+        public Task<SqlResponce> SaveVisibleFieldsAsync(string RegId, Int16 CompanyId, List<S_VisibleFields> s_VisibleFields, Int16 UserId);
+    }
+}
