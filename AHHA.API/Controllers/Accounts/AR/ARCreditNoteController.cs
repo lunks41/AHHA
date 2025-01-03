@@ -26,398 +26,248 @@ namespace AHHA.API.Controllers.Accounts.AR
             _ARCreditNoteService = ARCreditNoteService;
         }
 
-        //All ARCreditNote LIST
         [HttpGet, Route("GetARCreditNote")]
         [Authorize]
         public async Task<ActionResult> GetARCreditNote([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _ARCreditNoteService.GetARCreditNoteListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString.Trim(), headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponce
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
 
-                    if (userGroupRight != null)
-                    {
-                        var cacheData = await _ARCreditNoteService.GetARCreditNoteListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
-
-                        if (cacheData == null)
-                            return NotFound(GenrateMessage.datanotfound);
-
-                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
-                    return NotFound(GenrateMessage.authenticationfailed);
-                }
+                return Ok(sqlResponse);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Error in GetARCreditNote: {ex.Message}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                 new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
+                    new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
             }
         }
 
-        //GET ONE ARCreditNote BY INVOICEID
         [HttpGet, Route("GetARCreditNotebyId/{CreditNoteId}")]
         [Authorize]
         public async Task<ActionResult<ARCreditNoteViewModel>> GetARCreditNoteById(string CreditNoteId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
+                if (CreditNoteId == "0")
+                    return NotFound("Invalid Id");
 
-                    if (userGroupRight != null)
-                    {
-                        var ARCreditNoteViewModel = await _ARCreditNoteService.GetARCreditNoteByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(CreditNoteId) ? 0 : CreditNoteId.Trim()), string.Empty, headerViewModel.UserId);
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
 
-                        if (ARCreditNoteViewModel == null)
-                            return NotFound(GenrateMessage.datanotfound);
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
 
-                        return StatusCode(StatusCodes.Status202Accepted, ARCreditNoteViewModel);
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
-                    return NoContent();
-                }
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arCreditNoteViewModel = await _ARCreditNoteService.GetARCreditNoteByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(CreditNoteId) ? 0 : CreditNoteId.Trim()),
+                    string.Empty, headerViewModel.UserId
+                );
+
+                if (arCreditNoteViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponce { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponce { Result = 1, Message = "Success", Data = arCreditNoteViewModel });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Error in GetARCreditNoteById: {ex.Message}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
             }
         }
 
-        //GET ONE ARCreditNote BY INVOICEID
         [HttpGet, Route("GetARCreditNotebyNo/{CreditNoteNo}")]
         [Authorize]
         public async Task<ActionResult<ARCreditNoteViewModel>> GetARCreditNoteByNo(string CreditNoteNo, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
+                if (CreditNoteNo == "")
+                    return NotFound("Invalid Id");
 
-                    if (userGroupRight != null)
-                    {
-                        var ARCreditNoteViewModel = await _ARCreditNoteService.GetARCreditNoteByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, 0, CreditNoteNo, headerViewModel.UserId);
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
 
-                        if (ARCreditNoteViewModel == null)
-                            return NotFound(GenrateMessage.datanotfound);
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
 
-                        return StatusCode(StatusCodes.Status202Accepted, ARCreditNoteViewModel);
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
-                    return NoContent();
-                }
+                var arCreditNoteViewModel = await _ARCreditNoteService.GetARCreditNoteByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId, 0, CreditNoteNo, headerViewModel.UserId
+                );
+                if (arCreditNoteViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponce { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponce { Result = 1, Message = "Success", Data = arCreditNoteViewModel });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Error in GetARCreditNoteByNo: {ex.Message}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
             }
         }
 
-        //SAVE ONE ARCreditNote BY INVOICEID
         [HttpPost, Route("SaveARCreditNote")]
         [Authorize]
-        public async Task<ActionResult<ARCreditNoteViewModel>> SaveARCreditNote(ARCreditNoteViewModel aRCreditNoteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<ARCreditNoteViewModel>> SaveARCreditNote(
+            ARCreditNoteViewModel aRCreditNoteViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
-
-                    if (userGroupRight != null)
-                    {
-                        if (userGroupRight.IsCreate || userGroupRight.IsEdit)
-                        {
-                            if (aRCreditNoteViewModel == null)
-                                return NotFound(GenrateMessage.datanotfound);
-
-                            //Header Data Mapping
-                            ArCreditNoteHd? ARCreditNoteEntity;
-                            if (aRCreditNoteViewModel.BalAmt == null)
-                            {
-                                ARCreditNoteEntity = new ArCreditNoteHd
-                                {
-                                    CompanyId = headerViewModel.CompanyId,
-                                    CreditNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.CreditNoteId) ? 0 : aRCreditNoteViewModel.CreditNoteId.Trim()),
-                                    CreditNoteNo = aRCreditNoteViewModel.CreditNoteNo,
-                                    ReferenceNo = aRCreditNoteViewModel.ReferenceNo == null ? string.Empty : aRCreditNoteViewModel.ReferenceNo,
-                                    TrnDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
-                                    AccountDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
-                                    DeliveryDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
-                                    DueDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
-                                    CustomerId = aRCreditNoteViewModel.CustomerId,
-                                    CurrencyId = aRCreditNoteViewModel.CurrencyId,
-                                    ExhRate = aRCreditNoteViewModel.ExhRate == null ? 0 : aRCreditNoteViewModel.ExhRate,
-                                    CtyExhRate = aRCreditNoteViewModel.CtyExhRate == null ? 0 : aRCreditNoteViewModel.CtyExhRate,
-                                    CreditTermId = aRCreditNoteViewModel.CreditTermId,
-                                    BankId = Convert.ToInt16(aRCreditNoteViewModel.BankId == null ? 0 : aRCreditNoteViewModel.BankId),
-                                    InvoiceId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.InvoiceId) ? 0 : aRCreditNoteViewModel.InvoiceId.Trim()),
-                                    InvoiceNo = aRCreditNoteViewModel.InvoiceNo,
-                                    TotAmt = aRCreditNoteViewModel.TotAmt == null ? 0 : aRCreditNoteViewModel.TotAmt,
-                                    TotLocalAmt = aRCreditNoteViewModel.TotLocalAmt == null ? 0 : aRCreditNoteViewModel.TotLocalAmt,
-                                    TotCtyAmt = aRCreditNoteViewModel.TotCtyAmt == null ? 0 : aRCreditNoteViewModel.TotCtyAmt,
-                                    GstClaimDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
-                                    GstAmt = aRCreditNoteViewModel.GstAmt == null ? 0 : aRCreditNoteViewModel.GstAmt,
-                                    GstLocalAmt = aRCreditNoteViewModel.GstLocalAmt == null ? 0 : aRCreditNoteViewModel.GstLocalAmt,
-                                    GstCtyAmt = aRCreditNoteViewModel.GstCtyAmt == null ? 0 : aRCreditNoteViewModel.GstCtyAmt,
-                                    TotAmtAftGst = aRCreditNoteViewModel.TotAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotAmtAftGst,
-                                    TotLocalAmtAftGst = aRCreditNoteViewModel.TotLocalAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotLocalAmtAftGst,
-                                    TotCtyAmtAftGst = aRCreditNoteViewModel.TotCtyAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotCtyAmtAftGst,
-                                    BalAmt = 0,
-                                    BalLocalAmt = aRCreditNoteViewModel.BalLocalAmt == null ? 0 : aRCreditNoteViewModel.BalLocalAmt,
-                                    PayAmt = aRCreditNoteViewModel.PayAmt == null ? 0 : aRCreditNoteViewModel.PayAmt,
-                                    PayLocalAmt = aRCreditNoteViewModel.PayLocalAmt == null ? 0 : aRCreditNoteViewModel.PayLocalAmt,
-                                    ExGainLoss = aRCreditNoteViewModel.ExGainLoss == null ? 0 : aRCreditNoteViewModel.ExGainLoss,
-                                    SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.SalesOrderId) == null ? 0 : aRCreditNoteViewModel.SalesOrderId.Trim()),
-                                    SalesOrderNo = aRCreditNoteViewModel.SalesOrderNo == null ? string.Empty : aRCreditNoteViewModel.SalesOrderNo,
-                                    OperationId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.OperationId) == null ? 0 : aRCreditNoteViewModel.OperationId.Trim()),
-                                    OperationNo = aRCreditNoteViewModel.OperationNo == null ? string.Empty : aRCreditNoteViewModel.OperationNo,
-                                    Remarks = aRCreditNoteViewModel.Remarks == null ? string.Empty : aRCreditNoteViewModel.Remarks,
-                                    Address1 = aRCreditNoteViewModel.Address1 == null ? string.Empty : aRCreditNoteViewModel.Address1,
-                                    Address2 = aRCreditNoteViewModel.Address2 == null ? string.Empty : aRCreditNoteViewModel.Address2,
-                                    Address3 = aRCreditNoteViewModel.Address3 == null ? string.Empty : aRCreditNoteViewModel.Address3,
-                                    Address4 = aRCreditNoteViewModel.Address4 == null ? string.Empty : aRCreditNoteViewModel.Address4,
-                                    PinCode = aRCreditNoteViewModel.PinCode == null ? string.Empty : aRCreditNoteViewModel.PinCode,
-                                    CountryId = aRCreditNoteViewModel.CountryId,
-                                    PhoneNo = aRCreditNoteViewModel.PhoneNo == null ? string.Empty : aRCreditNoteViewModel.PhoneNo,
-                                    FaxNo = aRCreditNoteViewModel.FaxNo == null ? string.Empty : aRCreditNoteViewModel.FaxNo,
-                                    ContactName = aRCreditNoteViewModel.ContactName == null ? string.Empty : aRCreditNoteViewModel.ContactName,
-                                    MobileNo = aRCreditNoteViewModel.MobileNo == null ? string.Empty : aRCreditNoteViewModel.MobileNo,
-                                    EmailAdd = aRCreditNoteViewModel.EmailAdd == null ? string.Empty : aRCreditNoteViewModel.EmailAdd,
-                                    ModuleFrom = aRCreditNoteViewModel.ModuleFrom == null ? string.Empty : aRCreditNoteViewModel.ModuleFrom,
-                                    SupplierName = aRCreditNoteViewModel.SupplierName == null ? string.Empty : aRCreditNoteViewModel.SupplierName,
-                                    CreateById = headerViewModel.UserId,
-                                    EditById = headerViewModel.UserId,
-                                    EditDate = DateTime.Now,
-                                };
-                            }
-                            else
-                            {
-                                if (aRCreditNoteViewModel.ExhRate == null)
-                                {
-                                    ARCreditNoteEntity = new ArCreditNoteHd
-                                    {
-                                        CompanyId = headerViewModel.CompanyId,
-                                        CreditNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.CreditNoteId) ? 0 : aRCreditNoteViewModel.CreditNoteId.Trim()),
-                                        CreditNoteNo = aRCreditNoteViewModel.CreditNoteNo,
-                                        ReferenceNo = aRCreditNoteViewModel.ReferenceNo == null ? string.Empty : aRCreditNoteViewModel.ReferenceNo,
-                                        TrnDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
-                                        AccountDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
-                                        DeliveryDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
-                                        DueDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
-                                        CustomerId = aRCreditNoteViewModel.CustomerId,
-                                        CurrencyId = aRCreditNoteViewModel.CurrencyId,
-                                        ExhRate = 0,
-                                        CtyExhRate = aRCreditNoteViewModel.CtyExhRate == null ? 0 : aRCreditNoteViewModel.CtyExhRate,
-                                        CreditTermId = aRCreditNoteViewModel.CreditTermId,
-                                        BankId = Convert.ToInt16(aRCreditNoteViewModel.BankId == null ? 0 : aRCreditNoteViewModel.BankId),
-                                        InvoiceId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.InvoiceId) ? 0 : aRCreditNoteViewModel.InvoiceId.Trim()),
-                                        InvoiceNo = aRCreditNoteViewModel.InvoiceNo,
-                                        TotAmt = aRCreditNoteViewModel.TotAmt == null ? 0 : aRCreditNoteViewModel.TotAmt,
-                                        TotLocalAmt = aRCreditNoteViewModel.TotLocalAmt == null ? 0 : aRCreditNoteViewModel.TotLocalAmt,
-                                        TotCtyAmt = aRCreditNoteViewModel.TotCtyAmt == null ? 0 : aRCreditNoteViewModel.TotCtyAmt,
-                                        GstClaimDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
-                                        GstAmt = aRCreditNoteViewModel.GstAmt == null ? 0 : aRCreditNoteViewModel.GstAmt,
-                                        GstLocalAmt = aRCreditNoteViewModel.GstLocalAmt == null ? 0 : aRCreditNoteViewModel.GstLocalAmt,
-                                        GstCtyAmt = aRCreditNoteViewModel.GstCtyAmt == null ? 0 : aRCreditNoteViewModel.GstCtyAmt,
-                                        TotAmtAftGst = aRCreditNoteViewModel.TotAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotAmtAftGst,
-                                        TotLocalAmtAftGst = aRCreditNoteViewModel.TotLocalAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotLocalAmtAftGst,
-                                        TotCtyAmtAftGst = aRCreditNoteViewModel.TotCtyAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotCtyAmtAftGst,
-                                        BalAmt = aRCreditNoteViewModel.BalAmt,
-                                        BalLocalAmt = aRCreditNoteViewModel.BalLocalAmt == null ? 0 : aRCreditNoteViewModel.BalLocalAmt,
-                                        PayAmt = aRCreditNoteViewModel.PayAmt == null ? 0 : aRCreditNoteViewModel.PayAmt,
-                                        PayLocalAmt = aRCreditNoteViewModel.PayLocalAmt == null ? 0 : aRCreditNoteViewModel.PayLocalAmt,
-                                        ExGainLoss = aRCreditNoteViewModel.ExGainLoss == null ? 0 : aRCreditNoteViewModel.ExGainLoss,
-                                        SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.SalesOrderId) == null ? 0 : aRCreditNoteViewModel.SalesOrderId.Trim()),
-                                        SalesOrderNo = aRCreditNoteViewModel.SalesOrderNo == null ? string.Empty : aRCreditNoteViewModel.SalesOrderNo,
-                                        OperationId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.OperationId) == null ? 0 : aRCreditNoteViewModel.OperationId.Trim()),
-                                        OperationNo = aRCreditNoteViewModel.OperationNo == null ? string.Empty : aRCreditNoteViewModel.OperationNo,
-                                        Remarks = aRCreditNoteViewModel.Remarks == null ? string.Empty : aRCreditNoteViewModel.Remarks,
-                                        Address1 = aRCreditNoteViewModel.Address1 == null ? string.Empty : aRCreditNoteViewModel.Address1,
-                                        Address2 = aRCreditNoteViewModel.Address2 == null ? string.Empty : aRCreditNoteViewModel.Address2,
-                                        Address3 = aRCreditNoteViewModel.Address3 == null ? string.Empty : aRCreditNoteViewModel.Address3,
-                                        Address4 = aRCreditNoteViewModel.Address4 == null ? string.Empty : aRCreditNoteViewModel.Address4,
-                                        PinCode = aRCreditNoteViewModel.PinCode == null ? string.Empty : aRCreditNoteViewModel.PinCode,
-                                        CountryId = aRCreditNoteViewModel.CountryId,
-                                        PhoneNo = aRCreditNoteViewModel.PhoneNo == null ? string.Empty : aRCreditNoteViewModel.PhoneNo,
-                                        FaxNo = aRCreditNoteViewModel.FaxNo == null ? string.Empty : aRCreditNoteViewModel.FaxNo,
-                                        ContactName = aRCreditNoteViewModel.ContactName == null ? string.Empty : aRCreditNoteViewModel.ContactName,
-                                        MobileNo = aRCreditNoteViewModel.MobileNo == null ? string.Empty : aRCreditNoteViewModel.MobileNo,
-                                        EmailAdd = aRCreditNoteViewModel.EmailAdd == null ? string.Empty : aRCreditNoteViewModel.EmailAdd,
-                                        ModuleFrom = aRCreditNoteViewModel.ModuleFrom == null ? string.Empty : aRCreditNoteViewModel.ModuleFrom,
-                                        SupplierName = aRCreditNoteViewModel.SupplierName == null ? string.Empty : aRCreditNoteViewModel.SupplierName,
-                                        CreateById = headerViewModel.UserId,
-                                        EditById = headerViewModel.UserId,
-                                        EditDate = DateTime.Now,
-                                    };
-                                }
-                                else
-                                {
-                                    ARCreditNoteEntity = new ArCreditNoteHd
-                                    {
-                                        CompanyId = headerViewModel.CompanyId,
-                                        CreditNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.CreditNoteId) ? 0 : aRCreditNoteViewModel.CreditNoteId.Trim()),
-                                        CreditNoteNo = aRCreditNoteViewModel.CreditNoteNo,
-                                        ReferenceNo = aRCreditNoteViewModel.ReferenceNo == null ? string.Empty : aRCreditNoteViewModel.ReferenceNo,
-                                        TrnDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
-                                        AccountDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
-                                        DeliveryDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
-                                        DueDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
-                                        CustomerId = aRCreditNoteViewModel.CustomerId,
-                                        CurrencyId = aRCreditNoteViewModel.CurrencyId,
-                                        ExhRate = aRCreditNoteViewModel.ExhRate,
-                                        CtyExhRate = aRCreditNoteViewModel.CtyExhRate == null ? 0 : aRCreditNoteViewModel.CtyExhRate,
-                                        CreditTermId = aRCreditNoteViewModel.CreditTermId,
-                                        BankId = Convert.ToInt16(aRCreditNoteViewModel.BankId == null ? 0 : aRCreditNoteViewModel.BankId),
-                                        InvoiceId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.InvoiceId) ? 0 : aRCreditNoteViewModel.InvoiceId.Trim()),
-                                        InvoiceNo = aRCreditNoteViewModel.InvoiceNo,
-                                        TotAmt = aRCreditNoteViewModel.TotAmt == null ? 0 : aRCreditNoteViewModel.TotAmt,
-                                        TotLocalAmt = aRCreditNoteViewModel.TotLocalAmt == null ? 0 : aRCreditNoteViewModel.TotLocalAmt,
-                                        TotCtyAmt = aRCreditNoteViewModel.TotCtyAmt == null ? 0 : aRCreditNoteViewModel.TotCtyAmt,
-                                        GstClaimDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
-                                        GstAmt = aRCreditNoteViewModel.GstAmt == null ? 0 : aRCreditNoteViewModel.GstAmt,
-                                        GstLocalAmt = aRCreditNoteViewModel.GstLocalAmt == null ? 0 : aRCreditNoteViewModel.GstLocalAmt,
-                                        GstCtyAmt = aRCreditNoteViewModel.GstCtyAmt == null ? 0 : aRCreditNoteViewModel.GstCtyAmt,
-                                        TotAmtAftGst = aRCreditNoteViewModel.TotAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotAmtAftGst,
-                                        TotLocalAmtAftGst = aRCreditNoteViewModel.TotLocalAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotLocalAmtAftGst,
-                                        TotCtyAmtAftGst = aRCreditNoteViewModel.TotCtyAmtAftGst == null ? 0 : aRCreditNoteViewModel.TotCtyAmtAftGst,
-                                        BalAmt = aRCreditNoteViewModel.BalAmt,
-                                        BalLocalAmt = aRCreditNoteViewModel.BalLocalAmt == null ? 0 : aRCreditNoteViewModel.BalLocalAmt,
-                                        PayAmt = aRCreditNoteViewModel.PayAmt == null ? 0 : aRCreditNoteViewModel.PayAmt,
-                                        PayLocalAmt = aRCreditNoteViewModel.PayLocalAmt == null ? 0 : aRCreditNoteViewModel.PayLocalAmt,
-                                        ExGainLoss = aRCreditNoteViewModel.ExGainLoss == null ? 0 : aRCreditNoteViewModel.ExGainLoss,
-                                        SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.SalesOrderId) == null ? 0 : aRCreditNoteViewModel.SalesOrderId.Trim()),
-                                        SalesOrderNo = aRCreditNoteViewModel.SalesOrderNo == null ? string.Empty : aRCreditNoteViewModel.SalesOrderNo,
-                                        OperationId = Convert.ToInt64(string.IsNullOrEmpty(aRCreditNoteViewModel.OperationId) == null ? 0 : aRCreditNoteViewModel.OperationId.Trim()),
-                                        OperationNo = aRCreditNoteViewModel.OperationNo == null ? string.Empty : aRCreditNoteViewModel.OperationNo,
-                                        Remarks = aRCreditNoteViewModel.Remarks == null ? string.Empty : aRCreditNoteViewModel.Remarks,
-                                        Address1 = aRCreditNoteViewModel.Address1 == null ? string.Empty : aRCreditNoteViewModel.Address1,
-                                        Address2 = aRCreditNoteViewModel.Address2 == null ? string.Empty : aRCreditNoteViewModel.Address2,
-                                        Address3 = aRCreditNoteViewModel.Address3 == null ? string.Empty : aRCreditNoteViewModel.Address3,
-                                        Address4 = aRCreditNoteViewModel.Address4 == null ? string.Empty : aRCreditNoteViewModel.Address4,
-                                        PinCode = aRCreditNoteViewModel.PinCode == null ? string.Empty : aRCreditNoteViewModel.PinCode,
-                                        CountryId = aRCreditNoteViewModel.CountryId,
-                                        PhoneNo = aRCreditNoteViewModel.PhoneNo == null ? string.Empty : aRCreditNoteViewModel.PhoneNo,
-                                        FaxNo = aRCreditNoteViewModel.FaxNo == null ? string.Empty : aRCreditNoteViewModel.FaxNo,
-                                        ContactName = aRCreditNoteViewModel.ContactName == null ? string.Empty : aRCreditNoteViewModel.ContactName,
-                                        MobileNo = aRCreditNoteViewModel.MobileNo == null ? string.Empty : aRCreditNoteViewModel.MobileNo,
-                                        EmailAdd = aRCreditNoteViewModel.EmailAdd == null ? string.Empty : aRCreditNoteViewModel.EmailAdd,
-                                        ModuleFrom = aRCreditNoteViewModel.ModuleFrom == null ? string.Empty : aRCreditNoteViewModel.ModuleFrom,
-                                        SupplierName = aRCreditNoteViewModel.SupplierName == null ? string.Empty : aRCreditNoteViewModel.SupplierName,
-                                        CreateById = headerViewModel.UserId,
-                                        EditById = headerViewModel.UserId,
-                                        EditDate = DateTime.Now,
-                                    };
-                                }
-                            }
-
-                            //Details Table data mapping
-                            var ARCreditNoteDtEntities = new List<ArCreditNoteDt>();
-
-                            if (aRCreditNoteViewModel.data_details != null)
-                            {
-                                foreach (var item in aRCreditNoteViewModel.data_details)
-                                {
-                                    var ARCreditNoteDtEntity = new ArCreditNoteDt
-                                    {
-                                        CreditNoteId = Convert.ToInt64(string.IsNullOrEmpty(item.CreditNoteId) ? 0 : item.CreditNoteId.Trim()),
-                                        CreditNoteNo = item.CreditNoteNo,
-                                        ItemNo = item.ItemNo,
-                                        SeqNo = item.SeqNo,
-                                        DocItemNo = item.DocItemNo,
-                                        ProductId = item.ProductId,
-                                        GLId = item.GLId,
-                                        QTY = item.QTY,
-                                        BillQTY = item.BillQTY,
-                                        UomId = item.UomId,
-                                        UnitPrice = item.UnitPrice,
-                                        TotAmt = item.TotAmt,
-                                        TotLocalAmt = item.TotLocalAmt,
-                                        TotCtyAmt = item.TotCtyAmt,
-                                        Remarks = item.Remarks,
-                                        GstId = item.GstId,
-                                        GstPercentage = item.GstPercentage,
-                                        GstAmt = item.GstAmt,
-                                        GstLocalAmt = item.GstLocalAmt,
-                                        GstCtyAmt = item.GstCtyAmt,
-                                        DeliveryDate = DateHelperStatic.ParseClientDate(item.DeliveryDate),
-                                        DepartmentId = item.DepartmentId,
-                                        EmployeeId = item.EmployeeId,
-                                        PortId = item.PortId,
-                                        VesselId = item.VesselId,
-                                        BargeId = item.BargeId,
-                                        VoyageId = item.VoyageId,
-                                        OperationId = Convert.ToInt64(string.IsNullOrEmpty(item.OperationId.Trim())),
-                                        OperationNo = item.OperationNo,
-                                        OPRefNo = item.OPRefNo,
-                                        SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(item.SalesOrderId.Trim())),
-                                        SalesOrderNo = item.SalesOrderNo,
-                                        SupplyDate = DateHelperStatic.ParseClientDate(item.SupplyDate),
-                                        SupplierName = item.SupplierName,
-                                    };
-
-                                    ARCreditNoteDtEntities.Add(ARCreditNoteDtEntity);
-                                }
-                            }
-
-                            var sqlResponce = await _ARCreditNoteService.SaveARCreditNoteAsync(headerViewModel.RegId, headerViewModel.CompanyId, ARCreditNoteEntity, ARCreditNoteDtEntities, headerViewModel.UserId);
-
-                            if (sqlResponce.Result > 0)
-                            {
-                                var customerModel = await _ARCreditNoteService.GetARCreditNoteByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, sqlResponce.Result, string.Empty, headerViewModel.UserId);
-
-                                return StatusCode(StatusCodes.Status202Accepted, customerModel);
-                            }
-
-                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-                        }
-                        else
-                        {
-                            return NotFound(GenrateMessage.authenticationfailed);
-                        }
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                     return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.AR,
+                    (int)E_AR.CreditNote,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                if (aRCreditNoteViewModel == null)
+                    return NotFound(GenrateMessage.datanotfound);
+
+                // Header Data Mapping
+                var ARCreditNoteEntity = new ArCreditNoteHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    CreditNoteId = aRCreditNoteViewModel.CreditNoteId != null ? Convert.ToInt64(aRCreditNoteViewModel.CreditNoteId) : 0,
+                    CreditNoteNo = aRCreditNoteViewModel.CreditNoteNo ?? string.Empty,
+                    ReferenceNo = aRCreditNoteViewModel.ReferenceNo ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.AccountDate),
+                    DeliveryDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DeliveryDate),
+                    DueDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.DueDate),
+                    CustomerId = aRCreditNoteViewModel.CustomerId,
+                    CurrencyId = aRCreditNoteViewModel.CurrencyId,
+                    ExhRate = aRCreditNoteViewModel.ExhRate,
+                    CtyExhRate = aRCreditNoteViewModel.CtyExhRate,
+                    CreditTermId = aRCreditNoteViewModel.CreditTermId,
+                    BankId = aRCreditNoteViewModel.BankId,
+                    InvoiceId = aRCreditNoteViewModel.InvoiceId != null ? Convert.ToInt64(aRCreditNoteViewModel.InvoiceId) : 0,
+                    InvoiceNo = aRCreditNoteViewModel.InvoiceNo ?? string.Empty,
+                    TotAmt = aRCreditNoteViewModel.TotAmt,
+                    TotLocalAmt = aRCreditNoteViewModel.TotLocalAmt,
+                    TotCtyAmt = aRCreditNoteViewModel.TotCtyAmt,
+                    GstClaimDate = DateHelperStatic.ParseClientDate(aRCreditNoteViewModel.GstClaimDate),
+                    GstAmt = aRCreditNoteViewModel.GstAmt,
+                    GstLocalAmt = aRCreditNoteViewModel.GstLocalAmt,
+                    GstCtyAmt = aRCreditNoteViewModel.GstCtyAmt,
+                    TotAmtAftGst = aRCreditNoteViewModel.TotAmtAftGst,
+                    TotLocalAmtAftGst = aRCreditNoteViewModel.TotLocalAmtAftGst,
+                    TotCtyAmtAftGst = aRCreditNoteViewModel.TotCtyAmtAftGst,
+                    BalAmt = aRCreditNoteViewModel.BalAmt,
+                    BalLocalAmt = aRCreditNoteViewModel.BalLocalAmt,
+                    PayAmt = aRCreditNoteViewModel.PayAmt,
+                    PayLocalAmt = aRCreditNoteViewModel.PayLocalAmt,
+                    ExGainLoss = aRCreditNoteViewModel.ExGainLoss,
+                    Remarks = aRCreditNoteViewModel.Remarks ?? string.Empty,
+                    Address1 = aRCreditNoteViewModel.Address1 ?? string.Empty,
+                    Address2 = aRCreditNoteViewModel.Address2 ?? string.Empty,
+                    Address3 = aRCreditNoteViewModel.Address3 ?? string.Empty,
+                    Address4 = aRCreditNoteViewModel.Address4 ?? string.Empty,
+                    PinCode = aRCreditNoteViewModel.PinCode ?? string.Empty,
+                    CountryId = aRCreditNoteViewModel.CountryId,
+                    PhoneNo = aRCreditNoteViewModel.PhoneNo ?? string.Empty,
+                    FaxNo = aRCreditNoteViewModel.FaxNo ?? string.Empty,
+                    ContactName = aRCreditNoteViewModel.ContactName ?? string.Empty,
+                    MobileNo = aRCreditNoteViewModel.MobileNo ?? string.Empty,
+                    EmailAdd = aRCreditNoteViewModel.EmailAdd ?? string.Empty,
+                    ModuleFrom = aRCreditNoteViewModel.ModuleFrom ?? string.Empty,
+                    SupplierName = aRCreditNoteViewModel.SupplierName ?? string.Empty,
+                    SuppCreditNoteNo = aRCreditNoteViewModel.SuppCreditNoteNo ?? string.Empty,
+                    APCreditNoteId = !string.IsNullOrEmpty(aRCreditNoteViewModel.APCreditNoteId?.Trim()) ? Convert.ToInt64(aRCreditNoteViewModel.APCreditNoteId.Trim()) : 0,
+                    APCreditNoteNo = aRCreditNoteViewModel.APCreditNoteNo ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var arCreditNoteDtEntities = aRCreditNoteViewModel.data_details?.Select(item => new ArCreditNoteDt
+                {
+                    CreditNoteId = Convert.ToInt64(item.CreditNoteId),
+                    CreditNoteNo = item.CreditNoteNo,
+                    ItemNo = item.ItemNo,
+                    SeqNo = item.SeqNo,
+                    ProductId = item.ProductId,
+                    GLId = item.GLId,
+                    QTY = item.QTY,
+                    BillQTY = item.BillQTY,
+                    UomId = item.UomId,
+                    UnitPrice = item.UnitPrice,
+                    TotAmt = item.TotAmt,
+                    TotLocalAmt = item.TotLocalAmt,
+                    TotCtyAmt = item.TotCtyAmt,
+                    GstId = item.GstId,
+                    GstPercentage = item.GstPercentage,
+                    GstAmt = item.GstAmt,
+                    GstLocalAmt = item.GstLocalAmt,
+                    GstCtyAmt = item.GstCtyAmt,
+                    DeliveryDate = DateHelperStatic.ParseClientDate(item.DeliveryDate),
+                    SupplyDate = DateHelperStatic.ParseClientDate(item.SupplyDate),
+                    Remarks = item.Remarks ?? string.Empty,
+                }).ToList();
+
+                // Save AR Credit Note
+                var sqlResponse = await _ARCreditNoteService.SaveARCreditNoteAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    ARCreditNoteEntity,
+                    arCreditNoteDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _ARCreditNoteService.GetARCreditNoteByIdAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponce { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
                 }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error creating new ARCreditNote record");
+                     new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
             }
         }
 
@@ -427,52 +277,42 @@ namespace AHHA.API.Controllers.Accounts.AR
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponce = await _ARCreditNoteService.DeleteARCreditNoteAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponce.Result > 0)
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.CreditNote, headerViewModel.UserId);
+                    var customerModel = await _ARCreditNoteService.GetARCreditNoteByIdAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
 
-                    if (userGroupRight != null)
-                    {
-                        if (userGroupRight.IsDelete)
-                        {
-                            if (!string.IsNullOrEmpty(deleteViewModel.DocumentId))
-                            {
-                                var sqlResponce = await _ARCreditNoteService.DeleteARCreditNoteAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(deleteViewModel.DocumentId), deleteViewModel.CancelRemarks, headerViewModel.UserId);
-
-                                if (sqlResponce.Result > 0)
-                                {
-                                    var customerModel = await _ARCreditNoteService.GetARCreditNoteByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId);
-
-                                    return StatusCode(StatusCodes.Status202Accepted, customerModel);
-                                }
-
-                                return StatusCode(StatusCodes.Status204NoContent, sqlResponce);
-                            }
-                            else
-                            {
-                                return NotFound(GenrateMessage.datanotfound);
-                            }
-                        }
-                        else
-                        {
-                            return NotFound(GenrateMessage.authenticationfailed);
-                        }
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
+                    return Ok(new SqlResponce { Result = sqlResponce.Result, Message = sqlResponce.Message, Data = customerModel });
                 }
-                else
-                {
-                    return NoContent();
-                }
+                return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Error in DeleteARCreditNote: {ex.Message}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error deleting data");
+                    "Internal Server Error");
             }
         }
     }

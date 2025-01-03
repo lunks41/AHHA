@@ -5,12 +5,13 @@ namespace AHHA.Core.Models.Account.AR
 {
     public class ARCreditNoteViewModel
     {
+        //Get & Set the formate
+
         private DateTime _trnDate;
         private DateTime _accountDate;
         private DateTime _deliveryDate;
         private DateTime _dueDate;
         private DateTime _gstClaimDate;
-
         public Int16 CompanyId { get; set; }
         public string CreditNoteId { get; set; }
         public string CreditNoteNo { get; set; }
@@ -41,7 +42,11 @@ namespace AHHA.Core.Models.Account.AR
         }
 
         public Int32 CustomerId { get; set; }
+        public string CustomerCode { get; set; }
+        public string CustomerName { get; set; }
         public Int16 CurrencyId { get; set; }
+        public string CurrencyCode { get; set; }
+        public string CurrencyName { get; set; }
 
         [Column(TypeName = "decimal(18,10)")]
         public decimal ExhRate { get; set; }
@@ -50,7 +55,11 @@ namespace AHHA.Core.Models.Account.AR
         public decimal CtyExhRate { get; set; }
 
         public Int16 CreditTermId { get; set; }
+        public string CreditTermCode { get; set; }
+        public string CreditTermName { get; set; }
         public Int16 BankId { get; set; }
+        public string BankCode { get; set; }
+        public string BankName { get; set; }
         public string InvoiceId { get; set; }
         public string InvoiceNo { get; set; }
 
@@ -87,18 +96,23 @@ namespace AHHA.Core.Models.Account.AR
         [Column(TypeName = "decimal(18,4)")]
         public decimal TotCtyAmtAftGst { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal BalAmt { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal BalLocalAmt { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal PayAmt { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal PayLocalAmt { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal ExGainLoss { get; set; }
 
@@ -113,6 +127,8 @@ namespace AHHA.Core.Models.Account.AR
         public string Address4 { get; set; }
         public string PinCode { get; set; }
         public Int16 CountryId { get; set; }
+        public string CountryCode { get; set; }
+        public string CountryName { get; set; }
         public string PhoneNo { get; set; }
         public string FaxNo { get; set; }
         public string ContactName { get; set; }
@@ -131,6 +147,9 @@ namespace AHHA.Core.Models.Account.AR
         public Int16 CancelById { get; set; }
         public DateTime? CancelDate { get; set; }
         public string CancelRemarks { get; set; }
+        public string CreateBy { get; set; }
+        public string EditBy { get; set; }
+        public string CancelBy { get; set; }
         public byte EditVersion { get; set; }
         public List<ARCreditNoteDtViewModel> data_details { get; set; }
     }

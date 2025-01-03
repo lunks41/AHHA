@@ -5,16 +5,24 @@ namespace AHHA.Core.Models.Account.AR
 {
     public class ARCreditNoteDtViewModel
     {
+        //Get & Set the formate
+
         private DateTime _supplyDate;
         private DateTime _deliveryDate;
 
+        //actual Model
         public string CreditNoteId { get; set; }
+
         public string CreditNoteNo { get; set; }
-        public Int32 ItemNo { get; set; }
+        public Int16 ItemNo { get; set; }
         public Int16 SeqNo { get; set; }
-        public Int32 DocItemNo { get; set; }
+        public Int16 DocItemNo { get; set; }
         public Int16 ProductId { get; set; }
+        public string ProductCode { get; set; }
+        public string ProductName { get; set; }
         public Int16 GLId { get; set; }
+        public string GLCode { get; set; }
+        public string GLName { get; set; }
 
         [Column(TypeName = "decimal(9,4)")]
         public decimal QTY { get; set; }
@@ -22,8 +30,9 @@ namespace AHHA.Core.Models.Account.AR
         [Column(TypeName = "decimal(9,4)")]
         public decimal BillQTY { get; set; }
 
-        [ForeignKey(nameof(UomId))]
         public Int16 UomId { get; set; }
+        public string UomCode { get; set; }
+        public string UomName { get; set; }
 
         [Column(TypeName = "decimal(9,4)")]
         public decimal UnitPrice { get; set; }
@@ -38,9 +47,9 @@ namespace AHHA.Core.Models.Account.AR
         public decimal TotCtyAmt { get; set; }
 
         public string Remarks { get; set; }
-
-        [ForeignKey(nameof(UomId))]
-        public Int16 GstId { get; set; }
+        public byte GstId { get; set; }
+        public string GstCode { get; set; }
+        public string GstName { get; set; }
 
         [Column(TypeName = "decimal(4,2)")]
         public decimal GstPercentage { get; set; }
@@ -61,11 +70,23 @@ namespace AHHA.Core.Models.Account.AR
         }
 
         public Int16 DepartmentId { get; set; }
+        public string DepartmentCode { get; set; }
+        public string DepartmentName { get; set; }
         public Int16 EmployeeId { get; set; }
+        public string EmployeeCode { get; set; }
+        public string EmployeeName { get; set; }
         public Int16 PortId { get; set; }
+        public string PortCode { get; set; }
+        public string PortName { get; set; }
         public Int32 VesselId { get; set; }
+        public string VesselCode { get; set; }
+        public string VesselName { get; set; }
         public Int16 BargeId { get; set; }
+        public string BargeCode { get; set; }
+        public string BargeName { get; set; }
         public Int16 VoyageId { get; set; }
+        public string VoyageNo { get; set; }
+        public string VoyageReferenceNo { get; set; }
         public string OperationId { get; set; }
         public string OperationNo { get; set; }
         public string OPRefNo { get; set; }

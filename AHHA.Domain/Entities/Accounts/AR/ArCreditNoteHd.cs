@@ -1,20 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AHHA.Core.Entities.Accounts.AR
 {
-    [PrimaryKey(nameof(CreditNoteId))]
     public class ArCreditNoteHd
     {
+        [ForeignKey(nameof(CompanyId))]
         public Int16 CompanyId { get; set; }
+
+        [Key]
         public Int64 CreditNoteId { get; set; }
+
         public string CreditNoteNo { get; set; }
         public string ReferenceNo { get; set; }
         public DateTime TrnDate { get; set; }
         public DateTime AccountDate { get; set; }
         public DateTime DeliveryDate { get; set; }
         public DateTime DueDate { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
         public Int32 CustomerId { get; set; }
+
+        [ForeignKey(nameof(CurrencyId))]
         public Int16 CurrencyId { get; set; }
 
         [Column(TypeName = "decimal(18,10)")]
@@ -23,9 +30,14 @@ namespace AHHA.Core.Entities.Accounts.AR
         [Column(TypeName = "decimal(18,10)")]
         public decimal CtyExhRate { get; set; }
 
+        [ForeignKey(nameof(CreditTermId))]
         public Int16 CreditTermId { get; set; }
+
+        [ForeignKey(nameof(BankId))]
         public Int16 BankId { get; set; }
+
         public Int64 InvoiceId { get; set; }
+
         public string InvoiceNo { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
@@ -57,18 +69,23 @@ namespace AHHA.Core.Entities.Accounts.AR
         [Column(TypeName = "decimal(18,4)")]
         public decimal TotCtyAmtAftGst { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal BalAmt { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal BalLocalAmt { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal PayAmt { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal PayLocalAmt { get; set; }
 
+        [NotMapped]
         [Column(TypeName = "decimal(18,4)")]
         public decimal ExGainLoss { get; set; }
 
@@ -94,11 +111,14 @@ namespace AHHA.Core.Entities.Accounts.AR
         public Int64 APCreditNoteId { get; set; }
         public string APCreditNoteNo { get; set; }
         public Int16 CreateById { get; set; }
+
+        [NotMapped]
         public DateTime CreateDate { get; set; }
+
         public Int16? EditById { get; set; }
         public DateTime? EditDate { get; set; }
         public bool IsCancel { get; set; }
-        public Int16 CancelById { get; set; }
+        public Int16? CancelById { get; set; }
         public DateTime? CancelDate { get; set; }
         public string CancelRemarks { get; set; }
         public byte EditVersion { get; set; }

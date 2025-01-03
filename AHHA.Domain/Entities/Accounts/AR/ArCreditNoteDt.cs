@@ -8,10 +8,14 @@ namespace AHHA.Core.Entities.Accounts.AR
     {
         public Int64 CreditNoteId { get; set; }
         public string CreditNoteNo { get; set; }
-        public Int32 ItemNo { get; set; }
+        public Int16 ItemNo { get; set; }
         public Int16 SeqNo { get; set; }
-        public Int32 DocItemNo { get; set; }
+        public Int16 DocItemNo { get; set; }
+
+        [ForeignKey(nameof(ProductId))]
         public Int16 ProductId { get; set; }
+
+        [ForeignKey(nameof(GLId))]
         public Int16 GLId { get; set; }
 
         [Column(TypeName = "decimal(9,4)")]
@@ -38,7 +42,7 @@ namespace AHHA.Core.Entities.Accounts.AR
         public string Remarks { get; set; }
 
         [ForeignKey(nameof(UomId))]
-        public Int16 GstId { get; set; }
+        public byte GstId { get; set; }
 
         [Column(TypeName = "decimal(4,2)")]
         public decimal GstPercentage { get; set; }

@@ -2,6 +2,7 @@
 using AHHA.Application.IServices.Accounts.AR;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Helper;
 using AHHA.Core.Models.Account;
 using AHHA.Core.Models.Account.AR;
 using AutoMapper;
@@ -25,398 +26,248 @@ namespace AHHA.API.Controllers.Accounts.AR
             _ARDebitNoteService = ARDebitNoteService;
         }
 
-        //All ARDebitNote LIST
         [HttpGet, Route("GetARDebitNote")]
         [Authorize]
         public async Task<ActionResult> GetARDebitNote([FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _ARDebitNoteService.GetARDebitNoteListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString.Trim(), headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponce
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
 
-                    if (userGroupRight != null)
-                    {
-                        var cacheData = await _ARDebitNoteService.GetARDebitNoteListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
-
-                        if (cacheData == null)
-                            return NotFound(GenrateMessage.datanotfound);
-
-                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
-                    return NotFound(GenrateMessage.authenticationfailed);
-                }
+                return Ok(sqlResponse);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Error in GetARDebitNote: {ex.Message}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                 new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
+                    new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
             }
         }
 
-        //GET ONE ARDebitNote BY INVOICEID
         [HttpGet, Route("GetARDebitNotebyId/{DebitNoteId}")]
         [Authorize]
         public async Task<ActionResult<ARDebitNoteViewModel>> GetARDebitNoteById(string DebitNoteId, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+                if (DebitNoteId == "0")
+                    return NotFound("Invalid Id");
 
-                    if (userGroupRight != null)
-                    {
-                        var ARDebitNoteViewModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(DebitNoteId) ? 0 : DebitNoteId.Trim()), string.Empty, headerViewModel.UserId);
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
 
-                        if (ARDebitNoteViewModel == null)
-                            return NotFound(GenrateMessage.datanotfound);
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
 
-                        return StatusCode(StatusCodes.Status202Accepted, ARDebitNoteViewModel);
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
-                    return NoContent();
-                }
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arDebitNoteViewModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(DebitNoteId) ? 0 : DebitNoteId.Trim()),
+                    string.Empty, headerViewModel.UserId
+                );
+
+                if (arDebitNoteViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponce { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponce { Result = 1, Message = "Success", Data = arDebitNoteViewModel });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Error in GetARDebitNoteById: {ex.Message}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
             }
         }
 
-        //GET ONE ARDebitNote BY INVOICEID
         [HttpGet, Route("GetARDebitNotebyNo/{DebitNoteNo}")]
         [Authorize]
         public async Task<ActionResult<ARDebitNoteViewModel>> GetARDebitNoteByNo(string DebitNoteNo, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+                if (DebitNoteNo == "")
+                    return NotFound("Invalid Id");
 
-                    if (userGroupRight != null)
-                    {
-                        var ARDebitNoteViewModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, 0, DebitNoteNo, headerViewModel.UserId);
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
 
-                        if (ARDebitNoteViewModel == null)
-                            return NotFound(GenrateMessage.datanotfound);
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
 
-                        return StatusCode(StatusCodes.Status202Accepted, ARDebitNoteViewModel);
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
-                    return NoContent();
-                }
+                var arDebitNoteViewModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId, 0, DebitNoteNo, headerViewModel.UserId
+                );
+                if (arDebitNoteViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponce { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponce { Result = 1, Message = "Success", Data = arDebitNoteViewModel });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Error in GetARDebitNoteByNo: {ex.Message}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
             }
         }
 
-        //SAVE ONE ARDebitNote BY INVOICEID
         [HttpPost, Route("SaveARDebitNote")]
         [Authorize]
-        public async Task<ActionResult<ARDebitNoteViewModel>> SaveARDebitNote(ARDebitNoteViewModel aRDebitNoteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        public async Task<ActionResult<ARDebitNoteViewModel>> SaveARDebitNote(
+            ARDebitNoteViewModel aRDebitNoteViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
-
-                    if (userGroupRight != null)
-                    {
-                        if (userGroupRight.IsCreate || userGroupRight.IsEdit)
-                        {
-                            if (aRDebitNoteViewModel == null)
-                                return NotFound(GenrateMessage.datanotfound);
-
-                            //Header Data Mapping
-                            ArDebitNoteHd? ARDebitNoteEntity;
-                            if (aRDebitNoteViewModel.BalAmt == null)
-                            {
-                                ARDebitNoteEntity = new ArDebitNoteHd
-                                {
-                                    CompanyId = headerViewModel.CompanyId,
-                                    DebitNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.DebitNoteId) ? 0 : aRDebitNoteViewModel.DebitNoteId.Trim()),
-                                    DebitNoteNo = aRDebitNoteViewModel.DebitNoteNo,
-                                    ReferenceNo = aRDebitNoteViewModel.ReferenceNo == null ? string.Empty : aRDebitNoteViewModel.ReferenceNo,
-                                    TrnDate = aRDebitNoteViewModel.TrnDate,
-                                    AccountDate = aRDebitNoteViewModel.AccountDate,
-                                    DeliveryDate = aRDebitNoteViewModel.DeliveryDate,
-                                    DueDate = aRDebitNoteViewModel.DueDate,
-                                    CustomerId = aRDebitNoteViewModel.CustomerId,
-                                    CurrencyId = aRDebitNoteViewModel.CurrencyId,
-                                    ExhRate = aRDebitNoteViewModel.ExhRate == null ? 0 : aRDebitNoteViewModel.ExhRate,
-                                    CtyExhRate = aRDebitNoteViewModel.CtyExhRate == null ? 0 : aRDebitNoteViewModel.CtyExhRate,
-                                    CreditTermId = aRDebitNoteViewModel.CreditTermId,
-                                    BankId = Convert.ToInt16(aRDebitNoteViewModel.BankId == null ? 0 : aRDebitNoteViewModel.BankId),
-                                    InvoiceId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.InvoiceId) ? 0 : aRDebitNoteViewModel.InvoiceId.Trim()),
-                                    InvoiceNo = aRDebitNoteViewModel.InvoiceNo,
-                                    TotAmt = aRDebitNoteViewModel.TotAmt == null ? 0 : aRDebitNoteViewModel.TotAmt,
-                                    TotLocalAmt = aRDebitNoteViewModel.TotLocalAmt == null ? 0 : aRDebitNoteViewModel.TotLocalAmt,
-                                    TotCtyAmt = aRDebitNoteViewModel.TotCtyAmt == null ? 0 : aRDebitNoteViewModel.TotCtyAmt,
-                                    GstClaimDate = aRDebitNoteViewModel.GstClaimDate,
-                                    GstAmt = aRDebitNoteViewModel.GstAmt == null ? 0 : aRDebitNoteViewModel.GstAmt,
-                                    GstLocalAmt = aRDebitNoteViewModel.GstLocalAmt == null ? 0 : aRDebitNoteViewModel.GstLocalAmt,
-                                    GstCtyAmt = aRDebitNoteViewModel.GstCtyAmt == null ? 0 : aRDebitNoteViewModel.GstCtyAmt,
-                                    TotAmtAftGst = aRDebitNoteViewModel.TotAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotAmtAftGst,
-                                    TotLocalAmtAftGst = aRDebitNoteViewModel.TotLocalAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotLocalAmtAftGst,
-                                    TotCtyAmtAftGst = aRDebitNoteViewModel.TotCtyAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotCtyAmtAftGst,
-                                    BalAmt = 0,
-                                    BalLocalAmt = aRDebitNoteViewModel.BalLocalAmt == null ? 0 : aRDebitNoteViewModel.BalLocalAmt,
-                                    PayAmt = aRDebitNoteViewModel.PayAmt == null ? 0 : aRDebitNoteViewModel.PayAmt,
-                                    PayLocalAmt = aRDebitNoteViewModel.PayLocalAmt == null ? 0 : aRDebitNoteViewModel.PayLocalAmt,
-                                    ExGainLoss = aRDebitNoteViewModel.ExGainLoss == null ? 0 : aRDebitNoteViewModel.ExGainLoss,
-                                    SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.SalesOrderId) == null ? 0 : aRDebitNoteViewModel.SalesOrderId.Trim()),
-                                    SalesOrderNo = aRDebitNoteViewModel.SalesOrderNo == null ? string.Empty : aRDebitNoteViewModel.SalesOrderNo,
-                                    OperationId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.OperationId) == null ? 0 : aRDebitNoteViewModel.OperationId.Trim()),
-                                    OperationNo = aRDebitNoteViewModel.OperationNo == null ? string.Empty : aRDebitNoteViewModel.OperationNo,
-                                    Remarks = aRDebitNoteViewModel.Remarks == null ? string.Empty : aRDebitNoteViewModel.Remarks,
-                                    Address1 = aRDebitNoteViewModel.Address1 == null ? string.Empty : aRDebitNoteViewModel.Address1,
-                                    Address2 = aRDebitNoteViewModel.Address2 == null ? string.Empty : aRDebitNoteViewModel.Address2,
-                                    Address3 = aRDebitNoteViewModel.Address3 == null ? string.Empty : aRDebitNoteViewModel.Address3,
-                                    Address4 = aRDebitNoteViewModel.Address4 == null ? string.Empty : aRDebitNoteViewModel.Address4,
-                                    PinCode = aRDebitNoteViewModel.PinCode == null ? string.Empty : aRDebitNoteViewModel.PinCode,
-                                    CountryId = aRDebitNoteViewModel.CountryId,
-                                    PhoneNo = aRDebitNoteViewModel.PhoneNo == null ? string.Empty : aRDebitNoteViewModel.PhoneNo,
-                                    FaxNo = aRDebitNoteViewModel.FaxNo == null ? string.Empty : aRDebitNoteViewModel.FaxNo,
-                                    ContactName = aRDebitNoteViewModel.ContactName == null ? string.Empty : aRDebitNoteViewModel.ContactName,
-                                    MobileNo = aRDebitNoteViewModel.MobileNo == null ? string.Empty : aRDebitNoteViewModel.MobileNo,
-                                    EmailAdd = aRDebitNoteViewModel.EmailAdd == null ? string.Empty : aRDebitNoteViewModel.EmailAdd,
-                                    ModuleFrom = aRDebitNoteViewModel.ModuleFrom == null ? string.Empty : aRDebitNoteViewModel.ModuleFrom,
-                                    SupplierName = aRDebitNoteViewModel.SupplierName == null ? string.Empty : aRDebitNoteViewModel.SupplierName,
-                                    CreateById = headerViewModel.UserId,
-                                    EditById = headerViewModel.UserId,
-                                    EditDate = DateTime.Now,
-                                };
-                            }
-                            else
-                            {
-                                if (aRDebitNoteViewModel.ExhRate == null)
-                                {
-                                    ARDebitNoteEntity = new ArDebitNoteHd
-                                    {
-                                        CompanyId = headerViewModel.CompanyId,
-                                        DebitNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.DebitNoteId) ? 0 : aRDebitNoteViewModel.DebitNoteId.Trim()),
-                                        DebitNoteNo = aRDebitNoteViewModel.DebitNoteNo,
-                                        ReferenceNo = aRDebitNoteViewModel.ReferenceNo == null ? string.Empty : aRDebitNoteViewModel.ReferenceNo,
-                                        TrnDate = aRDebitNoteViewModel.TrnDate,
-                                        AccountDate = aRDebitNoteViewModel.AccountDate,
-                                        DeliveryDate = aRDebitNoteViewModel.DeliveryDate,
-                                        DueDate = aRDebitNoteViewModel.DueDate,
-                                        CustomerId = aRDebitNoteViewModel.CustomerId,
-                                        CurrencyId = aRDebitNoteViewModel.CurrencyId,
-                                        ExhRate = 0,
-                                        CtyExhRate = aRDebitNoteViewModel.CtyExhRate == null ? 0 : aRDebitNoteViewModel.CtyExhRate,
-                                        CreditTermId = aRDebitNoteViewModel.CreditTermId,
-                                        BankId = Convert.ToInt16(aRDebitNoteViewModel.BankId == null ? 0 : aRDebitNoteViewModel.BankId),
-                                        InvoiceId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.InvoiceId) ? 0 : aRDebitNoteViewModel.InvoiceId.Trim()),
-                                        InvoiceNo = aRDebitNoteViewModel.InvoiceNo,
-                                        TotAmt = aRDebitNoteViewModel.TotAmt == null ? 0 : aRDebitNoteViewModel.TotAmt,
-                                        TotLocalAmt = aRDebitNoteViewModel.TotLocalAmt == null ? 0 : aRDebitNoteViewModel.TotLocalAmt,
-                                        TotCtyAmt = aRDebitNoteViewModel.TotCtyAmt == null ? 0 : aRDebitNoteViewModel.TotCtyAmt,
-                                        GstClaimDate = aRDebitNoteViewModel.GstClaimDate,
-                                        GstAmt = aRDebitNoteViewModel.GstAmt == null ? 0 : aRDebitNoteViewModel.GstAmt,
-                                        GstLocalAmt = aRDebitNoteViewModel.GstLocalAmt == null ? 0 : aRDebitNoteViewModel.GstLocalAmt,
-                                        GstCtyAmt = aRDebitNoteViewModel.GstCtyAmt == null ? 0 : aRDebitNoteViewModel.GstCtyAmt,
-                                        TotAmtAftGst = aRDebitNoteViewModel.TotAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotAmtAftGst,
-                                        TotLocalAmtAftGst = aRDebitNoteViewModel.TotLocalAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotLocalAmtAftGst,
-                                        TotCtyAmtAftGst = aRDebitNoteViewModel.TotCtyAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotCtyAmtAftGst,
-                                        BalAmt = aRDebitNoteViewModel.BalAmt,
-                                        BalLocalAmt = aRDebitNoteViewModel.BalLocalAmt == null ? 0 : aRDebitNoteViewModel.BalLocalAmt,
-                                        PayAmt = aRDebitNoteViewModel.PayAmt == null ? 0 : aRDebitNoteViewModel.PayAmt,
-                                        PayLocalAmt = aRDebitNoteViewModel.PayLocalAmt == null ? 0 : aRDebitNoteViewModel.PayLocalAmt,
-                                        ExGainLoss = aRDebitNoteViewModel.ExGainLoss == null ? 0 : aRDebitNoteViewModel.ExGainLoss,
-                                        SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.SalesOrderId) == null ? 0 : aRDebitNoteViewModel.SalesOrderId.Trim()),
-                                        SalesOrderNo = aRDebitNoteViewModel.SalesOrderNo == null ? string.Empty : aRDebitNoteViewModel.SalesOrderNo,
-                                        OperationId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.OperationId) == null ? 0 : aRDebitNoteViewModel.OperationId.Trim()),
-                                        OperationNo = aRDebitNoteViewModel.OperationNo == null ? string.Empty : aRDebitNoteViewModel.OperationNo,
-                                        Remarks = aRDebitNoteViewModel.Remarks == null ? string.Empty : aRDebitNoteViewModel.Remarks,
-                                        Address1 = aRDebitNoteViewModel.Address1 == null ? string.Empty : aRDebitNoteViewModel.Address1,
-                                        Address2 = aRDebitNoteViewModel.Address2 == null ? string.Empty : aRDebitNoteViewModel.Address2,
-                                        Address3 = aRDebitNoteViewModel.Address3 == null ? string.Empty : aRDebitNoteViewModel.Address3,
-                                        Address4 = aRDebitNoteViewModel.Address4 == null ? string.Empty : aRDebitNoteViewModel.Address4,
-                                        PinCode = aRDebitNoteViewModel.PinCode == null ? string.Empty : aRDebitNoteViewModel.PinCode,
-                                        CountryId = aRDebitNoteViewModel.CountryId,
-                                        PhoneNo = aRDebitNoteViewModel.PhoneNo == null ? string.Empty : aRDebitNoteViewModel.PhoneNo,
-                                        FaxNo = aRDebitNoteViewModel.FaxNo == null ? string.Empty : aRDebitNoteViewModel.FaxNo,
-                                        ContactName = aRDebitNoteViewModel.ContactName == null ? string.Empty : aRDebitNoteViewModel.ContactName,
-                                        MobileNo = aRDebitNoteViewModel.MobileNo == null ? string.Empty : aRDebitNoteViewModel.MobileNo,
-                                        EmailAdd = aRDebitNoteViewModel.EmailAdd == null ? string.Empty : aRDebitNoteViewModel.EmailAdd,
-                                        ModuleFrom = aRDebitNoteViewModel.ModuleFrom == null ? string.Empty : aRDebitNoteViewModel.ModuleFrom,
-                                        SupplierName = aRDebitNoteViewModel.SupplierName == null ? string.Empty : aRDebitNoteViewModel.SupplierName,
-                                        CreateById = headerViewModel.UserId,
-                                        EditById = headerViewModel.UserId,
-                                        EditDate = DateTime.Now,
-                                    };
-                                }
-                                else
-                                {
-                                    ARDebitNoteEntity = new ArDebitNoteHd
-                                    {
-                                        CompanyId = headerViewModel.CompanyId,
-                                        DebitNoteId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.DebitNoteId) ? 0 : aRDebitNoteViewModel.DebitNoteId.Trim()),
-                                        DebitNoteNo = aRDebitNoteViewModel.DebitNoteNo,
-                                        ReferenceNo = aRDebitNoteViewModel.ReferenceNo == null ? string.Empty : aRDebitNoteViewModel.ReferenceNo,
-                                        TrnDate = aRDebitNoteViewModel.TrnDate,
-                                        AccountDate = aRDebitNoteViewModel.AccountDate,
-                                        DeliveryDate = aRDebitNoteViewModel.DeliveryDate,
-                                        DueDate = aRDebitNoteViewModel.DueDate,
-                                        CustomerId = aRDebitNoteViewModel.CustomerId,
-                                        CurrencyId = aRDebitNoteViewModel.CurrencyId,
-                                        ExhRate = aRDebitNoteViewModel.ExhRate,
-                                        CtyExhRate = aRDebitNoteViewModel.CtyExhRate == null ? 0 : aRDebitNoteViewModel.CtyExhRate,
-                                        CreditTermId = aRDebitNoteViewModel.CreditTermId,
-                                        BankId = Convert.ToInt16(aRDebitNoteViewModel.BankId == null ? 0 : aRDebitNoteViewModel.BankId),
-                                        InvoiceId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.InvoiceId) ? 0 : aRDebitNoteViewModel.InvoiceId.Trim()),
-                                        InvoiceNo = aRDebitNoteViewModel.InvoiceNo,
-                                        TotAmt = aRDebitNoteViewModel.TotAmt == null ? 0 : aRDebitNoteViewModel.TotAmt,
-                                        TotLocalAmt = aRDebitNoteViewModel.TotLocalAmt == null ? 0 : aRDebitNoteViewModel.TotLocalAmt,
-                                        TotCtyAmt = aRDebitNoteViewModel.TotCtyAmt == null ? 0 : aRDebitNoteViewModel.TotCtyAmt,
-                                        GstClaimDate = aRDebitNoteViewModel.GstClaimDate,
-                                        GstAmt = aRDebitNoteViewModel.GstAmt == null ? 0 : aRDebitNoteViewModel.GstAmt,
-                                        GstLocalAmt = aRDebitNoteViewModel.GstLocalAmt == null ? 0 : aRDebitNoteViewModel.GstLocalAmt,
-                                        GstCtyAmt = aRDebitNoteViewModel.GstCtyAmt == null ? 0 : aRDebitNoteViewModel.GstCtyAmt,
-                                        TotAmtAftGst = aRDebitNoteViewModel.TotAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotAmtAftGst,
-                                        TotLocalAmtAftGst = aRDebitNoteViewModel.TotLocalAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotLocalAmtAftGst,
-                                        TotCtyAmtAftGst = aRDebitNoteViewModel.TotCtyAmtAftGst == null ? 0 : aRDebitNoteViewModel.TotCtyAmtAftGst,
-                                        BalAmt = aRDebitNoteViewModel.BalAmt,
-                                        BalLocalAmt = aRDebitNoteViewModel.BalLocalAmt == null ? 0 : aRDebitNoteViewModel.BalLocalAmt,
-                                        PayAmt = aRDebitNoteViewModel.PayAmt == null ? 0 : aRDebitNoteViewModel.PayAmt,
-                                        PayLocalAmt = aRDebitNoteViewModel.PayLocalAmt == null ? 0 : aRDebitNoteViewModel.PayLocalAmt,
-                                        ExGainLoss = aRDebitNoteViewModel.ExGainLoss == null ? 0 : aRDebitNoteViewModel.ExGainLoss,
-                                        SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.SalesOrderId) == null ? 0 : aRDebitNoteViewModel.SalesOrderId.Trim()),
-                                        SalesOrderNo = aRDebitNoteViewModel.SalesOrderNo == null ? string.Empty : aRDebitNoteViewModel.SalesOrderNo,
-                                        OperationId = Convert.ToInt64(string.IsNullOrEmpty(aRDebitNoteViewModel.OperationId) == null ? 0 : aRDebitNoteViewModel.OperationId.Trim()),
-                                        OperationNo = aRDebitNoteViewModel.OperationNo == null ? string.Empty : aRDebitNoteViewModel.OperationNo,
-                                        Remarks = aRDebitNoteViewModel.Remarks == null ? string.Empty : aRDebitNoteViewModel.Remarks,
-                                        Address1 = aRDebitNoteViewModel.Address1 == null ? string.Empty : aRDebitNoteViewModel.Address1,
-                                        Address2 = aRDebitNoteViewModel.Address2 == null ? string.Empty : aRDebitNoteViewModel.Address2,
-                                        Address3 = aRDebitNoteViewModel.Address3 == null ? string.Empty : aRDebitNoteViewModel.Address3,
-                                        Address4 = aRDebitNoteViewModel.Address4 == null ? string.Empty : aRDebitNoteViewModel.Address4,
-                                        PinCode = aRDebitNoteViewModel.PinCode == null ? string.Empty : aRDebitNoteViewModel.PinCode,
-                                        CountryId = aRDebitNoteViewModel.CountryId,
-                                        PhoneNo = aRDebitNoteViewModel.PhoneNo == null ? string.Empty : aRDebitNoteViewModel.PhoneNo,
-                                        FaxNo = aRDebitNoteViewModel.FaxNo == null ? string.Empty : aRDebitNoteViewModel.FaxNo,
-                                        ContactName = aRDebitNoteViewModel.ContactName == null ? string.Empty : aRDebitNoteViewModel.ContactName,
-                                        MobileNo = aRDebitNoteViewModel.MobileNo == null ? string.Empty : aRDebitNoteViewModel.MobileNo,
-                                        EmailAdd = aRDebitNoteViewModel.EmailAdd == null ? string.Empty : aRDebitNoteViewModel.EmailAdd,
-                                        ModuleFrom = aRDebitNoteViewModel.ModuleFrom == null ? string.Empty : aRDebitNoteViewModel.ModuleFrom,
-                                        SupplierName = aRDebitNoteViewModel.SupplierName == null ? string.Empty : aRDebitNoteViewModel.SupplierName,
-                                        CreateById = headerViewModel.UserId,
-                                        EditById = headerViewModel.UserId,
-                                        EditDate = DateTime.Now,
-                                    };
-                                }
-                            }
-
-                            //Details Table data mapping
-                            var ARDebitNoteDtEntities = new List<ArDebitNoteDt>();
-
-                            if (aRDebitNoteViewModel.data_details != null)
-                            {
-                                foreach (var item in aRDebitNoteViewModel.data_details)
-                                {
-                                    var ARDebitNoteDtEntity = new ArDebitNoteDt
-                                    {
-                                        DebitNoteId = Convert.ToInt64(string.IsNullOrEmpty(item.DebitNoteId) ? 0 : item.DebitNoteId.Trim()),
-                                        DebitNoteNo = item.DebitNoteNo,
-                                        ItemNo = item.ItemNo,
-                                        SeqNo = item.SeqNo,
-                                        DocItemNo = item.DocItemNo,
-                                        ProductId = item.ProductId,
-                                        GLId = item.GLId,
-                                        QTY = item.QTY,
-                                        BillQTY = item.BillQTY,
-                                        UomId = item.UomId,
-                                        UnitPrice = item.UnitPrice,
-                                        TotAmt = item.TotAmt,
-                                        TotLocalAmt = item.TotLocalAmt,
-                                        TotCtyAmt = item.TotCtyAmt,
-                                        Remarks = item.Remarks,
-                                        GstId = item.GstId,
-                                        GstPercentage = item.GstPercentage,
-                                        GstAmt = item.GstAmt,
-                                        GstLocalAmt = item.GstLocalAmt,
-                                        GstCtyAmt = item.GstCtyAmt,
-                                        DeliveryDate = item.DeliveryDate,
-                                        DepartmentId = item.DepartmentId,
-                                        EmployeeId = item.EmployeeId,
-                                        PortId = item.PortId,
-                                        VesselId = item.VesselId,
-                                        BargeId = item.BargeId,
-                                        VoyageId = item.VoyageId,
-                                        OperationId = Convert.ToInt64(string.IsNullOrEmpty(item.OperationId.Trim())),
-                                        OperationNo = item.OperationNo,
-                                        OPRefNo = item.OPRefNo,
-                                        SalesOrderId = Convert.ToInt64(string.IsNullOrEmpty(item.SalesOrderId.Trim())),
-                                        SalesOrderNo = item.SalesOrderNo,
-                                        SupplyDate = item.SupplyDate,
-                                        SupplierName = item.SupplierName,
-                                    };
-
-                                    ARDebitNoteDtEntities.Add(ARDebitNoteDtEntity);
-                                }
-                            }
-
-                            var sqlResponce = await _ARDebitNoteService.SaveARDebitNoteAsync(headerViewModel.RegId, headerViewModel.CompanyId, ARDebitNoteEntity, ARDebitNoteDtEntities, headerViewModel.UserId);
-
-                            if (sqlResponce.Result > 0)
-                            {
-                                var customerModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, sqlResponce.Result, string.Empty, headerViewModel.UserId);
-
-                                return StatusCode(StatusCodes.Status202Accepted, customerModel);
-                            }
-
-                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
-                        }
-                        else
-                        {
-                            return NotFound(GenrateMessage.authenticationfailed);
-                        }
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
-                }
-                else
-                {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                     return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.AR,
+                    (int)E_AR.DebitNote,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                if (aRDebitNoteViewModel == null)
+                    return NotFound(GenrateMessage.datanotfound);
+
+                // Header Data Mapping
+                var ARDebitNoteEntity = new ArDebitNoteHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    DebitNoteId = aRDebitNoteViewModel.DebitNoteId != null ? Convert.ToInt64(aRDebitNoteViewModel.DebitNoteId) : 0,
+                    DebitNoteNo = aRDebitNoteViewModel.DebitNoteNo ?? string.Empty,
+                    ReferenceNo = aRDebitNoteViewModel.ReferenceNo ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.AccountDate),
+                    DeliveryDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.DeliveryDate),
+                    DueDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.DueDate),
+                    CustomerId = aRDebitNoteViewModel.CustomerId,
+                    CurrencyId = aRDebitNoteViewModel.CurrencyId,
+                    ExhRate = aRDebitNoteViewModel.ExhRate,
+                    CtyExhRate = aRDebitNoteViewModel.CtyExhRate,
+                    CreditTermId = aRDebitNoteViewModel.CreditTermId,
+                    BankId = aRDebitNoteViewModel.BankId,
+                    InvoiceId = aRDebitNoteViewModel.InvoiceId != null ? Convert.ToInt64(aRDebitNoteViewModel.InvoiceId) : 0,
+                    InvoiceNo = aRDebitNoteViewModel.InvoiceNo ?? string.Empty,
+                    TotAmt = aRDebitNoteViewModel.TotAmt,
+                    TotLocalAmt = aRDebitNoteViewModel.TotLocalAmt,
+                    TotCtyAmt = aRDebitNoteViewModel.TotCtyAmt,
+                    GstClaimDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.GstClaimDate),
+                    GstAmt = aRDebitNoteViewModel.GstAmt,
+                    GstLocalAmt = aRDebitNoteViewModel.GstLocalAmt,
+                    GstCtyAmt = aRDebitNoteViewModel.GstCtyAmt,
+                    TotAmtAftGst = aRDebitNoteViewModel.TotAmtAftGst,
+                    TotLocalAmtAftGst = aRDebitNoteViewModel.TotLocalAmtAftGst,
+                    TotCtyAmtAftGst = aRDebitNoteViewModel.TotCtyAmtAftGst,
+                    BalAmt = aRDebitNoteViewModel.BalAmt,
+                    BalLocalAmt = aRDebitNoteViewModel.BalLocalAmt,
+                    PayAmt = aRDebitNoteViewModel.PayAmt,
+                    PayLocalAmt = aRDebitNoteViewModel.PayLocalAmt,
+                    ExGainLoss = aRDebitNoteViewModel.ExGainLoss,
+                    Remarks = aRDebitNoteViewModel.Remarks ?? string.Empty,
+                    Address1 = aRDebitNoteViewModel.Address1 ?? string.Empty,
+                    Address2 = aRDebitNoteViewModel.Address2 ?? string.Empty,
+                    Address3 = aRDebitNoteViewModel.Address3 ?? string.Empty,
+                    Address4 = aRDebitNoteViewModel.Address4 ?? string.Empty,
+                    PinCode = aRDebitNoteViewModel.PinCode ?? string.Empty,
+                    CountryId = aRDebitNoteViewModel.CountryId,
+                    PhoneNo = aRDebitNoteViewModel.PhoneNo ?? string.Empty,
+                    FaxNo = aRDebitNoteViewModel.FaxNo ?? string.Empty,
+                    ContactName = aRDebitNoteViewModel.ContactName ?? string.Empty,
+                    MobileNo = aRDebitNoteViewModel.MobileNo ?? string.Empty,
+                    EmailAdd = aRDebitNoteViewModel.EmailAdd ?? string.Empty,
+                    ModuleFrom = aRDebitNoteViewModel.ModuleFrom ?? string.Empty,
+                    SupplierName = aRDebitNoteViewModel.SupplierName ?? string.Empty,
+                    SuppDebitNoteNo = aRDebitNoteViewModel.SuppDebitNoteNo ?? string.Empty,
+                    APDebitNoteId = !string.IsNullOrEmpty(aRDebitNoteViewModel.APDebitNoteId?.Trim()) ? Convert.ToInt64(aRDebitNoteViewModel.APDebitNoteId.Trim()) : 0,
+                    APDebitNoteNo = aRDebitNoteViewModel.APDebitNoteNo ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var arDebitNoteDtEntities = aRDebitNoteViewModel.data_details?.Select(item => new ArDebitNoteDt
+                {
+                    DebitNoteId = Convert.ToInt64(item.DebitNoteId),
+                    DebitNoteNo = item.DebitNoteNo,
+                    ItemNo = item.ItemNo,
+                    SeqNo = item.SeqNo,
+                    ProductId = item.ProductId,
+                    GLId = item.GLId,
+                    QTY = item.QTY,
+                    BillQTY = item.BillQTY,
+                    UomId = item.UomId,
+                    UnitPrice = item.UnitPrice,
+                    TotAmt = item.TotAmt,
+                    TotLocalAmt = item.TotLocalAmt,
+                    TotCtyAmt = item.TotCtyAmt,
+                    GstId = item.GstId,
+                    GstPercentage = item.GstPercentage,
+                    GstAmt = item.GstAmt,
+                    GstLocalAmt = item.GstLocalAmt,
+                    GstCtyAmt = item.GstCtyAmt,
+                    DeliveryDate = DateHelperStatic.ParseClientDate(item.DeliveryDate),
+                    SupplyDate = DateHelperStatic.ParseClientDate(item.SupplyDate),
+                    Remarks = item.Remarks ?? string.Empty,
+                }).ToList();
+
+                // Save AR Debit Note
+                var sqlResponse = await _ARDebitNoteService.SaveARDebitNoteAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    ARDebitNoteEntity,
+                    arDebitNoteDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponce { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
                 }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error creating new ARDebitNote record");
+                     new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
             }
         }
 
@@ -426,52 +277,42 @@ namespace AHHA.API.Controllers.Accounts.AR
         {
             try
             {
-                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponce = await _ARDebitNoteService.DeleteARDebitNoteAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponce.Result > 0)
                 {
-                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+                    var customerModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
 
-                    if (userGroupRight != null)
-                    {
-                        if (userGroupRight.IsDelete)
-                        {
-                            if (!string.IsNullOrEmpty(deleteViewModel.DocumentId))
-                            {
-                                var sqlResponce = await _ARDebitNoteService.DeleteARDebitNoteAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(deleteViewModel.DocumentId), deleteViewModel.CancelRemarks, headerViewModel.UserId);
-
-                                if (sqlResponce.Result > 0)
-                                {
-                                    var customerModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId);
-
-                                    return StatusCode(StatusCodes.Status202Accepted, customerModel);
-                                }
-
-                                return StatusCode(StatusCodes.Status204NoContent, sqlResponce);
-                            }
-                            else
-                            {
-                                return NotFound(GenrateMessage.datanotfound);
-                            }
-                        }
-                        else
-                        {
-                            return NotFound(GenrateMessage.authenticationfailed);
-                        }
-                    }
-                    else
-                    {
-                        return NotFound(GenrateMessage.authenticationfailed);
-                    }
+                    return Ok(new SqlResponce { Result = sqlResponce.Result, Message = sqlResponce.Message, Data = customerModel });
                 }
-                else
-                {
-                    return NoContent();
-                }
+                return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Error in DeleteARDebitNote: {ex.Message}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error deleting data");
+                    "Internal Server Error");
             }
         }
     }

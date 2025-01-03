@@ -1,0 +1,309 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.AR;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AP;
+using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.AR;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Accounts.AR
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class ARDebitNoteController : BaseController
+    {
+        private readonly IARDebitNoteService _ARDebitNoteService;
+        private readonly ILogger<ARDebitNoteController> _logger;
+
+        public ARDebitNoteController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ARDebitNoteController> logger, IARDebitNoteService ARDebitNoteService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _ARDebitNoteService = ARDebitNoteService;
+        }
+
+        [HttpGet, Route("GetARDebitNote")]
+        [Authorize]
+        public async Task<ActionResult> GetARDebitNote([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _ARDebitNoteService.GetARDebitNoteListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString.Trim(), headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponce
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetARDebitNote: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetARDebitNotebyId/{DebitNoteId}")]
+        [Authorize]
+        public async Task<ActionResult<ARDebitNoteViewModel>> GetARDebitNoteById(string DebitNoteId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (DebitNoteId == "0")
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arDebitNoteViewModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(DebitNoteId) ? 0 : DebitNoteId.Trim()),
+                    string.Empty, headerViewModel.UserId
+                );
+
+                if (arDebitNoteViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponce { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponce { Result = 1, Message = "Success", Data = arDebitNoteViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetARDebitNoteById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetARDebitNotebyNo/{DebitNoteNo}")]
+        [Authorize]
+        public async Task<ActionResult<ARDebitNoteViewModel>> GetARDebitNoteByNo(string DebitNoteNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (DebitNoteNo == "")
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arDebitNoteViewModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId, 0, DebitNoteNo, headerViewModel.UserId
+                );
+                if (arDebitNoteViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponce { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponce { Result = 1, Message = "Success", Data = arDebitNoteViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetARDebitNoteByNo: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("SaveARDebitNote")]
+        [Authorize]
+        public async Task<ActionResult<ARDebitNoteViewModel>> SaveARDebitNote(
+            ARDebitNoteViewModel aRDebitNoteViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.AR,
+                    (int)E_AR.DebitNote,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                if (aRDebitNoteViewModel == null)
+                    return NotFound(GenrateMessage.datanotfound);
+
+                // Header Data Mapping
+                var ARDebitNoteEntity = new ArDebitNoteHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    DebitNoteId = Convert.ToInt64(aRDebitNoteViewModel.DebitNoteId),
+                    DebitNoteNo = aRDebitNoteViewModel.DebitNoteNo,
+                    ReferenceNo = aRDebitNoteViewModel.ReferenceNo ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.AccountDate),
+                    DeliveryDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.DeliveryDate),
+                    DueDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.DueDate),
+                    CustomerId = aRDebitNoteViewModel.CustomerId,
+                    CurrencyId = aRDebitNoteViewModel.CurrencyId,
+                    ExhRate = aRDebitNoteViewModel.ExhRate,
+                    CtyExhRate = aRDebitNoteViewModel.CtyExhRate,
+                    CreditTermId = aRDebitNoteViewModel.CreditTermId,
+                    BankId = aRDebitNoteViewModel.BankId,
+                    InvoiceId = Convert.ToInt64(aRDebitNoteViewModel.InvoiceId),
+                    InvoiceNo = aRDebitNoteViewModel.InvoiceNo,
+                    TotAmt = aRDebitNoteViewModel.TotAmt,
+                    TotLocalAmt = aRDebitNoteViewModel.TotLocalAmt,
+                    TotCtyAmt = aRDebitNoteViewModel.TotCtyAmt,
+                    GstClaimDate = DateHelperStatic.ParseClientDate(aRDebitNoteViewModel.GstClaimDate),
+                    GstAmt = aRDebitNoteViewModel.GstAmt,
+                    GstLocalAmt = aRDebitNoteViewModel.GstLocalAmt,
+                    GstCtyAmt = aRDebitNoteViewModel.GstCtyAmt,
+                    TotAmtAftGst = aRDebitNoteViewModel.TotAmtAftGst,
+                    TotLocalAmtAftGst = aRDebitNoteViewModel.TotLocalAmtAftGst,
+                    TotCtyAmtAftGst = aRDebitNoteViewModel.TotCtyAmtAftGst,
+                    BalAmt = aRDebitNoteViewModel.BalAmt,
+                    BalLocalAmt = aRDebitNoteViewModel.BalLocalAmt,
+                    PayAmt = aRDebitNoteViewModel.PayAmt,
+                    PayLocalAmt = aRDebitNoteViewModel.PayLocalAmt,
+                    ExGainLoss = aRDebitNoteViewModel.ExGainLoss,
+                    Remarks = aRDebitNoteViewModel.Remarks ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var arDebitNoteDtEntities = aRDebitNoteViewModel.data_details?.Select(item => new ArDebitNoteDt
+                {
+                    DebitNoteId = Convert.ToInt64(item.DebitNoteId),
+                    DebitNoteNo = item.DebitNoteNo,
+                    ItemNo = item.ItemNo,
+                    SeqNo = item.SeqNo,
+                    ProductId = item.ProductId,
+                    GLId = item.GLId,
+                    QTY = item.QTY,
+                    BillQTY = item.BillQTY,
+                    UomId = item.UomId,
+                    UnitPrice = item.UnitPrice,
+                    TotAmt = item.TotAmt,
+                    TotLocalAmt = item.TotLocalAmt,
+                    TotCtyAmt = item.TotCtyAmt,
+                    GstId = item.GstId,
+                    GstPercentage = item.GstPercentage,
+                    GstAmt = item.GstAmt,
+                    GstLocalAmt = item.GstLocalAmt,
+                    GstCtyAmt = item.GstCtyAmt,
+                    DeliveryDate = DateHelperStatic.ParseClientDate(item.DeliveryDate),
+                    SupplyDate = DateHelperStatic.ParseClientDate(item.SupplyDate),
+                    Remarks = item.Remarks ?? string.Empty,
+                }).ToList();
+
+                // Save AR Debit Note
+                var sqlResponse = await _ARDebitNoteService.SaveARDebitNoteAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    ARDebitNoteEntity,
+                    arDebitNoteDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return StatusCode(StatusCodes.Status202Accepted, new SqlResponce
+                    {
+                        Result = sqlResponse.Result,
+                        Message = sqlResponse.Message,
+                        Data = customerModel
+                    });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                     new SqlResponce { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("DeleteARDebitNote")]
+        [Authorize]
+        public async Task<ActionResult<ARDebitNoteViewModel>> DeleteARDebitNote(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.DebitNote, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponce = await _ARDebitNoteService.DeleteARDebitNoteAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponce.Result > 0)
+                {
+                    var customerModel = await _ARDebitNoteService.GetARDebitNoteByIdAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponce { Result = sqlResponce.Result, Message = sqlResponce.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteARDebitNote: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+    }
+}
