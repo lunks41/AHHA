@@ -1,0 +1,199 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class CustomerContactController : BaseController
+    {
+        private readonly ICustomerContactService _CustomerContactService;
+        private readonly ILogger<CustomerContactController> _logger;
+
+        public CustomerContactController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CustomerContactController> logger, ICustomerContactService CustomerContactService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CustomerContactService = CustomerContactService;
+        }
+
+        //Get the Customer Contact List
+        [HttpGet, Route("getcustomercontactbycustomerid/{CustomerId}")]
+        [Authorize]
+        public async Task<ActionResult> GetCustomerContactByCustomerId(Int16 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CustomerContactViewModel = await _CustomerContactService.GetCustomerContactByCustomerIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
+
+                        if (CustomerContactViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CustomerContactViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        //Customer Contact one record by using contactid
+        [HttpGet, Route("getcustomercontactbyid/{CustomerId}/{ContactId}")]
+        [Authorize]
+        public async Task<ActionResult<CustomerContactViewModel>> GetCustomerContactById(Int32 CustomerId, Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CustomerContactViewModel = await _CustomerContactService.GetCustomerContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, ContactId, headerViewModel.UserId);
+
+                        if (CustomerContactViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CustomerContactViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCustomerContact")]
+        [Authorize]
+        public async Task<ActionResult<CustomerContactViewModel>> SaveCustomerContact(CustomerContactViewModel customerContactViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (customerContactViewModel == null || customerContactViewModel.CustomerId == 0)
+                    return NotFound();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+
+                if (userGroupRight == null || !userGroupRight.IsCreate)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                var CustomerContactEntity = new M_CustomerContact
+                {
+                    CustomerId = customerContactViewModel.CustomerId,
+                    ContactId = customerContactViewModel.ContactId,
+                    ContactName = customerContactViewModel.ContactName?.Trim() ?? string.Empty,
+                    OtherName = customerContactViewModel.OtherName?.Trim() ?? string.Empty,
+                    OffNo = customerContactViewModel.OffNo?.Trim() ?? string.Empty,
+                    FaxNo = customerContactViewModel.FaxNo?.Trim() ?? string.Empty,
+                    EmailAdd = customerContactViewModel.EmailAdd?.Trim() ?? string.Empty,
+                    MessId = customerContactViewModel.MessId?.Trim() ?? string.Empty,
+                    ContactMessType = customerContactViewModel.ContactMessType?.Trim() ?? string.Empty,
+                    IsDefault = customerContactViewModel.IsDefault,
+                    IsFinance = customerContactViewModel.IsFinance,
+                    IsSales = customerContactViewModel.IsSales,
+                    IsActive = customerContactViewModel.IsActive,
+                    MobileNo = customerContactViewModel.MobileNo?.Trim() ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                var sqlResponce = await _CustomerContactService.SaveCustomerContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerContactEntity, headerViewModel.UserId);
+
+                if (sqlResponce.Result > 0)
+                {
+                    var customerModel = await _CustomerContactService.GetCustomerContactByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, customerContactViewModel.CustomerId, Convert.ToInt16(sqlResponce.Result), headerViewModel.UserId);
+                    return StatusCode(StatusCodes.Status204NoContent, customerModel);
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Customer record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCustomerContact/{CustomerId}/{ContactId}")]
+        [Authorize]
+        public async Task<ActionResult<M_CustomerContact>> DeleteCustomerContact(Int32 CustomerId, Int16 ContactId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var sqlResponce = await _CustomerContactService.DeleteCustomerContactAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, ContactId, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponce);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}
