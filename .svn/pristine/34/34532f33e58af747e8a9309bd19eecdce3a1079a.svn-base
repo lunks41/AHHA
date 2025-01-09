@@ -1,0 +1,227 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class SupplierController : BaseController
+    {
+        private readonly ISupplierService _SupplierService;
+        private readonly ILogger<SupplierController> _logger;
+
+        public SupplierController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<SupplierController> logger, ISupplierService SupplierService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _SupplierService = SupplierService;
+        }
+
+        [HttpGet, Route("GetSupplier")]
+        [Authorize]
+        public async Task<ActionResult> GetSupplier([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Supplier, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                var cacheData = await _SupplierService.GetSupplierListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                if (cacheData == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "success", Data = cacheData.data, TotalRecords = cacheData.totalRecords });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetSupplierbyid/{SupplierId}")]
+        [Authorize]
+        public async Task<ActionResult<SupplierViewModel>> GetSupplierById(Int16 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Supplier, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                var cacheData = await _SupplierService.GetSupplierByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
+
+                if (cacheData == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "success", Data = cacheData, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetSupplierbycode/{SupplierCode}")]
+        [Authorize]
+        public async Task<ActionResult<SupplierViewModel>> GetSupplierByCode(string SupplierCode, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Supplier, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+                var cacheData = await _SupplierService.GetSupplierByCodeAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierCode, headerViewModel.UserId);
+
+                if (cacheData == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "success", Data = cacheData, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetSupplierbyname/{SupplierName}")]
+        [Authorize]
+        public async Task<ActionResult<SupplierViewModel>> GetSupplierByName(string SupplierName, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(SupplierName))
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Supplier, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                var cacheData = await _SupplierService.GetSupplierByNameAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierName, headerViewModel.UserId);
+
+                if (cacheData == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "success", Data = cacheData, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveSupplier")]
+        [Authorize]
+        public async Task<ActionResult<SupplierViewModel>> SaveSupplier(SupplierViewModel supplierViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Supplier, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                if (!userGroupRight.IsCreate)
+                    return Unauthorized(GenrateMessage.authenticationfailed);
+
+                if (supplierViewModel == null)
+                    return BadRequest(GenrateMessage.datanotfound);
+
+                var SupplierEntity = new M_Supplier
+                {
+                    SupplierId = supplierViewModel.SupplierId,
+                    CompanyId = headerViewModel.CompanyId,
+                    SupplierCode = supplierViewModel.SupplierCode?.Trim() ?? string.Empty,
+                    SupplierName = supplierViewModel.SupplierName?.Trim() ?? string.Empty,
+                    SupplierOtherName = supplierViewModel.SupplierOtherName?.Trim() ?? string.Empty,
+                    SupplierShortName = supplierViewModel.SupplierShortName?.Trim() ?? string.Empty,
+                    SupplierRegNo = supplierViewModel.SupplierRegNo?.Trim() ?? string.Empty,
+                    CurrencyId = supplierViewModel.CurrencyId,
+                    CreditTermId = supplierViewModel.CreditTermId,
+                    ParentSupplierId = supplierViewModel.ParentSupplierId,
+                    IsCustomer = supplierViewModel.IsCustomer,
+                    IsVendor = supplierViewModel.IsVendor,
+                    IsTrader = supplierViewModel.IsTrader,
+                    IsSupplier = supplierViewModel.IsSupplier,
+                    Remarks = supplierViewModel.Remarks?.Trim() ?? string.Empty,
+                    IsActive = supplierViewModel.IsActive,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                var sqlResponse = await _SupplierService.SaveSupplierAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierEntity, headerViewModel.UserId);
+
+                return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Supplier record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteSupplier/{SupplierId}")]
+        [Authorize]
+        public async Task<ActionResult<SupplierViewModel>> DeleteSupplier(Int32 SupplierId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                if (!userGroupRight.IsDelete)
+                    return Unauthorized(GenrateMessage.authenticationfailed);
+
+                var sqlResponse = await _SupplierService.DeleteSupplierAsync(headerViewModel.RegId, headerViewModel.CompanyId, SupplierId, headerViewModel.UserId);
+
+                return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

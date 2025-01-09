@@ -191,7 +191,7 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    throw ex;
+                    throw;
                 }
             }
         }

@@ -11,28 +11,28 @@ using System.Transactions;
 
 namespace AHHA.Infra.Services.Masters
 {
-    public sealed class ChartOfAccountService : IChartOfAccountService
+    public sealed class BankService : IBankService
     {
-        private readonly IRepository<M_ChartOfAccount> _repository;
+        private readonly IRepository<M_Bank> _repository;
         private ApplicationDbContext _context;
 
-        public ChartOfAccountService(IRepository<M_ChartOfAccount> repository, ApplicationDbContext context)
+        public BankService(IRepository<M_Bank> repository, ApplicationDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        public async Task<ChartOfAccountViewModelCount> GetChartOfAccountListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId)
+        public async Task<BankViewModelCount> GetBankListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId)
         {
-            ChartOfAccountViewModelCount countViewModel = new ChartOfAccountViewModelCount();
+            BankViewModelCount countViewModel = new BankViewModelCount();
             try
             {
-                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_ChartOfAccount M_ChtAcc INNER JOIN dbo.M_AccountType M_AccTy ON M_AccTy.AccTypeId = M_ChtAcc.AccTypeId INNER JOIN dbo.M_AccountGroup M_AccGrp ON M_AccGrp.AccGroupId = M_ChtAcc.AccGroupId INNER JOIN dbo.M_COACategory1 M_Coa1 ON M_Coa1.COACategoryId = M_ChtAcc.COACategoryId1 INNER JOIN dbo.M_COACategory2 M_Coa2 ON M_Coa2.COACategoryId = M_ChtAcc.COACategoryId2 INNER JOIN dbo.M_COACategory3 M_Coa3 ON M_Coa3.COACategoryId = M_ChtAcc.COACategoryId3 WHERE (M_ChtAcc.GLName LIKE '%{searchString}%' OR M_ChtAcc.GLCode LIKE '%{searchString}%' OR M_ChtAcc.Remarks LIKE '%{searchString}%' OR M_AccTy.AccTypeCode LIKE '%{searchString}%'OR M_AccTy.AccTypeName LIKE '%{searchString}%' OR M_AccGrp.AccGroupCode LIKE '%{searchString}%'OR M_AccGrp.AccGroupName LIKE '%{searchString}%' OR M_Coa1.COACategoryName LIKE '%{searchString}%' OR M_Coa2.COACategoryCode LIKE '%{searchString}%' OR M_Coa2.COACategoryName LIKE '%{searchString}%' OR M_Coa3.COACategoryCode LIKE '%{searchString}%' OR M_Coa3.COACategoryName LIKE '%{searchString}%') AND M_ChtAcc.GLId<>0 AND M_ChtAcc.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.ChartOfAccount}))");
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, $"SELECT COUNT(*) AS CountId FROM dbo.M_Bank M_Ban INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Ban.CurrencyId INNER JOIN dbo.M_ChartOfAccount M_Chr ON M_Chr.GLId = M_Ban.GLId WHERE (M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.AccountNo LIKE '%{searchString}%' OR M_Ban.SwiftCode LIKE '%{searchString}%' OR M_Ban.Remarks1 LIKE '%{searchString}%' OR M_Ban.Remarks2 LIKE '%{searchString}%' OR M_Chr.GLName LIKE '%{searchString}%' OR M_Chr.GLCode LIKE '%{searchString}%') AND M_Ban.BankId<>0 AND M_Ban.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Bank}))");
 
-                var result = await _repository.GetQueryAsync<ChartOfAccountViewModel>(RegId, $"SELECT M_ChtAcc.GLId,M_ChtAcc.CompanyId,M_ChtAcc.GLCode,M_ChtAcc.GLName,M_ChtAcc.AccTypeId,M_AccTy.AccTypeCode,M_AccTy.AccTypeName,M_ChtAcc.AccGroupId,M_AccGrp.AccGroupCode,M_AccGrp.AccGroupName,M_ChtAcc.COACategoryId1,M_Coa1.COACategoryCode AS COACategoryCode1,M_Coa1.COACategoryName AS COACategoryName1,M_ChtAcc.COACategoryId2,M_Coa2.COACategoryCode AS COACategoryCode2,M_Coa2.COACategoryName AS COACategoryName2,M_ChtAcc.COACategoryId3,M_Coa3.COACategoryCode AS COACategoryCode3,M_Coa3.COACategoryName AS COACategoryName3,M_ChtAcc.IsSysControl,M_ChtAcc.seqNo,M_ChtAcc.Remarks,M_ChtAcc.IsActive,M_ChtAcc.CreateById,M_ChtAcc.CreateDate,M_ChtAcc.EditById,M_ChtAcc.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.M_ChartOfAccount M_ChtAcc INNER JOIN dbo.M_AccountType M_AccTy ON M_AccTy.AccTypeId = M_ChtAcc.AccTypeId INNER JOIN dbo.M_AccountGroup M_AccGrp ON M_AccGrp.AccGroupId = M_ChtAcc.AccGroupId INNER JOIN dbo.M_COACategory1 M_Coa1 ON M_Coa1.COACategoryId = M_ChtAcc.COACategoryId1 INNER JOIN dbo.M_COACategory2 M_Coa2 ON M_Coa2.COACategoryId = M_ChtAcc.COACategoryId2 INNER JOIN dbo.M_COACategory3 M_Coa3 ON M_Coa3.COACategoryId = M_ChtAcc.COACategoryId3 LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_ChtAcc.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_ChtAcc.EditById WHERE (M_ChtAcc.GLName LIKE '%{searchString}%' OR M_ChtAcc.GLCode LIKE '%{searchString}%' OR M_ChtAcc.Remarks LIKE '%{searchString}%' OR M_AccTy.AccTypeCode LIKE '%{searchString}%'OR M_AccTy.AccTypeName LIKE '%{searchString}%' OR M_AccGrp.AccGroupCode LIKE '%{searchString}%'OR M_AccGrp.AccGroupName LIKE '%{searchString}%' OR M_Coa1.COACategoryName LIKE '%{searchString}%' OR M_Coa2.COACategoryCode LIKE '%{searchString}%' OR M_Coa2.COACategoryName LIKE '%{searchString}%' OR M_Coa3.COACategoryCode LIKE '%{searchString}%' OR M_Coa3.COACategoryName LIKE '%{searchString}%') AND M_ChtAcc.GLId<>0 AND M_ChtAcc.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.ChartOfAccount})) ORDER BY M_ChtAcc.GLName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+                var result = await _repository.GetQueryAsync<BankViewModel>(RegId, $"SELECT M_Ban.BankId,M_Ban.CompanyId,M_Ban.BankCode,M_Ban.BankName,M_Cur.CurrencyId,M_Cur.CurrencyName,M_Cur.CurrencyCode,M_Ban.AccountNo,M_Ban.SwiftCode,M_Ban.Remarks1,M_Ban.Remarks2,M_Ban.GLId,M_Chr.GLCode,M_Chr.GLName,M_Ban.IsActive,M_Ban.IsOwnBank,M_Ban.CreateById,M_Ban.CreateDate,M_Ban.EditById,M_Ban.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy  FROM dbo.M_Bank M_Ban INNER JOIN M_Currency M_Cur ON M_Cur.CurrencyId = M_Ban.CurrencyId INNER JOIN dbo.M_ChartOfAccount M_Chr ON M_Chr.GLId = M_Ban.GLId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Ban.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Ban.EditById WHERE (M_Cur.CurrencyName LIKE '%{searchString}%' OR M_Cur.CurrencyCode LIKE '%{searchString}%' OR M_Ban.BankName LIKE '%{searchString}%' OR M_Ban.BankCode LIKE '%{searchString}%' OR M_Ban.AccountNo LIKE '%{searchString}%' OR M_Ban.SwiftCode LIKE '%{searchString}%' OR M_Ban.Remarks1 LIKE '%{searchString}%' OR M_Ban.Remarks2 LIKE '%{searchString}%' OR M_Chr.GLName LIKE '%{searchString}%' OR M_Chr.GLCode LIKE '%{searchString}%') AND M_Ban.BankId<>0 AND M_Ban.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Bank})) ORDER BY M_Ban.BankName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
 
                 countViewModel.responseCode = 200;
-                countViewModel.responseMessage = "success";
+                countViewModel.responseMessage = "Success";
                 countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
                 countViewModel.data = result == null ? null : result.ToList();
 
@@ -44,10 +44,10 @@ namespace AHHA.Infra.Services.Masters
                 {
                     CompanyId = CompanyId,
                     ModuleId = (short)E_Modules.Master,
-                    TransactionId = (short)E_Master.ChartOfAccount,
+                    TransactionId = (short)E_Master.Bank,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "M_ChartOfAccount",
+                    TblName = "M_Bank",
                     ModeId = (short)E_Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId
@@ -60,11 +60,11 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<M_ChartOfAccount> GetChartOfAccountByIdAsync(string RegId, Int16 CompanyId, Int16 GLId, Int16 UserId)
+        public async Task<M_Bank> GetBankByIdAsync(string RegId, Int16 CompanyId, Int16 BankId, Int16 UserId)
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<M_ChartOfAccount>(RegId, $"SELECT GLId,GLCode,GLName,AccTypeId,AccGroupId,COACategoryId1,COACategoryId2,COACategoryId3,IsSysControl,CompanyId,Remarks,seqNo,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_ChartOfAccount WHERE GLId={GLId} AND CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.ChartOfAccount}))");
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Bank>(RegId, $"SELECT BankId,CompanyId,BankCode,BankName,CurrencyId,AccountNo,SwiftCode,Remarks1,Remarks2,GLId,IsActive,IsOwnBank,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Bank WHERE BankId={BankId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Bank}))");
 
                 return result;
             }
@@ -74,10 +74,10 @@ namespace AHHA.Infra.Services.Masters
                 {
                     CompanyId = CompanyId,
                     ModuleId = (short)E_Modules.Master,
-                    TransactionId = (short)E_Master.ChartOfAccount,
+                    TransactionId = (short)E_Master.Bank,
                     DocumentId = 0,
                     DocumentNo = "",
-                    TblName = "M_ChartOfAccount",
+                    TblName = "M_Bank",
                     ModeId = (short)E_Mode.View,
                     Remarks = ex.Message + ex.InnerException,
                     CreateById = UserId,
@@ -90,24 +90,24 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponse> SaveChartOfAccountAsync(string RegId, Int16 CompanyId, M_ChartOfAccount m_ChartOfAccount, Int16 UserId)
+        public async Task<SqlResponse> SaveBankAsync(string RegId, Int16 CompanyId, M_Bank m_Bank, Int16 UserId)
         {
             using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 bool IsEdit = false;
                 try
                 {
-                    if (m_ChartOfAccount.GLId != 0)
+                    if (m_Bank.BankId != 0)
                     {
                         IsEdit = true;
                     }
                     if (IsEdit)
                     {
-                        var DataExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_ChartOfAccount WHERE GLId<>0 AND GLId={m_ChartOfAccount.GLId} ");
+                        var DataExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Bank WHERE BankId<>0 AND BankId={m_Bank.BankId} ");
 
                         if (DataExist.Count() > 0 && DataExist.ToList()[0].IsExist == 1)
                         {
-                            var entityHead = _context.Update(m_ChartOfAccount);
+                            var entityHead = _context.Update(m_Bank);
                             entityHead.Property(b => b.CreateById).IsModified = false;
                             entityHead.Property(b => b.CompanyId).IsModified = false;
                         }
@@ -116,18 +116,18 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        var codeExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_ChartOfAccount WHERE GLId<>0 AND GLCode={m_ChartOfAccount.GLCode} AND GLName={m_ChartOfAccount.GLName} ");
+                        var codeExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Bank WHERE BankId<>0 AND BankCode={m_Bank.BankCode} AND BankName={m_Bank.BankName} ");
 
                         if (codeExist.Count() > 0 && codeExist.ToList()[0].IsExist == 1)
-                            return new SqlResponse { Result = -1, Message = "ChartOfAccount Code Same" };
+                            return new SqlResponse { Result = -1, Message = "Bank Code Same" };
 
                         //Take the Next Id From SQL
-                        var sqlMissingResponse = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (GLId + 1) FROM dbo.M_ChartOfAccount WHERE (GLId + 1) NOT IN (SELECT GLId FROM dbo.M_ChartOfAccount)),1) AS NextId");
+                        var sqlMissingResponse = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (BankId + 1) FROM dbo.M_Bank WHERE (BankId + 1) NOT IN (SELECT BankId FROM dbo.M_Bank)),1) AS NextId");
 
                         if (sqlMissingResponse != null && sqlMissingResponse.NextId > 0)
                         {
-                            m_ChartOfAccount.GLId = Convert.ToInt16(sqlMissingResponse.NextId);
-                            _context.Add(m_ChartOfAccount);
+                            m_Bank.BankId = Convert.ToInt16(sqlMissingResponse.NextId);
+                            _context.Add(m_Bank);
                         }
                         else
                             return new SqlResponse { Result = -1, Message = "Internal Server Error" };
@@ -144,12 +144,12 @@ namespace AHHA.Infra.Services.Masters
                         {
                             CompanyId = CompanyId,
                             ModuleId = (short)E_Modules.Master,
-                            TransactionId = (short)E_Master.ChartOfAccount,
-                            DocumentId = m_ChartOfAccount.GLId,
-                            DocumentNo = m_ChartOfAccount.GLCode,
-                            TblName = "M_ChartOfAccount",
+                            TransactionId = (short)E_Master.Bank,
+                            DocumentId = m_Bank.BankId,
+                            DocumentNo = m_Bank.BankCode,
+                            TblName = "M_Bank",
                             ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
-                            Remarks = "ChartOfAccount Save Successfully",
+                            Remarks = "Bank Save Successfully",
                             CreateById = UserId,
                             CreateDate = DateTime.Now
                         };
@@ -180,9 +180,9 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)E_Modules.Master,
-                        TransactionId = (short)E_Master.ChartOfAccount,
-                        DocumentId = m_ChartOfAccount.GLId,
-                        DocumentNo = m_ChartOfAccount.GLCode,
+                        TransactionId = (short)E_Master.Bank,
+                        DocumentId = m_Bank.BankId,
+                        DocumentNo = m_Bank.BankCode,
                         TblName = "AdmUser",
                         ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
@@ -191,62 +191,62 @@ namespace AHHA.Infra.Services.Masters
                     _context.Add(errorLog);
                     _context.SaveChanges();
 
-                    throw ex;
+                    throw;
                 }
             }
         }
 
-        public async Task<SqlResponse> AddChartOfAccountAsync(string RegId, Int16 CompanyId, M_ChartOfAccount ChartOfAccount, Int16 UserId)
+        public async Task<SqlResponse> AddBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int16 UserId)
         {
             using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 try
                 {
-                    var DataExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.ChartOfAccount})) AND GLCode='{ChartOfAccount.GLCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.ChartOfAccount})) AND GLName='{ChartOfAccount.GLName}'");
+                    var DataExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Bank.CompanyId},{(short)E_Modules.Master},{(short)E_Master.Bank})) AND BankCode='{Bank.BankCode}' UNION ALL SELECT 2 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({Bank.CompanyId},{(short)E_Modules.Master},{(short)E_Master.Bank})) AND BankName='{Bank.BankName}'");
 
                     if (DataExist.Count() > 0)
                     {
                         if (DataExist.ToList()[0].IsExist == 1)
                         {
-                            return new SqlResponse { Result = -1, Message = "ChartOfAccount Code Exist" };
+                            return new SqlResponse { Result = -1, Message = "Bank Code Exist" };
                         }
                         else if (DataExist.ToList()[0].IsExist == 2)
                         {
-                            return new SqlResponse { Result = -2, Message = "ChartOfAccount Name Exist" };
+                            return new SqlResponse { Result = -2, Message = "Bank Name Exist" };
                         }
                     }
 
                     //Take the Next Id From SQL
-                    var sqlMissingResponse = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (GLId + 1) FROM dbo.M_ChartOfAccount WHERE (GLId + 1) NOT IN (SELECT GLId FROM dbo.M_ChartOfAccount)),1) AS NextId");
+                    var sqlMissingResponse = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (BankId + 1) FROM dbo.M_Bank WHERE (BankId + 1) NOT IN (SELECT BankId FROM dbo.M_Bank)),1) AS NextId");
 
                     if (sqlMissingResponse != null && sqlMissingResponse.NextId > 0)
                     {
-                        #region Saving ChartOfAccount
+                        #region Saving Bank
 
-                        ChartOfAccount.GLId = Convert.ToInt16(sqlMissingResponse.NextId);
+                        Bank.BankId = Convert.ToInt16(sqlMissingResponse.NextId);
 
-                        var entity = _context.Add(ChartOfAccount);
+                        var entity = _context.Add(Bank);
                         entity.Property(b => b.EditDate).IsModified = false;
 
-                        var ChartOfAccountToSave = _context.SaveChanges();
+                        var BankToSave = _context.SaveChanges();
 
-                        #endregion Saving ChartOfAccount
+                        #endregion Saving Bank
 
                         #region Save AuditLog
 
-                        if (ChartOfAccountToSave > 0)
+                        if (BankToSave > 0)
                         {
                             //Saving Audit log
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)E_Modules.Master,
-                                TransactionId = (short)E_Master.ChartOfAccount,
-                                DocumentId = ChartOfAccount.GLId,
-                                DocumentNo = ChartOfAccount.GLCode,
-                                TblName = "M_ChartOfAccount",
+                                TransactionId = (short)E_Master.Bank,
+                                DocumentId = Bank.BankId,
+                                DocumentNo = Bank.BankCode,
+                                TblName = "M_Bank",
                                 ModeId = (short)E_Mode.Create,
-                                Remarks = "Chart of Account Save Successfully",
+                                Remarks = "Bank Save Successfully",
                                 CreateById = UserId,
                                 CreateDate = DateTime.Now
                             };
@@ -269,7 +269,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponse { Result = -1, Message = "GLId Should not be zero" };
+                        return new SqlResponse { Result = -1, Message = "BankId Should not be zero" };
                     }
                     return new SqlResponse();
                 }
@@ -281,10 +281,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)E_Modules.Master,
-                        TransactionId = (short)E_Master.ChartOfAccount,
+                        TransactionId = (short)E_Master.Bank,
                         DocumentId = 0,
-                        DocumentNo = ChartOfAccount.GLCode,
-                        TblName = "M_ChartOfAccount",
+                        DocumentNo = Bank.BankCode,
+                        TblName = "M_Bank",
                         ModeId = (short)E_Mode.Create,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId
@@ -297,35 +297,35 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponse> UpdateChartOfAccountAsync(string RegId, Int16 CompanyId, M_ChartOfAccount ChartOfAccount, Int16 UserId)
+        public async Task<SqlResponse> UpdateBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int16 UserId)
         {
             using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 try
                 {
-                    if (ChartOfAccount.GLId > 0)
+                    if (Bank.BankId > 0)
                     {
-                        var DataExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_ChartOfAccount WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.ChartOfAccount})) AND GLName='{ChartOfAccount.GLName}' AND GLId <>{ChartOfAccount.GLId}");
+                        var DataExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 2 AS IsExist FROM dbo.M_Bank WHERE CompanyId IN (SELECT DISTINCT CompanyId FROM dbo.Fn_Adm_GetShareCompany ({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Bank})) AND BankName='{Bank.BankName}' AND BankId <>{Bank.BankId}");
 
                         if (DataExist.Count() > 0)
                         {
                             if (DataExist.ToList()[0].IsExist == 2)
                             {
-                                return new SqlResponse { Result = -2, Message = "ChartOfAccount Name Exist" };
+                                return new SqlResponse { Result = -2, Message = "Bank Name Exist" };
                             }
                         }
 
-                        #region Update ChartOfAccount
+                        #region Update Bank
 
-                        var entity = _context.Update(ChartOfAccount);
+                        var entity = _context.Update(Bank);
 
                         entity.Property(b => b.CreateById).IsModified = false;
-                        entity.Property(b => b.GLCode).IsModified = false;
+                        entity.Property(b => b.BankCode).IsModified = false;
                         entity.Property(b => b.CompanyId).IsModified = false;
 
                         var counToUpdate = _context.SaveChanges();
 
-                        #endregion Update ChartOfAccount
+                        #endregion Update Bank
 
                         if (counToUpdate > 0)
                         {
@@ -333,12 +333,12 @@ namespace AHHA.Infra.Services.Masters
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)E_Modules.Master,
-                                TransactionId = (short)E_Master.ChartOfAccount,
-                                DocumentId = ChartOfAccount.GLId,
-                                DocumentNo = ChartOfAccount.GLCode,
-                                TblName = "M_ChartOfAccount",
+                                TransactionId = (short)E_Master.Bank,
+                                DocumentId = Bank.BankId,
+                                DocumentNo = Bank.BankCode,
+                                TblName = "M_Bank",
                                 ModeId = (short)E_Mode.Update,
-                                Remarks = "ChartOfAccount Update Successfully",
+                                Remarks = "Bank Update Successfully",
                                 CreateById = UserId
                             };
                             _context.Add(auditLog);
@@ -357,7 +357,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponse { Result = -1, Message = "GLId Should not be zero" };
+                        return new SqlResponse { Result = -1, Message = "BankId Should not be zero" };
                     }
                     return new SqlResponse();
                 }
@@ -369,10 +369,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)E_Modules.Master,
-                        TransactionId = (short)E_Master.ChartOfAccount,
-                        DocumentId = ChartOfAccount.GLId,
-                        DocumentNo = ChartOfAccount.GLCode,
-                        TblName = "M_ChartOfAccount",
+                        TransactionId = (short)E_Master.Bank,
+                        DocumentId = Bank.BankId,
+                        DocumentNo = Bank.BankCode,
+                        TblName = "M_Bank",
                         ModeId = (short)E_Mode.Update,
                         Remarks = ex.Message,
                         CreateById = UserId
@@ -385,28 +385,28 @@ namespace AHHA.Infra.Services.Masters
             }
         }
 
-        public async Task<SqlResponse> DeleteChartOfAccountAsync(string RegId, Int16 CompanyId, M_ChartOfAccount ChartOfAccount, Int16 UserId)
+        public async Task<SqlResponse> DeleteBankAsync(string RegId, Int16 CompanyId, M_Bank Bank, Int16 UserId)
         {
             using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 try
                 {
-                    if (ChartOfAccount.GLId > 0)
+                    if (Bank.BankId > 0)
                     {
-                        var ChartOfAccountToRemove = _context.M_ChartOfAccount.Where(x => x.GLId == ChartOfAccount.GLId).ExecuteDelete();
+                        var BankToRemove = _context.M_Bank.Where(x => x.BankId == Bank.BankId).ExecuteDelete();
 
-                        if (ChartOfAccountToRemove > 0)
+                        if (BankToRemove > 0)
                         {
                             var auditLog = new AdmAuditLog
                             {
                                 CompanyId = CompanyId,
                                 ModuleId = (short)E_Modules.Master,
-                                TransactionId = (short)E_Master.ChartOfAccount,
-                                DocumentId = ChartOfAccount.GLId,
-                                DocumentNo = ChartOfAccount.GLCode,
-                                TblName = "M_ChartOfAccount",
+                                TransactionId = (short)E_Master.Bank,
+                                DocumentId = Bank.BankId,
+                                DocumentNo = Bank.BankCode,
+                                TblName = "M_Bank",
                                 ModeId = (short)E_Mode.Delete,
-                                Remarks = "ChartOfAccount Delete Successfully",
+                                Remarks = "Bank Delete Successfully",
                                 CreateById = UserId
                             };
                             _context.Add(auditLog);
@@ -424,7 +424,7 @@ namespace AHHA.Infra.Services.Masters
                     }
                     else
                     {
-                        return new SqlResponse { Result = -1, Message = "GLId Should be zero" };
+                        return new SqlResponse { Result = -1, Message = "BankId Should be zero" };
                     }
                     return new SqlResponse();
                 }
@@ -436,10 +436,10 @@ namespace AHHA.Infra.Services.Masters
                     {
                         CompanyId = CompanyId,
                         ModuleId = (short)E_Modules.Master,
-                        TransactionId = (short)E_Master.ChartOfAccount,
+                        TransactionId = (short)E_Master.Bank,
                         DocumentId = 0,
                         DocumentNo = "",
-                        TblName = "M_ChartOfAccount",
+                        TblName = "M_Bank",
                         ModeId = (short)E_Mode.Delete,
                         Remarks = ex.Message + ex.InnerException,
                         CreateById = UserId,

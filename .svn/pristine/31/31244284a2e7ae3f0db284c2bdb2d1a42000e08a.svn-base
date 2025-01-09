@@ -1,0 +1,183 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+using System;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class ChartOfAccountController : BaseController
+    {
+        private readonly IChartOfAccountService _ChartOfAccountService;
+        private readonly ILogger<ChartOfAccountController> _logger;
+
+        public ChartOfAccountController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ChartOfAccountController> logger, IChartOfAccountService ChartOfAccountService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _ChartOfAccountService = ChartOfAccountService;
+        }
+
+        [HttpGet, Route("GetChartOfAccount")]
+        [Authorize]
+        public async Task<ActionResult> GetChartOfAccount([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.ChartOfAccount, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                var data = await _ChartOfAccountService.GetChartOfAccountListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                if (data == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "success", Data = data.data, TotalRecords = data.totalRecords });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetChartOfAccountbyid/{GLId}")]
+        [Authorize]
+        public async Task<ActionResult<ChartOfAccountViewModel>> GetChartOfAccountById(Int16 GLId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (GLId == 0)
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.ChartOfAccount, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                var data = await _ChartOfAccountService.GetChartOfAccountByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId);
+
+                if (data == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "success", Data = data, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveChartOfAccount")]
+        [Authorize]
+        public async Task<ActionResult<ChartOfAccountViewModel>> SaveChartOfAccount(ChartOfAccountViewModel chartOfAccountViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (chartOfAccountViewModel == null)
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.ChartOfAccount, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                if (!userGroupRight.IsCreate || !userGroupRight.IsEdit)
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                var ChartOfAccountEntity = new M_ChartOfAccount
+                {
+                    GLId = chartOfAccountViewModel.GLId,
+                    CompanyId = headerViewModel.CompanyId,
+                    GLCode = chartOfAccountViewModel.GLCode,
+                    GLName = chartOfAccountViewModel.GLName,
+                    AccTypeId = chartOfAccountViewModel.AccTypeId,
+                    AccGroupId = chartOfAccountViewModel.AccGroupId,
+                    COACategoryId1 = chartOfAccountViewModel.COACategoryId1,
+                    COACategoryId2 = chartOfAccountViewModel.COACategoryId2,
+                    COACategoryId3 = chartOfAccountViewModel.COACategoryId3,
+                    IsSysControl = chartOfAccountViewModel.IsSysControl,
+                    SeqNo = chartOfAccountViewModel.SeqNo,
+                    Remarks = chartOfAccountViewModel.Remarks,
+                    IsActive = chartOfAccountViewModel.IsActive,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now
+                };
+
+                var dataofchartofacoount = await _ChartOfAccountService.SaveChartOfAccountAsync(headerViewModel.RegId, headerViewModel.CompanyId, ChartOfAccountEntity, headerViewModel.UserId);
+
+                return Ok(new SqlResponse { Result = dataofchartofacoount.Result, Message = dataofchartofacoount.Message, Data = dataofchartofacoount.Data, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new ChartOfAccount record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteChartOfAccount/{GLId}")]
+        [Authorize]
+        public async Task<ActionResult<M_ChartOfAccount>> DeleteChartOfAccount(Int16 GLId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.ChartOfAccount, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var sqlResponse = await _ChartOfAccountService.DeleteChartOfAccountAsync(headerViewModel.RegId, headerViewModel.CompanyId, GLId, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}
