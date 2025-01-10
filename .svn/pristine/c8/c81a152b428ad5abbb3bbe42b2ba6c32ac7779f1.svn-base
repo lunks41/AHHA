@@ -66,12 +66,12 @@ namespace AHHA.API.Controllers.Masters
                 if (userGroupRight == null)
                     return NotFound(GenrateMessage.authenticationfailed);
 
-                var cacheData = await _CustomerService.GetCustomerAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, CustomerCode == "0" ? string.Empty : CustomerCode, CustomerName == "0" ? string.Empty : CustomerName, headerViewModel.UserId);
+                var customerViewModel = await _CustomerService.GetCustomerAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, CustomerCode == "0" ? string.Empty : CustomerCode, CustomerName == "0" ? string.Empty : CustomerName, headerViewModel.UserId);
 
-                if (cacheData == null)
+                if (customerViewModel == null)
                     return Ok(new SqlResponse { Result = -1, Message = "Customer not found", Data = null, TotalRecords = 0 });
 
-                return Ok(new SqlResponse { Result = 1, Message = "Customer retrieved successfully", Data = cacheData, TotalRecords = 0 });
+                return Ok(new SqlResponse { Result = 1, Message = "Customer retrieved successfully", Data = customerViewModel, TotalRecords = 0 });
             }
             catch (Exception ex)
             {
