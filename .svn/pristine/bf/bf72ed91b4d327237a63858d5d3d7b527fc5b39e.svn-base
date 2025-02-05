@@ -1,0 +1,113 @@
+using AHHA.API.ExceptionHandling;
+using AHHA.API.Extensions;
+using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using System.Text;
+using Telerik.Reporting.Cache.File;
+using Telerik.Reporting.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
+
+#region Caching & IP Rate Limiting
+
+var configuration = builder.Configuration;
+
+builder.Services.AddOptions();
+builder.Services.AddMemoryCache();
+
+////load general configuration from appsettings.json
+//builder.Services.Configure<IpRateLimitOptions>(configuration.GetSection("IpRateLimiting"));
+////load ip rules from appsettings.json
+//builder.Services.Configure<IpRateLimitPolicies>(configuration.GetSection("IpRateLimitPolicies"));
+
+builder.Services.AddInMemoryRateLimiting();
+
+// inject counter and rules distributed cache stores
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IClientPolicyStore, MemoryCacheClientPolicyStore>();
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+builder.Services.AddSingleton<IExceptionHandler, GlobalExcaptionHandler>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+builder.Services.AddSingleton<IReportServiceConfiguration>(sp =>
+{
+    var environment = sp.GetService<IWebHostEnvironment>();
+    return new ReportServiceConfiguration
+    {
+        HostAppId = "YourAppId",
+        Storage = new FileStorage(),
+        ReportSourceResolver = new UriReportSourceResolver(environment.ContentRootPath + "/Reports"),
+    };
+});
+
+#endregion Caching & IP Rate Limiting
+
+builder.Services.AddLogging();
+builder.Services.RegisterService(builder.Configuration);//From API Exenstions Folder
+
+#region JWT Token
+
+// Configuring JWT authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = configuration["JWT:ValidAudience"],
+            ValidIssuer = configuration["JWT:ValidIssuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
+        };
+    });
+
+#endregion JWT Token
+
+builder.Services.AddControllers().AddNewtonsoftJson();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowOrigin", builder => builder.WithOrigins("*").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+app.UseCors("AllowOrigin");
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AHHA API V1");
+});
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseIpRateLimiting();
+
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
+//static IConfiguration ResolveSpecificReportingConfiguration(IWebHostEnvironment environment)
+//{
+//    // If a specific configuration needs to be passed to the reporting engine, add it through a new IConfiguration instance.
+//    var reportingConfigFileName = System.IO.Path.Combine(environment.ContentRootPath, "reportingAppSettings.json");
+//    return new ConfigurationBuilder()
+//        .AddJsonFile(reportingConfigFileName, true)
+//        .Build();
+//}

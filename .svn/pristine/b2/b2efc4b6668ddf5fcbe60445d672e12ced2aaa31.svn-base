@@ -1,0 +1,19 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Models.Account.AR;
+
+namespace AHHA.Application.IServices.Accounts.AR
+{
+    public interface IARDocumentSetOffService
+    {
+        public Task<ARDocumentSetOffViewModelCount> GetARDocumentSetOffListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, string fromDate, string toDtae, Int16 UserId);
+
+        public Task<ARDocumentSetOffViewModel> GetARDocumentSetOffByIdAsync(string RegId, Int16 CompanyId, Int64 SetoffId, string SetoffNo, Int16 UserId);
+
+        public Task<SqlResponse> SaveARDocumentSetOffAsync(string RegId, Int16 CompanyId, ArDocSetOffHd ARDocumentSetOffHd, List<ArDocSetOffDt> ARDocumentSetOffDt, Int16 UserId);
+
+        public Task<SqlResponse> DeleteARDocumentSetOffAsync(string RegId, Int16 CompanyId, Int64 SetoffId, string SetoffNo, string CanacelRemarks, Int16 UserId);
+
+        public Task<IEnumerable<ARDocumentSetOffViewModel>> GetHistoryARDocumentSetOffByIdAsync(string RegId, Int16 CompanyId, Int64 SetoffId, string SetoffNo, Int16 UserId);
+    }
+}

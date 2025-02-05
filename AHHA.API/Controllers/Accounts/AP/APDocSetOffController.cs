@@ -1,0 +1,295 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.AP;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AP;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.AP;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Accounts.AP
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class APDocSetOffController : BaseController
+    {
+        private readonly IAPDocSetOffService _APDocSetOffService;
+        private readonly ILogger<APDocSetOffController> _logger;
+
+        public APDocSetOffController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<APDocSetOffController> logger, IAPDocSetOffService APDocSetOffService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _APDocSetOffService = APDocSetOffService;
+        }
+
+        [HttpGet, Route("GetAPDocSetOff")]
+        [Authorize]
+        public async Task<ActionResult> GetAPDocSetOff([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AP, (Int32)E_AR.DocSetoff, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _APDocSetOffService.GetAPDocSetOffListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString?.Trim(), headerViewModel.fromDate, headerViewModel.toDate, headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetAPDocSetOff: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetAPDocSetOffbyIdNo/{SetoffId}/{SetoffNo}")]
+        [Authorize]
+        public async Task<ActionResult<APDocSetOffViewModel>> GetAPDocSetOffByIdNo(string SetoffId, string SetoffNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (SetoffId == "0" && SetoffNo == "")
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AP, (Int32)E_AR.DocSetoff, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arDocSetOffViewModel = await _APDocSetOffService.GetAPDocSetOffByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(SetoffId) ? 0 : SetoffId?.Trim()),
+                    SetoffNo, headerViewModel.UserId
+                );
+
+                if (arDocSetOffViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = arDocSetOffViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetAPDocSetOffById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        //SAVE ONE APDocSetOff BY INVOICEID
+        [HttpPost, Route("SaveAPDocSetOff")]
+        [Authorize]
+        public async Task<ActionResult<APDocSetOffViewModel>> SaveAPDocSetOff(APDocSetOffViewModel aRDocSetOffViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (aRDocSetOffViewModel == null)
+                    return NotFound(GenrateMessage.datanotfound);
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.AP,
+                    (int)E_AR.DocSetoff,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                //Header Data Mapping
+                var APDocSetOffEntity = new ApDocSetOffHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    SetoffId = Convert.ToInt64(string.IsNullOrEmpty(aRDocSetOffViewModel.SetoffId) ? 0 : aRDocSetOffViewModel.SetoffId?.Trim()),
+                    SetoffNo = aRDocSetOffViewModel.SetoffNo,
+                    ReferenceNo = aRDocSetOffViewModel.ReferenceNo == null ? string.Empty : aRDocSetOffViewModel.ReferenceNo,
+                    TrnDate = DateHelperStatic.ParseClientDate(aRDocSetOffViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(aRDocSetOffViewModel.AccountDate),
+                    SupplierId = aRDocSetOffViewModel.SupplierId,
+                    CurrencyId = aRDocSetOffViewModel.CurrencyId,
+                    ExhRate = aRDocSetOffViewModel.ExhRate,
+                    Remarks = aRDocSetOffViewModel.Remarks == null ? string.Empty : aRDocSetOffViewModel.Remarks,
+                    BalanceAmt = aRDocSetOffViewModel.BalanceAmt,
+                    AllocAmt = aRDocSetOffViewModel.AllocAmt,
+                    UnAllocAmt = aRDocSetOffViewModel.UnAllocAmt,
+                    ExhGainLoss = aRDocSetOffViewModel.ExhGainLoss,
+                    ModuleFrom = aRDocSetOffViewModel.ModuleFrom == null ? string.Empty : aRDocSetOffViewModel.ModuleFrom,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                //Details Table data mapping
+                var APDocSetOffDtEntities = new List<ApDocSetOffDt>();
+
+                if (aRDocSetOffViewModel.data_details != null)
+                {
+                    foreach (var item in aRDocSetOffViewModel.data_details)
+                    {
+                        var APDocSetOffDtEntity = new ApDocSetOffDt
+                        {
+                            CompanyId = headerViewModel.CompanyId,
+                            SetoffId = Convert.ToInt64(string.IsNullOrEmpty(item.SetoffId) ? 0 : item.SetoffId?.Trim()),
+                            SetoffNo = item.SetoffNo,
+                            ItemNo = item.ItemNo,
+                            TransactionId = item.TransactionId,
+                            DocumentId = Convert.ToInt64(string.IsNullOrEmpty(item.DocumentId) ? 0 : item.DocumentId?.Trim()),
+                            DocumentNo = item.DocumentNo,
+                            ReferenceNo = item.ReferenceNo,
+                            DocCurrencyId = item.DocCurrencyId,
+                            DocExhRate = item.DocExhRate,
+                            DocAccountDate = DateHelperStatic.ParseClientDate(item.DocAccountDate),
+                            DocDueDate = DateHelperStatic.ParseClientDate(item.DocDueDate),
+                            DocTotAmt = item.DocTotAmt,
+                            DocTotLocalAmt = item.DocTotLocalAmt,
+                            DocBalAmt = item.DocBalAmt,
+                            DocBalLocalAmt = item.DocBalLocalAmt,
+                            AllocAmt = item.AllocAmt,
+                            AllocLocalAmt = item.AllocLocalAmt,
+                            DocAllocAmt = item.DocAllocAmt,
+                            DocAllocLocalAmt = item.DocAllocLocalAmt,
+                            CentDiff = item.CentDiff,
+                            ExhGainLoss = item.ExhGainLoss,
+                        };
+
+                        APDocSetOffDtEntities.Add(APDocSetOffDtEntity);
+                    }
+                }
+
+                var sqlResponse = await _APDocSetOffService.SaveAPDocSetOffAsync(
+                   headerViewModel.RegId,
+                   headerViewModel.CompanyId,
+                   APDocSetOffEntity,
+                   APDocSetOffDtEntities,
+                   headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _APDocSetOffService.GetAPDocSetOffByIdAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new APDocSetOff record");
+            }
+        }
+
+        [HttpPost, Route("DeleteAPDocSetOff")]
+        [Authorize]
+        public async Task<ActionResult<APDocSetOffViewModel>> DeleteAPDocSetOff(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AP, (Int32)E_AR.DocSetoff, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _APDocSetOffService.DeleteAPDocSetOffAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId), deleteViewModel.DocumentNo,
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _APDocSetOffService.GetAPDocSetOffByIdAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteAPDocSetOff: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        [HttpGet, Route("GetHistoryAPDocSetOffbyId/{SetoffId}")]
+        [Authorize]
+        public async Task<ActionResult<APDocSetOffViewModel>> GetHistoryAPDocSetOffbyId(string SetoffId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (SetoffId == null || SetoffId == "" || SetoffId == "0")
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AP, (Int32)E_AR.DocSetoff, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arDocSetOffViewModel = await _APDocSetOffService.GetHistoryAPDocSetOffByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(SetoffId) ? 0 : SetoffId?.Trim()), string.Empty, headerViewModel.UserId);
+
+                if (arDocSetOffViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = arDocSetOffViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+    }
+}

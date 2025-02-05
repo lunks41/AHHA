@@ -1,0 +1,400 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.AR;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.AR;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Accounts.AR
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class ARInvoiceController : BaseController
+    {
+        private readonly IARInvoiceService _ARInvoiceService;
+        private readonly ILogger<ARInvoiceController> _logger;
+
+        public ARInvoiceController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ARInvoiceController> logger, IARInvoiceService ARInvoiceService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _ARInvoiceService = ARInvoiceService;
+        }
+
+        [HttpGet, Route("GetARInvoice")]
+        [Authorize]
+        public async Task<ActionResult> GetARInvoice([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Invoice, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _ARInvoiceService.GetARInvoiceListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString.Trim(), headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetARInvoice: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetARInvoicebyId/{InvoiceId}")]
+        [Authorize]
+        public async Task<ActionResult<ARInvoiceViewModel>> GetARInvoiceById(string InvoiceId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (InvoiceId == "0")
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Invoice, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arInvoiceViewModel = await _ARInvoiceService.GetARInvoiceByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(InvoiceId) ? 0 : InvoiceId.Trim()),
+                    string.Empty, headerViewModel.UserId
+                );
+
+                if (arInvoiceViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = arInvoiceViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetARInvoiceById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetARInvoicebyNo/{InvoiceNo}")]
+        [Authorize]
+        public async Task<ActionResult<ARInvoiceViewModel>> GetARInvoiceByNo(string InvoiceNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (InvoiceNo == "")
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Invoice, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arInvoiceViewModel = await _ARInvoiceService.GetARInvoiceByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId, 0, InvoiceNo, headerViewModel.UserId
+                );
+                if (arInvoiceViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = arInvoiceViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetARInvoiceByNo: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("SaveARInvoice")]
+        [Authorize]
+        public async Task<ActionResult<ARInvoiceViewModel>> SaveARInvoice(
+            ARInvoiceViewModel aRInvoiceViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.AR,
+                    (int)E_AR.Invoice,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                if (aRInvoiceViewModel == null)
+                    return NotFound(GenrateMessage.datanotfound);
+
+                // Header Data Mapping
+                var ARInvoiceEntity = new ArInvoiceHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    InvoiceId = aRInvoiceViewModel.InvoiceId != null ? Convert.ToInt64(aRInvoiceViewModel.InvoiceId) : 0,
+                    InvoiceNo = aRInvoiceViewModel.InvoiceNo ?? string.Empty,
+                    ReferenceNo = aRInvoiceViewModel.ReferenceNo ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(aRInvoiceViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(aRInvoiceViewModel.AccountDate),
+                    DeliveryDate = DateHelperStatic.ParseClientDate(aRInvoiceViewModel.DeliveryDate),
+                    DueDate = DateHelperStatic.ParseClientDate(aRInvoiceViewModel.DueDate),
+                    CustomerId = aRInvoiceViewModel.CustomerId,
+                    CurrencyId = aRInvoiceViewModel.CurrencyId,
+                    ExhRate = aRInvoiceViewModel.ExhRate,
+                    CtyExhRate = aRInvoiceViewModel.CtyExhRate,
+                    CreditTermId = aRInvoiceViewModel.CreditTermId,
+                    BankId = aRInvoiceViewModel.BankId,
+                    TotAmt = aRInvoiceViewModel.TotAmt,
+                    TotLocalAmt = aRInvoiceViewModel.TotLocalAmt,
+                    TotCtyAmt = aRInvoiceViewModel.TotCtyAmt,
+                    GstClaimDate = DateHelperStatic.ParseClientDate(aRInvoiceViewModel.GstClaimDate),
+                    GstAmt = aRInvoiceViewModel.GstAmt,
+                    GstLocalAmt = aRInvoiceViewModel.GstLocalAmt,
+                    GstCtyAmt = aRInvoiceViewModel.GstCtyAmt,
+                    TotAmtAftGst = aRInvoiceViewModel.TotAmtAftGst,
+                    TotLocalAmtAftGst = aRInvoiceViewModel.TotLocalAmtAftGst,
+                    TotCtyAmtAftGst = aRInvoiceViewModel.TotCtyAmtAftGst,
+                    BalAmt = aRInvoiceViewModel.BalAmt,
+                    BalLocalAmt = aRInvoiceViewModel.BalLocalAmt,
+                    PayAmt = aRInvoiceViewModel.PayAmt,
+                    PayLocalAmt = aRInvoiceViewModel.PayLocalAmt,
+                    ExGainLoss = aRInvoiceViewModel.ExGainLoss,
+                    Remarks = aRInvoiceViewModel.Remarks ?? string.Empty,
+                    Address1 = aRInvoiceViewModel.Address1 ?? string.Empty,
+                    Address2 = aRInvoiceViewModel.Address2 ?? string.Empty,
+                    Address3 = aRInvoiceViewModel.Address3 ?? string.Empty,
+                    Address4 = aRInvoiceViewModel.Address4 ?? string.Empty,
+                    PinCode = aRInvoiceViewModel.PinCode ?? string.Empty,
+                    CountryId = aRInvoiceViewModel.CountryId,
+                    PhoneNo = aRInvoiceViewModel.PhoneNo ?? string.Empty,
+                    FaxNo = aRInvoiceViewModel.FaxNo ?? string.Empty,
+                    ContactName = aRInvoiceViewModel.ContactName ?? string.Empty,
+                    MobileNo = aRInvoiceViewModel.MobileNo ?? string.Empty,
+                    EmailAdd = aRInvoiceViewModel.EmailAdd ?? string.Empty,
+                    ModuleFrom = aRInvoiceViewModel.ModuleFrom ?? string.Empty,
+                    SupplierName = aRInvoiceViewModel.SupplierName ?? string.Empty,
+                    SuppInvoiceNo = aRInvoiceViewModel.SuppInvoiceNo ?? string.Empty,
+                    APInvoiceId = !string.IsNullOrEmpty(aRInvoiceViewModel.APInvoiceId?.Trim()) ? Convert.ToInt64(aRInvoiceViewModel.APInvoiceId.Trim()) : 0,
+                    APInvoiceNo = aRInvoiceViewModel.APInvoiceNo ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var arInvoiceDtEntities = aRInvoiceViewModel.data_details?.Select(item => new ArInvoiceDt
+                {
+                    InvoiceId = Convert.ToInt64(item.InvoiceId),
+                    InvoiceNo = item.InvoiceNo,
+                    ItemNo = item.ItemNo,
+                    SeqNo = item.SeqNo,
+                    ProductId = item.ProductId,
+                    GLId = item.GLId,
+                    QTY = item.QTY,
+                    BillQTY = item.BillQTY,
+                    UomId = item.UomId,
+                    UnitPrice = item.UnitPrice,
+                    TotAmt = item.TotAmt,
+                    TotLocalAmt = item.TotLocalAmt,
+                    TotCtyAmt = item.TotCtyAmt,
+                    GstId = item.GstId,
+                    GstPercentage = item.GstPercentage,
+                    GstAmt = item.GstAmt,
+                    GstLocalAmt = item.GstLocalAmt,
+                    GstCtyAmt = item.GstCtyAmt,
+                    DeliveryDate = DateHelperStatic.ParseClientDate(item.DeliveryDate),
+                    SupplyDate = DateHelperStatic.ParseClientDate(item.SupplyDate),
+                    Remarks = item.Remarks ?? string.Empty,
+                }).ToList();
+
+                // Save AR Debit Note
+                var sqlResponse = await _ARInvoiceService.SaveARInvoiceAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    ARInvoiceEntity,
+                    arInvoiceDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _ARInvoiceService.GetARInvoiceByIdAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                     new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("DeleteARInvoice")]
+        [Authorize]
+        public async Task<ActionResult<ARInvoiceViewModel>> DeleteARInvoice(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Invoice, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _ARInvoiceService.DeleteARInvoiceAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _ARInvoiceService.GetARInvoiceByIdAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteARInvoice: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        //GET ONE ARINVOICE BY INVOICEID
+        [HttpGet, Route("GetHistoryARInvoicebyId/{InvoiceId}")]
+        [Authorize]
+        public async Task<ActionResult<ARInvoiceViewModel>> GetHistoryARInvoiceById(string InvoiceId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(InvoiceId) || InvoiceId != "0")
+                {
+                    if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    {
+                        var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Invoice, headerViewModel.UserId);
+
+                        if (userGroupRight != null)
+                        {
+                            var ARInvoiceViewModel = await _ARInvoiceService.GetHistoryARInvoiceByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(InvoiceId) ? 0 : InvoiceId.Trim()), string.Empty, headerViewModel.UserId);
+
+                            if (ARInvoiceViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            return StatusCode(StatusCodes.Status202Accepted, ARInvoiceViewModel);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NoContent();
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [NonAction]
+        public DateTime ConvertStringToDate(string Passdate, string DateFormat)
+        {
+            DateTime returndate = new DateTime();
+            //Array splitdate;
+            //Array splitdateformat;
+
+            //if (string.IsNullOrEmpty(Passdate))
+            //{
+            //    if (Passdate.Contains('/'))
+            //    {
+            //        splitdate = Passdate.Split('/');
+            //    }
+            //    else if (Passdate.Contains('-'))
+            //    {
+            //        splitdate = Passdate.Split('-');
+            //    }
+            //}
+
+            string[] formats = { "yyyy-MM-dd", "dd-MM-yyyy hh:mm:ss", "dd-MM-yyyy", "MM-dd-yyyy", "MM-dd-yyyy hh:mm:ss", "dd-MM-yyyy hh:mm:ss", "dd/MM/yyyy", "MM/dd/yyyy", "MM/dd/yyyy hh:mm:ss" };
+
+            if (DateTime.TryParseExact(Passdate, formats,
+                                    System.Globalization.CultureInfo.InvariantCulture,
+                                    System.Globalization.DateTimeStyles.None,
+                                    out DateTime date))
+            {
+                return date;
+            }
+
+            return returndate;
+        }
+
+        [NonAction]
+        public string ConvertDateToString(DateTime Passdate, string DateFormat = "yyyy-MM-dd")
+        {
+            return Passdate.ToString(DateFormat);
+        }
+    }
+}
