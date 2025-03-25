@@ -1,0 +1,403 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts;
+using AHHA.Application.IServices.Accounts.GL;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.GL;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account.GL;
+using AHHA.Infra.Data;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Transactions;
+
+namespace AHHA.Infra.Services.Accounts.GL
+{
+    public sealed class GLPeriodCloseService : IGLPeriodCloseService
+    {
+        private readonly IRepository<GLPeriodClose> _repository;
+        private ApplicationDbContext _context; private readonly ILogService _logService;
+        private readonly IAccountService _accountService;
+
+        public GLPeriodCloseService(IRepository<GLPeriodClose> repository, ApplicationDbContext context, ILogService logService, IAccountService accountService)
+        {
+            _repository = repository;
+            _context = context; _logService = logService;
+            _accountService = accountService;
+        }
+
+        public async Task<IEnumerable<GLPeriodCloseViewModel>> GetGLPeriodCloseListAsync(string RegId, Int16 CompanyId, Int32 FinYear, Int16 UserId)
+        {
+            try
+            {
+                return await _repository.GetQueryAsync<GLPeriodCloseViewModel>(RegId, $"SELECT GLprcls.CompanyId,GLprcls.FinYear,GLprcls.FinMonth,GLprcls.StartDate,GLprcls.EndDate,GLprcls.IsArClose,GLprcls.ArCloseById,GLprcls.ArCloseDate,GLprcls.IsApClose,GLprcls.ApCloseById,GLprcls.ApCloseDate,GLprcls.IsCbClose,GLprcls.CbCloseById,GLprcls.CbCloseDate,GLprcls.IsGlClose,GLprcls.GlCloseById,GLprcls.GlCloseDate,UsrAr.UserName ArCloseBy,UsrAp.UserName ApCloseBy,UsrCb.UserName CbCloseBy,UsrGl.UserName GlCloseBy,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM dbo.GLPeriodClose GLprcls LEFT JOIN dbo.AdmUser UsrAr ON UsrAr.UserId = GLprcls.ArCloseById LEFT JOIN dbo.AdmUser UsrAp ON UsrAp.UserId = GLprcls.ApCloseById LEFT JOIN dbo.AdmUser UsrCb ON UsrCb.UserId = GLprcls.CbCloseById LEFT JOIN dbo.AdmUser UsrGl ON UsrGl.UserId = GLprcls.GlCloseById LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = GLprcls.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = GLprcls.EditById WHERE GLprcls.FinYear={FinYear}");
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.GL,
+                    TransactionId = (short)E_GL.PeriodClose,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "GLPeriodClose",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException?.Message,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponse> SaveGLPeriodCloseAsync(string RegId, Int16 CompanyId, List<GLPeriodClose> glPeriodClose, short UserId)
+        {
+            try
+            {
+                using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    foreach (var entry in glPeriodClose)
+                    {
+                        var finperiodExist = await _repository.GetQuerySingleOrDefaultAsync<bool>(RegId, $"exec FIN_GL_UpdateGLPeriodClose {CompanyId},{UserId},{entry.FinYear},{entry.FinMonth},{entry.IsArClose},{entry.IsApClose},{entry.IsCbClose},{entry.IsGlClose}");
+                    }
+
+                    var auditLog = new AdmAuditLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.GL,
+                        TransactionId = (short)E_GL.PeriodClose,
+                        TblName = "GLPeriodClose",
+                        ModeId = (short)E_Mode.Create,
+                        Remarks = "GlPeriodClose Save Successfully",
+                        CreateById = UserId,
+                        CreateDate = DateTime.Now
+                    };
+
+                    _context.AdmAuditLog.Add(auditLog);
+                    await _context.SaveChangesAsync();
+
+                    TScope.Complete();
+                    return new SqlResponse { Result = 1, Message = "Save Successfully" };
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                await _logService.LogErrorAsync(sqlEx, CompanyId, E_Modules.GL, E_GL.PeriodClose, 0, "", "GLPeriodClose", E_Mode.Create, "SQL", UserId);
+                return new SqlResponse { Result = -1, Message = SqlErrorHelper.GetErrorMessage(sqlEx.Number) };
+            }
+            catch (Exception ex)
+            {
+                await _logService.LogErrorAsync(ex, CompanyId, E_Modules.GL, E_GL.PeriodClose, 0, "", "GLPeriodClose", E_Mode.Create, "General", UserId);
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponse> SaveGLPeriodCloseAsyncV1(string RegId, Int16 CompanyId, PeriodCloseViewModel periodCloseViewModel, Int16 UserId)
+        {
+            bool IsEdit = true;
+            try
+            {
+                using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    var SaveDetails = 0;
+
+                    if (periodCloseViewModel.FieldName == "isArClose")
+                        SaveDetails = await _context.GLPeriodClose.Where(x => x.FinYear == periodCloseViewModel.FinYear && x.FinMonth == periodCloseViewModel.FinMonth).ExecuteUpdateAsync(setPropertyCalls: setters => setters.SetProperty(b => b.IsArClose, periodCloseViewModel.IsValue).SetProperty(b => b.ArCloseById, UserId).SetProperty(b => b.ArCloseDate, DateTime.Now).SetProperty(b => b.EditById, UserId).SetProperty(b => b.EditDate, DateTime.Now));
+                    else if (periodCloseViewModel.FieldName == "isApClose")
+                        SaveDetails = await _context.GLPeriodClose.Where(x => x.FinYear == periodCloseViewModel.FinYear && x.FinMonth == periodCloseViewModel.FinMonth).ExecuteUpdateAsync(setPropertyCalls: setters => setters.SetProperty(b => b.IsApClose, periodCloseViewModel.IsValue).SetProperty(b => b.ApCloseById, UserId).SetProperty(b => b.ApCloseDate, DateTime.Now).SetProperty(b => b.EditById, UserId).SetProperty(b => b.EditDate, DateTime.Now));
+                    else if (periodCloseViewModel.FieldName == "isCbClose")
+                        SaveDetails = await _context.GLPeriodClose.Where(x => x.FinYear == periodCloseViewModel.FinYear && x.FinMonth == periodCloseViewModel.FinMonth).ExecuteUpdateAsync(setPropertyCalls: setters => setters.SetProperty(b => b.IsCbClose, periodCloseViewModel.IsValue).SetProperty(b => b.CbCloseById, UserId).SetProperty(b => b.CbCloseDate, DateTime.Now).SetProperty(b => b.EditById, UserId).SetProperty(b => b.EditDate, DateTime.Now));
+                    else if (periodCloseViewModel.FieldName == "isGlClose")
+                        SaveDetails = await _context.GLPeriodClose.Where(x => x.FinYear == periodCloseViewModel.FinYear && x.FinMonth == periodCloseViewModel.FinMonth).ExecuteUpdateAsync(setPropertyCalls: setters => setters.SetProperty(b => b.IsGlClose, periodCloseViewModel.IsValue).SetProperty(b => b.GlCloseById, UserId).SetProperty(b => b.GlCloseDate, DateTime.Now).SetProperty(b => b.EditById, UserId).SetProperty(b => b.EditDate, DateTime.Now));
+
+                    #region Save AuditLog
+
+                    if (SaveDetails > 0)
+                    {
+                        //Saving Audit log
+                        var auditLog = new AdmAuditLog
+                        {
+                            CompanyId = CompanyId,
+                            ModuleId = (short)E_Modules.GL,
+                            TransactionId = (short)E_GL.PeriodClose,
+                            DocumentId = periodCloseViewModel.FinYear,
+                            DocumentNo = periodCloseViewModel.FinMonth.ToString(),
+                            TblName = "GLPeriodClose",
+                            ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                            Remarks = "",
+                            CreateById = UserId,
+                            CreateDate = DateTime.Now
+                        };
+
+                        _context.Add(auditLog);
+                        var auditLogSave = _context.SaveChanges();
+
+                        if (auditLogSave > 0)
+                        {
+                            TScope.Complete();
+                            return new SqlResponse { Result = 1, Message = "Save Successfully" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponse { Result = -1, Message = "Save Failed" };
+                    }
+
+                    #endregion Save AuditLog
+
+                    return new SqlResponse();
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.GL,
+                    TransactionId = (short)E_GL.PeriodClose,
+                    DocumentId = periodCloseViewModel.FinYear,
+                    DocumentNo = periodCloseViewModel.FinMonth.ToString(),
+                    TblName = "GLPeriodClose",
+                    ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                    Remarks = ex.Message + ex.InnerException?.Message,
+                    CreateById = UserId
+                };
+                _context.Add(errorLog);
+                _context.SaveChanges();
+                throw;
+            }
+        }
+
+        public async Task<SqlResponse> SaveNewPeriodCloseAsync(string RegId, Int16 CompanyId, NewPeriodCloseViewModel newPeriodCloseViewModel, Int16 UserId)
+        {
+            bool IsEdit = true;
+            try
+            {
+                using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    var finperiodExist = await _repository.GetQuerySingleOrDefaultAsync<bool>(RegId, $"exec FIN_GL_FinPeriod_Gen {CompanyId},{newPeriodCloseViewModel.FinYear},{newPeriodCloseViewModel.MonthId},{newPeriodCloseViewModel.TotalPeriod},{UserId}");
+
+                    if (finperiodExist)
+                        return new SqlResponse { Result = -1, Message = "Financial period exists." };
+
+                    //Saving Audit log
+                    var auditLog = new AdmAuditLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.GL,
+                        TransactionId = (short)E_GL.PeriodClose,
+                        DocumentId = newPeriodCloseViewModel.FinYear,
+                        DocumentNo = newPeriodCloseViewModel.FinYear.ToString(),
+                        TblName = "GLPeriodClose",
+                        ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                        Remarks = "",
+                        CreateById = UserId,
+                        CreateDate = DateTime.Now
+                    };
+
+                    _context.Add(auditLog);
+                    var auditLogSave = _context.SaveChanges();
+
+                    if (auditLogSave > 0)
+                    {
+                        TScope.Complete();
+                        return new SqlResponse { Result = 1, Message = "Save Successfully" };
+                    }
+
+                    return new SqlResponse();
+                }
+            }
+            catch (SqlException sqex)
+            {
+                _context.ChangeTracker.Clear();
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.GL,
+                    TransactionId = (short)E_GL.PeriodClose,
+                    DocumentId = newPeriodCloseViewModel.FinYear,
+                    DocumentNo = newPeriodCloseViewModel.FinYear.ToString(),
+                    TblName = "GLPeriodClose",
+                    ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                    Remarks = sqex.Message + sqex.InnerException?.Message,
+                    CreateById = UserId
+                };
+                _context.Add(errorLog);
+                _context.SaveChanges();
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.GL,
+                    TransactionId = (short)E_GL.PeriodClose,
+                    DocumentId = newPeriodCloseViewModel.FinYear,
+                    DocumentNo = newPeriodCloseViewModel.FinYear.ToString(),
+                    TblName = "GLPeriodClose",
+                    ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                    Remarks = ex.Message + ex.InnerException?.Message,
+                    CreateById = UserId
+                };
+                _context.Add(errorLog);
+                _context.SaveChanges();
+                throw;
+            }
+        }
+
+        public async Task<SqlResponse> GenrateGLPeriodCloseYearlyAsync(string RegId, Int16 CompanyId, PeriodCloseViewModel periodCloseViewModel, Int16 UserId)
+        {
+            bool IsEdit = true;
+            try
+            {
+                using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    var SaveDetails = 0;
+
+                    if (periodCloseViewModel.FieldName == "isArClose")
+                        SaveDetails = await _context.GLPeriodClose.Where(x => x.FinYear == periodCloseViewModel.FinYear && x.FinMonth == periodCloseViewModel.FinMonth).ExecuteUpdateAsync(setPropertyCalls: setters => setters.SetProperty(b => b.IsArClose, periodCloseViewModel.IsValue).SetProperty(b => b.ArCloseById, UserId).SetProperty(b => b.ArCloseDate, DateTime.Now).SetProperty(b => b.EditById, UserId).SetProperty(b => b.EditDate, DateTime.Now));
+                    else if (periodCloseViewModel.FieldName == "isApClose")
+                        SaveDetails = await _context.GLPeriodClose.Where(x => x.FinYear == periodCloseViewModel.FinYear && x.FinMonth == periodCloseViewModel.FinMonth).ExecuteUpdateAsync(setPropertyCalls: setters => setters.SetProperty(b => b.IsApClose, periodCloseViewModel.IsValue).SetProperty(b => b.ApCloseById, UserId).SetProperty(b => b.ApCloseDate, DateTime.Now).SetProperty(b => b.EditById, UserId).SetProperty(b => b.EditDate, DateTime.Now));
+                    else if (periodCloseViewModel.FieldName == "isCbClose")
+                        SaveDetails = await _context.GLPeriodClose.Where(x => x.FinYear == periodCloseViewModel.FinYear && x.FinMonth == periodCloseViewModel.FinMonth).ExecuteUpdateAsync(setPropertyCalls: setters => setters.SetProperty(b => b.IsCbClose, periodCloseViewModel.IsValue).SetProperty(b => b.CbCloseById, UserId).SetProperty(b => b.CbCloseDate, DateTime.Now).SetProperty(b => b.EditById, UserId).SetProperty(b => b.EditDate, DateTime.Now));
+                    else if (periodCloseViewModel.FieldName == "isGlClose")
+                        SaveDetails = await _context.GLPeriodClose.Where(x => x.FinYear == periodCloseViewModel.FinYear && x.FinMonth == periodCloseViewModel.FinMonth).ExecuteUpdateAsync(setPropertyCalls: setters => setters.SetProperty(b => b.IsGlClose, periodCloseViewModel.IsValue).SetProperty(b => b.GlCloseById, UserId).SetProperty(b => b.GlCloseDate, DateTime.Now).SetProperty(b => b.EditById, UserId).SetProperty(b => b.EditDate, DateTime.Now));
+
+                    #region Save AuditLog
+
+                    if (SaveDetails > 0)
+                    {
+                        //Saving Audit log
+                        var auditLog = new AdmAuditLog
+                        {
+                            CompanyId = CompanyId,
+                            ModuleId = (short)E_Modules.GL,
+                            TransactionId = (short)E_GL.PeriodClose,
+                            DocumentId = periodCloseViewModel.FinYear,
+                            DocumentNo = periodCloseViewModel.FinMonth.ToString(),
+                            TblName = "GLPeriodClose",
+                            ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                            Remarks = "",
+                            CreateById = UserId,
+                            CreateDate = DateTime.Now
+                        };
+
+                        _context.Add(auditLog);
+                        var auditLogSave = _context.SaveChanges();
+
+                        if (auditLogSave > 0)
+                        {
+                            TScope.Complete();
+                            return new SqlResponse { Result = 1, Message = "Save Successfully" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponse { Result = -1, Message = "Save Failed" };
+                    }
+
+                    #endregion Save AuditLog
+
+                    return new SqlResponse();
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.GL,
+                    TransactionId = (short)E_GL.PeriodClose,
+                    DocumentId = periodCloseViewModel.FinYear,
+                    DocumentNo = periodCloseViewModel.FinMonth.ToString(),
+                    TblName = "GLPeriodClose",
+                    ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                    Remarks = ex.Message + ex.InnerException?.Message,
+                    CreateById = UserId
+                };
+                _context.Add(errorLog);
+                _context.SaveChanges();
+                throw;
+            }
+        }
+
+        public async Task<SqlResponse> DeletePeriodClose(string RegId, Int16 CompanyId, Int16 FinYear, Int16 UserId)
+        {
+            try
+            {
+                using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    if (FinYear > 0)
+                    {
+                        var periodyearToRemove = _context.GLPeriodClose.Where(b => b.FinYear == FinYear && b.CompanyId == CompanyId).ExecuteDelete();
+
+                        if (periodyearToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.GL,
+                                TransactionId = (short)E_GL.PeriodClose,
+                                DocumentId = FinYear,
+                                DocumentNo = FinYear.ToString(),
+                                TblName = "GLPeriodClose",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "Delete Successful",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                TScope.Complete();
+                                return new SqlResponse { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponse { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponse { Result = -1, Message = "FinYear Not exists" };
+                    }
+                    return new SqlResponse();
+                }
+            }
+            catch (Exception ex)
+            {
+                _context.ChangeTracker.Clear();
+
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.GL,
+                    TransactionId = (short)E_GL.PeriodClose,
+                    DocumentId = FinYear,
+                    DocumentNo = FinYear.ToString(),
+                    TblName = "GLPeriodClose",
+                    ModeId = (short)E_Mode.Delete,
+                    Remarks = ex.Message + ex.InnerException?.Message,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+    }
+}

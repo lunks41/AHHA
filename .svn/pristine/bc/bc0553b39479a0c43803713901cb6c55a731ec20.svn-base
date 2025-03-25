@@ -1,0 +1,386 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class AccountSetupController : BaseController
+    {
+        private readonly IAccountSetupService _AccountSetupService;
+        private readonly ILogger<AccountSetupController> _logger;
+
+        public AccountSetupController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<AccountSetupController> logger, IAccountSetupService AccountSetupService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _AccountSetupService = AccountSetupService;
+        }
+
+        #region Header
+
+        [HttpGet, Route("GetAccountSetup")]
+        [Authorize]
+        public async Task<ActionResult> GetAccountSetup([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.AccountSetup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _AccountSetupService.GetAccountSetupListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetAccountSetupbyid/{AccSetupId}")]
+        [Authorize]
+        public async Task<ActionResult<AccountSetupViewModel>> GetAccountSetupById(Int16 AccSetupId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.AccountSetup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var accountSetupViewModel = _mapper.Map<AccountSetupViewModel>(await _AccountSetupService.GetAccountSetupByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupId, headerViewModel.UserId));
+
+                        if (accountSetupViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, accountSetupViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveAccountSetup")]
+        [Authorize]
+        public async Task<ActionResult<AccountSetupViewModel>> SaveAccountSetup(AccountSetupViewModel AccountSetup, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.AccountSetup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (AccountSetup == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var AccountSetupEntity = new M_AccountSetup
+                            {
+                                CompanyId = AccountSetup.CompanyId,
+                                AccSetupCode = AccountSetup.AccSetupCode?.Trim() ?? string.Empty,
+                                AccSetupName = AccountSetup.AccSetupName?.Trim() ?? string.Empty,
+                                AccSetupCategoryId = AccountSetup.AccSetupCategoryId,
+                                CreateById = headerViewModel.UserId,
+                                IsActive = AccountSetup.IsActive,
+                                Remarks = AccountSetup.Remarks
+                            };
+
+                            var sqlResponse = await _AccountSetupService.SaveAccountSetupAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupEntity, headerViewModel.UserId);
+
+                            return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new AccountSetup record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteAccountSetup/{AccSetupId}")]
+        [Authorize]
+        public async Task<ActionResult<M_AccountSetup>> DeleteAccountSetup(Int16 AccSetupId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.AccountSetup, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var AccountSetupToDelete = await _AccountSetupService.GetAccountSetupByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupId, headerViewModel.UserId);
+
+                            if (AccountSetupToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _AccountSetupService.DeleteAccountSetupAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+
+        #endregion Header
+
+        #region Details
+
+        [HttpGet, Route("GetAccountSetupDt")]
+        [Authorize]
+        public async Task<ActionResult> GetAccountSetupDt([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.AccountSetupDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _AccountSetupService.GetAccountSetupDtListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetAccountSetupDtbyid/{AccSetupId}")]
+        [Authorize]
+        public async Task<ActionResult<AccountSetupDtViewModel>> GetAccountSetupDtById(Int16 AccSetupId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.AccountSetupDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var AccountSetupDtViewModel = await _AccountSetupService.GetAccountSetupDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupId, headerViewModel.UserId);
+
+                        if (AccountSetupDtViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, AccountSetupDtViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveAccountSetupDt")]
+        [Authorize]
+        public async Task<ActionResult<AccountSetupDtViewModel>> SaveAccountSetupDt(AccountSetupDtViewModel accountSetupDtViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.AccountSetupDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (accountSetupDtViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var AccountSetupDtEntity = new M_AccountSetupDt
+                            {
+                                CompanyId = headerViewModel.CompanyId,
+                                AccSetupId = accountSetupDtViewModel.AccSetupId,
+                                CurrencyId = accountSetupDtViewModel.CurrencyId,
+                                GLId = accountSetupDtViewModel.GLId,
+                                ApplyAllCurr = accountSetupDtViewModel.ApplyAllCurr,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var sqlResponse = await _AccountSetupService.SaveAccountSetupDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupDtEntity, headerViewModel.UserId);
+
+                            return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new AccountSetupDt record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteAccountSetupDt/{AccSetupId}")]
+        [Authorize]
+        public async Task<ActionResult<M_AccountSetupDt>> DeleteAccountSetupDt(Int16 AccSetupId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.AccountSetupDt, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var AccountSetupDtToDelete = await _AccountSetupService.GetAccountSetupDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccSetupId, headerViewModel.UserId);
+
+                            if (AccountSetupDtToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _AccountSetupService.DeleteAccountSetupDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, AccountSetupDtToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+
+        #endregion Details
+    }
+}

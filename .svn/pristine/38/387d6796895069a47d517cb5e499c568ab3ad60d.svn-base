@@ -1,0 +1,209 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class BankController : BaseController
+    {
+        private readonly IBankService _BankService;
+        private readonly ILogger<BankController> _logger;
+
+        public BankController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BankController> logger, IBankService BankService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _BankService = BankService;
+        }
+
+        [HttpGet, Route("GetBank")]
+        [Authorize]
+        public async Task<ActionResult> GetBank([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Bank, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _BankService.GetBankListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetBankbyid/{BankId}")]
+        [Authorize]
+        public async Task<ActionResult<BankViewModel>> GetBankById(Int16 BankId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Bank, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var bankViewModel = _mapper.Map<BankViewModel>(await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId));
+
+                        if (bankViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, bankViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveBank")]
+        [Authorize]
+        public async Task<ActionResult<BankViewModel>> SaveBank(BankViewModel Bank, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Bank, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (Bank == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var BankEntity = new M_Bank
+                            {
+                                BankId = Bank.BankId,
+                                CompanyId = headerViewModel.CompanyId,
+                                BankCode = Bank.BankCode?.Trim() ?? string.Empty,
+                                BankName = Bank.BankName?.Trim() ?? string.Empty,
+                                CurrencyId = Bank.CurrencyId,
+                                AccountNo = Bank.AccountNo?.Trim() ?? string.Empty,
+                                SwiftCode = Bank.SwiftCode?.Trim() ?? string.Empty,
+                                Remarks1 = Bank.Remarks1?.Trim() ?? string.Empty,
+                                Remarks2 = Bank.Remarks2?.Trim() ?? string.Empty,
+                                GLId = Bank.GLId,
+                                IsActive = Bank.IsActive,
+                                IsOwnBank = Bank.IsOwnBank,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
+                            };
+
+                            var sqlResponse = await _BankService.SaveBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankEntity, headerViewModel.UserId);
+                            return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Bank record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteBank/{BankId}")]
+        [Authorize]
+        public async Task<ActionResult<M_Bank>> DeleteBank(Int16 BankId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Bank, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var BankToDelete = await _BankService.GetBankByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId);
+
+                            if (BankToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _BankService.DeleteBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

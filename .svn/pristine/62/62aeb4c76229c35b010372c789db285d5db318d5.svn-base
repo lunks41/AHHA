@@ -1,0 +1,270 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Transactions;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class SubCategoryService : ISubCategoryService
+    {
+        private readonly IRepository<M_SubCategory> _repository;
+        private ApplicationDbContext _context;
+
+        public SubCategoryService(IRepository<M_SubCategory> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<SubCategoryViewModelCount> GetSubCategoryListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId)
+        {
+            SubCategoryViewModelCount countViewModel = new SubCategoryViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_SubCategory M_Sub WHERE (M_Sub.SubCategoryName LIKE '%{searchString}%' OR M_Sub.SubCategoryCode LIKE '%{searchString}%' OR M_Sub.Remarks LIKE '%{searchString}%') AND M_Sub.SubCategoryId<>0 AND M_Sub.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.SubCategory}))");
+
+                var result = await _repository.GetQueryAsync<SubCategoryViewModel>(RegId, $"SELECT M_Sub.SubCategoryId,M_Sub.SubCategoryCode,M_Sub.SubCategoryName,M_Sub.CompanyId,M_Sub.Remarks,M_Sub.IsActive,M_Sub.CreateById,M_Sub.CreateDate,M_Sub.EditById,M_Sub.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_SubCategory M_Sub LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Sub.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Sub.EditById WHERE (M_Sub.SubCategoryName LIKE '%{searchString}%' OR M_Sub.SubCategoryCode LIKE '%{searchString}%' OR M_Sub.Remarks LIKE '%{searchString}%') AND M_Sub.SubCategoryId<>0 AND M_Sub.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.SubCategory})) ORDER BY M_Sub.SubCategoryName OFFSET {pageSize}*({pageNumber - 1}) ROWS FETCH NEXT {pageSize} ROWS ONLY");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.SubCategory,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_SubCategory",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<M_SubCategory> GetSubCategoryByIdAsync(string RegId, Int16 CompanyId, Int16 SubCategoryId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_SubCategory>(RegId, $"SELECT SubCategoryId,SubCategoryCode,SubCategoryName,CompanyId,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_SubCategory WHERE SubCategoryId={SubCategoryId}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.SubCategory,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_SubCategory",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponse> SaveSubCategoryAsync(string RegId, Int16 CompanyId, M_SubCategory m_SubCategory, Int16 UserId)
+        {
+            using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                bool IsEdit = false;
+                try
+                {
+                    if (m_SubCategory.SubCategoryId != 0)
+                    {
+                        IsEdit = true;
+                    }
+                    if (IsEdit)
+                    {
+                        var DataExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SubCategory WHERE SubCategoryId<>0 AND SubCategoryId={m_SubCategory.SubCategoryId} ");
+
+                        if (DataExist.Count() > 0 && DataExist.ToList()[0].IsExist == 1)
+                        {
+                            var entityHead = _context.Update(m_SubCategory);
+                            entityHead.Property(b => b.CreateById).IsModified = false;
+                            entityHead.Property(b => b.CompanyId).IsModified = false;
+                        }
+                        else
+                            return new SqlResponse { Result = -1, Message = "User Not Found" };
+                    }
+                    else
+                    {
+                        var codeExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_SubCategory WHERE SubCategoryId<>0 AND SubCategoryCode={m_SubCategory.SubCategoryCode} AND SubCategoryName={m_SubCategory.SubCategoryName} ");
+
+                        if (codeExist.Count() > 0 && codeExist.ToList()[0].IsExist == 1)
+                            return new SqlResponse { Result = -1, Message = "SubCategory Code Same" };
+
+                        //Take the Next Id From SQL
+                        var sqlMissingResponse = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (SubCategoryId + 1) FROM dbo.M_SubCategory WHERE (SubCategoryId + 1) NOT IN (SELECT SubCategoryId FROM dbo.M_SubCategory)),1) AS NextId");
+
+                        if (sqlMissingResponse != null && sqlMissingResponse.NextId > 0)
+                        {
+                            m_SubCategory.SubCategoryId = Convert.ToInt16(sqlMissingResponse.NextId);
+                            _context.Add(m_SubCategory);
+                        }
+                        else
+                            return new SqlResponse { Result = -1, Message = "Internal Server Error" };
+                    }
+
+                    var saveChangeRecord = _context.SaveChanges();
+
+                    #region Save AuditLog
+
+                    if (saveChangeRecord > 0)
+                    {
+                        //Saving Audit log
+                        var auditLog = new AdmAuditLog
+                        {
+                            CompanyId = CompanyId,
+                            ModuleId = (short)E_Modules.Master,
+                            TransactionId = (short)E_Master.SubCategory,
+                            DocumentId = m_SubCategory.SubCategoryId,
+                            DocumentNo = m_SubCategory.SubCategoryCode,
+                            TblName = "M_SubCategory",
+                            ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                            Remarks = "SubCategory Save Successfully",
+                            CreateById = UserId,
+                            CreateDate = DateTime.Now
+                        };
+
+                        _context.Add(auditLog);
+                        var auditLogSave = _context.SaveChanges();
+
+                        if (auditLogSave > 0)
+                        {
+                            TScope.Complete();
+                            return new SqlResponse { Result = 1, Message = "Save Successfully" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponse { Result = 1, Message = "Save Failed" };
+                    }
+
+                    #endregion Save AuditLog
+
+                    return new SqlResponse();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.SubCategory,
+                        DocumentId = m_SubCategory.SubCategoryId,
+                        DocumentNo = m_SubCategory.SubCategoryCode,
+                        TblName = "AdmUser",
+                        ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw;
+                }
+            }
+        }
+
+        
+
+        public async Task<SqlResponse> DeleteSubCategoryAsync(string RegId, Int16 CompanyId, M_SubCategory SubCategory, Int16 UserId)
+        {
+            using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    if (SubCategory.SubCategoryId > 0)
+                    {
+                        var SubCategoryToRemove = _context.M_SubCategory.Where(x => x.SubCategoryId == SubCategory.SubCategoryId).ExecuteDelete();
+
+                        if (SubCategoryToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.SubCategory,
+                                DocumentId = SubCategory.SubCategoryId,
+                                DocumentNo = SubCategory.SubCategoryCode,
+                                TblName = "M_SubCategory",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "SubCategory Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+
+                            if (auditLogSave > 0)
+                            {
+                                TScope.Complete();
+                                return new SqlResponse { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponse { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponse { Result = -1, Message = "SubCategoryId Should be zero" };
+                    }
+                    return new SqlResponse();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Product,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Product",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

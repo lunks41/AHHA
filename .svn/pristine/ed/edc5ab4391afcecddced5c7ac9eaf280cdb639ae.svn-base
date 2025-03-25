@@ -1,0 +1,299 @@
+﻿using AHHA.API.Controllers;
+using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.CB;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.CB;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.CB;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.CBI.Controllers.Accounts.CB
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class CBGenReceiptController : BaseController
+    {
+        private readonly ICBGenReceiptService _CBGenReceiptService;
+        private readonly ILogger<CBGenReceiptController> _logger;
+
+        public CBGenReceiptController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CBGenReceiptController> logger, ICBGenReceiptService CBGenReceiptService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CBGenReceiptService = CBGenReceiptService;
+        }
+
+        [HttpGet, Route("GetCBGenReceipt")]
+        [Authorize]
+        public async Task<ActionResult> GetCBGenReceipt([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBReceipt, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _CBGenReceiptService.GetCBGenReceiptListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString?.Trim(), headerViewModel.fromDate, headerViewModel.toDate, headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetCBGenReceipt: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetCBGenReceiptbyIdNo/{ReceiptId}/{ReceiptNo}")]
+        [Authorize]
+        public async Task<ActionResult<CBGenReceiptViewModel>> GetCBGenReceiptByIdNo(string ReceiptId, string ReceiptNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if ((ReceiptId == "0" && ReceiptNo == ""))
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBReceipt, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var CBGenReceiptViewModel = await _CBGenReceiptService.GetCBGenReceiptByIdNoAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(ReceiptId) ? 0 : ReceiptId?.Trim()),
+                    ReceiptNo, headerViewModel.UserId
+                );
+
+                if (CBGenReceiptViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = CBGenReceiptViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetCBGenReceiptById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("SaveCBGenReceipt")]
+        [Authorize]
+        public async Task<ActionResult<CBGenReceiptHdViewModel>> SaveCBGenReceipt(
+            CBGenReceiptHdViewModel CBGenReceiptViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (CBGenReceiptViewModel == null)
+                    return NotFound(GenerateMessage.datanotfound);
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.CB,
+                    (int)E_CB.CBReceipt,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                // Header Data Mapping
+                var CBGenReceiptEntity = new CBGenReceiptHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    ReceiptId = CBGenReceiptViewModel.ReceiptId != null ? Convert.ToInt64(CBGenReceiptViewModel.ReceiptId) : 0,
+                    ReceiptNo = CBGenReceiptViewModel.ReceiptNo?.Trim() ?? string.Empty,
+                    ReferenceNo = CBGenReceiptViewModel.ReferenceNo?.Trim() ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(CBGenReceiptViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(CBGenReceiptViewModel.AccountDate),
+                    CurrencyId = CBGenReceiptViewModel.CurrencyId,
+                    ExhRate = CBGenReceiptViewModel.ExhRate,
+                    CtyExhRate = CBGenReceiptViewModel.CtyExhRate,
+                    PaymentTypeId = CBGenReceiptViewModel.PaymentTypeId,
+                    BankId = CBGenReceiptViewModel.BankId,
+                    ChequeNo = CBGenReceiptViewModel.ChequeNo,
+                    ChequeDate = DateHelperStatic.ParseClientDate(CBGenReceiptViewModel.ChequeDate),
+                    BankChgAmt = CBGenReceiptViewModel.BankChgAmt,
+                    BankChgLocalAmt = CBGenReceiptViewModel.BankChgLocalAmt,
+                    TotAmt = CBGenReceiptViewModel.TotAmt,
+                    TotLocalAmt = CBGenReceiptViewModel.TotLocalAmt,
+                    TotCtyAmt = CBGenReceiptViewModel.TotCtyAmt,
+                    GstClaimDate = DateHelperStatic.ParseClientDate(CBGenReceiptViewModel.GstClaimDate),
+                    GstAmt = CBGenReceiptViewModel.GstAmt,
+                    GstLocalAmt = CBGenReceiptViewModel.GstLocalAmt,
+                    GstCtyAmt = CBGenReceiptViewModel.GstCtyAmt,
+                    TotAmtAftGst = CBGenReceiptViewModel.TotAmtAftGst,
+                    TotLocalAmtAftGst = CBGenReceiptViewModel.TotLocalAmtAftGst,
+                    TotCtyAmtAftGst = CBGenReceiptViewModel.TotCtyAmtAftGst,
+                    Remarks = CBGenReceiptViewModel.Remarks?.Trim() ?? string.Empty,
+                    PayeeTo = CBGenReceiptViewModel.PayeeTo?.Trim() ?? string.Empty,
+                    ModuleFrom = CBGenReceiptViewModel.ModuleFrom?.Trim() ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var CBGenReceiptDtEntities = CBGenReceiptViewModel.data_details?.Select(item => new CBGenReceiptDt
+                {
+                    ReceiptId = item.ReceiptId != null ? Convert.ToInt64(item.ReceiptId) : 0,
+                    ReceiptNo = item.ReceiptNo,
+                    ItemNo = item.ItemNo,
+                    SeqNo = item.SeqNo,
+                    GLId = item.GLId,
+                    TotAmt = item.TotAmt,
+                    TotLocalAmt = item.TotLocalAmt,
+                    TotCtyAmt = item.TotCtyAmt,
+                    Remarks = item.Remarks?.Trim() ?? string.Empty,
+                    GstId = item.GstId,
+                    GstPercentage = item.GstPercentage,
+                    GstAmt = item.GstAmt,
+                    GstLocalAmt = item.GstLocalAmt,
+                    GstCtyAmt = item.GstCtyAmt,
+                    DepartmentId = item.DepartmentId,
+                    EmployeeId = item.EmployeeId,
+                    PortId = item.PortId,
+                    VesselId = item.VesselId,
+                    BargeId = item.BargeId,
+                    VoyageId = item.VoyageId,
+                    EditVersion = item.EditVersion,
+                }).ToList();
+
+                var sqlResponse = await _CBGenReceiptService.SaveCBGenReceiptAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    CBGenReceiptEntity,
+                    CBGenReceiptDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _CBGenReceiptService.GetCBGenReceiptByIdNoAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                     new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("DeleteCBGenReceipt")]
+        [Authorize]
+        public async Task<ActionResult<CBGenReceiptViewModel>> DeleteCBGenReceipt(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBReceipt, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _CBGenReceiptService.DeleteCBGenReceiptAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _CBGenReceiptService.GetCBGenReceiptByIdNoAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteCBGenReceipt: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        [HttpGet, Route("GetHistoryCBGenReceiptbyId/{ReceiptId}")]
+        [Authorize]
+        public async Task<ActionResult<CBGenReceiptViewModel>> GetHistoryCBGenReceiptbyId(string ReceiptId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ReceiptId == null || ReceiptId == "" || ReceiptId == "0")
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBReceipt, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var CBGenReceiptViewModel = await _CBGenReceiptService.GetHistoryCBGenReceiptByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(ReceiptId) ? 0 : ReceiptId?.Trim()), string.Empty, headerViewModel.UserId);
+
+                if (CBGenReceiptViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = CBGenReceiptViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+    }
+}

@@ -1,0 +1,298 @@
+﻿using AHHA.API.Controllers;
+using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.GL;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.GL;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.GL;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.GLI.Controllers.Accounts.GL
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class GLJournalController : BaseController
+    {
+        private readonly IGLJournalService _GLJournalService;
+        private readonly ILogger<GLJournalController> _logger;
+
+        public GLJournalController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<GLJournalController> logger, IGLJournalService GLJournalService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _GLJournalService = GLJournalService;
+        }
+
+        [HttpGet, Route("GetGLJournal")]
+        [Authorize]
+        public async Task<ActionResult> GetGLJournal([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.GL, (Int32)E_GL.JournalEntry, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _GLJournalService.GetGLJournalListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString?.Trim(), headerViewModel.fromDate, headerViewModel.toDate, headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetGLJournal: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetGLJournalbyIdNo/{JournalId}/{JournalNo}")]
+        [Authorize]
+        public async Task<ActionResult<GLJournalViewModel>> GetGLJournalByIdNo(string JournalId, string JournalNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if ((JournalId == "0" && JournalNo == ""))
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.GL, (Int32)E_GL.JournalEntry, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var GLJournalViewModel = await _GLJournalService.GetGLJournalByIdNoAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(JournalId) ? 0 : JournalId?.Trim()),
+                    JournalNo, headerViewModel.UserId
+                );
+
+                if (GLJournalViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = GLJournalViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetGLJournalById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("SaveGLJournal")]
+        [Authorize]
+        public async Task<ActionResult<GLJournalHdViewModel>> SaveGLJournal(
+            GLJournalHdViewModel GLJournalViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (GLJournalViewModel == null)
+                    return NotFound(GenerateMessage.DataNotFound);
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.GL,
+                    (int)E_GL.JournalEntry,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                // Header Data Mapping
+                var GLJournalEntity = new GLJournalHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    JournalId = GLJournalViewModel.JournalId != null ? Convert.ToInt64(GLJournalViewModel.JournalId) : 0,
+                    JournalNo = GLJournalViewModel.JournalNo?.Trim() ?? string.Empty,
+                    ReferenceNo = GLJournalViewModel.ReferenceNo?.Trim() ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(GLJournalViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(GLJournalViewModel.AccountDate),
+                    CurrencyId = GLJournalViewModel.CurrencyId,
+                    ExhRate = GLJournalViewModel.ExhRate,
+                    CtyExhRate = GLJournalViewModel.CtyExhRate,
+                    TotAmt = GLJournalViewModel.TotAmt,
+                    TotLocalAmt = GLJournalViewModel.TotLocalAmt,
+                    TotCtyAmt = GLJournalViewModel.TotCtyAmt,
+                    GstClaimDate = DateHelperStatic.ParseClientDate(GLJournalViewModel.GstClaimDate),
+                    GstAmt = GLJournalViewModel.GstAmt,
+                    GstLocalAmt = GLJournalViewModel.GstLocalAmt,
+                    GstCtyAmt = GLJournalViewModel.GstCtyAmt,
+                    TotAmtAftGst = GLJournalViewModel.TotAmtAftGst,
+                    TotLocalAmtAftGst = GLJournalViewModel.TotLocalAmtAftGst,
+                    TotCtyAmtAftGst = GLJournalViewModel.TotCtyAmtAftGst,
+                    Remarks = GLJournalViewModel.Remarks?.Trim() ?? string.Empty,
+                    IsReverse = GLJournalViewModel.IsReverse,
+                    IsRecurrency = GLJournalViewModel.IsRecurrency,
+                    RevDate = DateHelperStatic.ParseClientDate(GLJournalViewModel.RevDate),
+                    RecurrenceUntil = DateHelperStatic.ParseClientDate(GLJournalViewModel.RecurrenceUntil),
+                    ModuleFrom = GLJournalViewModel.ModuleFrom?.Trim() ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var GLJournalDtEntities = GLJournalViewModel.data_details?.Select(item => new GLJournalDt
+                {
+                    JournalId = item.JournalId != null ? Convert.ToInt64(item.JournalId) : 0,
+                    JournalNo = item.JournalNo,
+                    ItemNo = item.ItemNo,
+                    SeqNo = item.SeqNo,
+                    GLId = item.GLId,
+                    ProductId = item.ProductId,
+                    IsDebit = item.IsDebit,
+                    TotAmt = item.TotAmt,
+                    TotLocalAmt = item.TotLocalAmt,
+                    TotCtyAmt = item.TotCtyAmt,
+                    Remarks = item.Remarks?.Trim() ?? string.Empty,
+                    GstId = item.GstId,
+                    GstPercentage = item.GstPercentage,
+                    GstAmt = item.GstAmt,
+                    GstLocalAmt = item.GstLocalAmt,
+                    GstCtyAmt = item.GstCtyAmt,
+                    DepartmentId = item.DepartmentId,
+                    EmployeeId = item.EmployeeId,
+                    PortId = item.PortId,
+                    VesselId = item.VesselId,
+                    BargeId = item.BargeId,
+                    VoyageId = item.VoyageId,
+                    EditVersion = item.EditVersion,
+                }).ToList();
+
+                var sqlResponse = await _GLJournalService.SaveGLJournalAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    GLJournalEntity,
+                    GLJournalDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _GLJournalService.GetGLJournalByIdNoAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                     new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("DeleteGLJournal")]
+        [Authorize]
+        public async Task<ActionResult<GLJournalViewModel>> DeleteGLJournal(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.GL, (Int32)E_GL.JournalEntry, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _GLJournalService.DeleteGLJournalAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _GLJournalService.GetGLJournalByIdNoAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteGLJournal: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        [HttpGet, Route("GetHistoryGLJournalbyId/{JournalId}")]
+        [Authorize]
+        public async Task<ActionResult<GLJournalViewModel>> GetHistoryGLJournalbyId(string JournalId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (JournalId == null || JournalId == "" || JournalId == "0")
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.GL, (Int32)E_GL.JournalEntry, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var GLJournalViewModel = await _GLJournalService.GetHistoryGLJournalByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(JournalId) ? 0 : JournalId?.Trim()), string.Empty, headerViewModel.UserId);
+
+                if (GLJournalViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = GLJournalViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+    }
+}

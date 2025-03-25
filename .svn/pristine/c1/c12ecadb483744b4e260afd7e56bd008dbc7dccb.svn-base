@@ -1,0 +1,299 @@
+﻿using AHHA.API.Controllers;
+using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.CB;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.CB;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.CB;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.CBI.Controllers.Accounts.CB
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class CBGenPaymentController : BaseController
+    {
+        private readonly ICBGenPaymentService _CBGenPaymentService;
+        private readonly ILogger<CBGenPaymentController> _logger;
+
+        public CBGenPaymentController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CBGenPaymentController> logger, ICBGenPaymentService CBGenPaymentService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CBGenPaymentService = CBGenPaymentService;
+        }
+
+        [HttpGet, Route("GetCBGenPayment")]
+        [Authorize]
+        public async Task<ActionResult> GetCBGenPayment([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBPayment, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _CBGenPaymentService.GetCBGenPaymentListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString?.Trim(), headerViewModel.fromDate, headerViewModel.toDate, headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetCBGenPayment: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetCBGenPaymentbyIdNo/{PaymentId}/{PaymentNo}")]
+        [Authorize]
+        public async Task<ActionResult<CBGenPaymentViewModel>> GetCBGenPaymentByIdNo(string PaymentId, string PaymentNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if ((PaymentId == "0" && PaymentNo == ""))
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBPayment, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var CBGenPaymentViewModel = await _CBGenPaymentService.GetCBGenPaymentByIdNoAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(PaymentId) ? 0 : PaymentId?.Trim()),
+                    PaymentNo, headerViewModel.UserId
+                );
+
+                if (CBGenPaymentViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = CBGenPaymentViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetCBGenPaymentById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("SaveCBGenPayment")]
+        [Authorize]
+        public async Task<ActionResult<CBGenPaymentHdViewModel>> SaveCBGenPayment(
+            CBGenPaymentHdViewModel CBGenPaymentViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (CBGenPaymentViewModel == null)
+                    return NotFound(GenerateMessage.datanotfound);
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.CB,
+                    (int)E_CB.CBPayment,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                // Header Data Mapping
+                var CBGenPaymentEntity = new CBGenPaymentHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    PaymentId = CBGenPaymentViewModel.PaymentId != null ? Convert.ToInt64(CBGenPaymentViewModel.PaymentId) : 0,
+                    PaymentNo = CBGenPaymentViewModel.PaymentNo?.Trim() ?? string.Empty,
+                    ReferenceNo = CBGenPaymentViewModel.ReferenceNo?.Trim() ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(CBGenPaymentViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(CBGenPaymentViewModel.AccountDate),
+                    CurrencyId = CBGenPaymentViewModel.CurrencyId,
+                    ExhRate = CBGenPaymentViewModel.ExhRate,
+                    CtyExhRate = CBGenPaymentViewModel.CtyExhRate,
+                    PaymentTypeId = CBGenPaymentViewModel.PaymentTypeId,
+                    BankId = CBGenPaymentViewModel.BankId,
+                    ChequeNo = CBGenPaymentViewModel.ChequeNo,
+                    ChequeDate = DateHelperStatic.ParseClientDate(CBGenPaymentViewModel.ChequeDate),
+                    BankChgAmt = CBGenPaymentViewModel.BankChgAmt,
+                    BankChgLocalAmt = CBGenPaymentViewModel.BankChgLocalAmt,
+                    TotAmt = CBGenPaymentViewModel.TotAmt,
+                    TotLocalAmt = CBGenPaymentViewModel.TotLocalAmt,
+                    TotCtyAmt = CBGenPaymentViewModel.TotCtyAmt,
+                    GstClaimDate = DateHelperStatic.ParseClientDate(CBGenPaymentViewModel.GstClaimDate),
+                    GstAmt = CBGenPaymentViewModel.GstAmt,
+                    GstLocalAmt = CBGenPaymentViewModel.GstLocalAmt,
+                    GstCtyAmt = CBGenPaymentViewModel.GstCtyAmt,
+                    TotAmtAftGst = CBGenPaymentViewModel.TotAmtAftGst,
+                    TotLocalAmtAftGst = CBGenPaymentViewModel.TotLocalAmtAftGst,
+                    TotCtyAmtAftGst = CBGenPaymentViewModel.TotCtyAmtAftGst,
+                    Remarks = CBGenPaymentViewModel.Remarks?.Trim() ?? string.Empty,
+                    PayeeTo = CBGenPaymentViewModel.PayeeTo?.Trim() ?? string.Empty,
+                    ModuleFrom = CBGenPaymentViewModel.ModuleFrom?.Trim() ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var CBGenPaymentDtEntities = CBGenPaymentViewModel.data_details?.Select(item => new CBGenPaymentDt
+                {
+                    PaymentId = item.PaymentId != null ? Convert.ToInt64(item.PaymentId) : 0,
+                    PaymentNo = item.PaymentNo,
+                    ItemNo = item.ItemNo,
+                    SeqNo = item.SeqNo,
+                    GLId = item.GLId,
+                    TotAmt = item.TotAmt,
+                    TotLocalAmt = item.TotLocalAmt,
+                    TotCtyAmt = item.TotCtyAmt,
+                    Remarks = item.Remarks?.Trim() ?? string.Empty,
+                    GstId = item.GstId,
+                    GstPercentage = item.GstPercentage,
+                    GstAmt = item.GstAmt,
+                    GstLocalAmt = item.GstLocalAmt,
+                    GstCtyAmt = item.GstCtyAmt,
+                    DepartmentId = item.DepartmentId,
+                    EmployeeId = item.EmployeeId,
+                    PortId = item.PortId,
+                    VesselId = item.VesselId,
+                    BargeId = item.BargeId,
+                    VoyageId = item.VoyageId,
+                    EditVersion = item.EditVersion,
+                }).ToList();
+
+                var sqlResponse = await _CBGenPaymentService.SaveCBGenPaymentAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    CBGenPaymentEntity,
+                    CBGenPaymentDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _CBGenPaymentService.GetCBGenPaymentByIdNoAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                     new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("DeleteCBGenPayment")]
+        [Authorize]
+        public async Task<ActionResult<CBGenPaymentViewModel>> DeleteCBGenPayment(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBPayment, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _CBGenPaymentService.DeleteCBGenPaymentAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _CBGenPaymentService.GetCBGenPaymentByIdNoAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteCBGenPayment: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        [HttpGet, Route("GetHistoryCBGenPaymentbyId/{PaymentId}")]
+        [Authorize]
+        public async Task<ActionResult<CBGenPaymentViewModel>> GetHistoryCBGenPaymentbyId(string PaymentId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (PaymentId == null || PaymentId == "" || PaymentId == "0")
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBPayment, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var CBGenPaymentViewModel = await _CBGenPaymentService.GetHistoryCBGenPaymentByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(PaymentId) ? 0 : PaymentId?.Trim()), string.Empty, headerViewModel.UserId);
+
+                if (CBGenPaymentViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = CBGenPaymentViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+    }
+}

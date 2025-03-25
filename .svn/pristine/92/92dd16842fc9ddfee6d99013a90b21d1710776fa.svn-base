@@ -1,0 +1,17 @@
+﻿using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+
+namespace AHHA.Application.IServices.Masters
+{
+    public interface ICOACategory1Service
+    {
+        public Task<COACategoryViewModelCount> GetCOACategory1ListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId);
+
+        public Task<M_COACategory1> GetCOACategory1ByIdAsync(string RegId, Int16 CompanyId, Int16 COACategoryId, Int16 UserId);
+
+        public Task<SqlResponse> SaveCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 m_COACategory1, Int16 UserId);
+
+        public Task<SqlResponse> DeleteCOACategory1Async(string RegId, Int16 CompanyId, M_COACategory1 m_COACategory1, Int16 UserId);
+    }
+}

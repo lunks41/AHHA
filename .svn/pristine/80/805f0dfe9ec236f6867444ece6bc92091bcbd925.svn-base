@@ -1,0 +1,57 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Telerik.Reporting.Services;
+using Telerik.Reporting.Services.AspNetCore;
+
+namespace AHHA.API.Controllers.Report
+{
+    [Route("api/reports")]
+    [ApiController]
+    public class ReportsController : ReportsControllerBase
+    {
+        public ReportsController(IReportServiceConfiguration reportServiceConfiguration)
+            : base(reportServiceConfiguration)
+        {
+        }
+
+    }
+}
+
+    //[Route("api/reports")]
+    //[ApiController]
+    //public class ReportsController : ReportsControllerBase
+    //{
+    //    public ReportsController(IWebHostEnvironment environment, ReportServiceConfiguration reportServiceConfiguration)
+    //        : base(new ReportServiceConfiguration
+    //        {
+    //            ReportSourceResolver = new UriReportSourceResolver(environment.ContentRootPath + "/Reports")
+    //                .AddFallbackResolver(new TypeReportSourceResolver()),
+    //            Storage = new FileStorage(),
+    //        })
+    //    { }
+
+    
+    //    // [RESTAuthorize]
+    //    public override IActionResult CreateDocument(string clientID, string instanceID, [FromBody] CreateDocumentArgs args)
+    //    {
+    //        return base.CreateDocument(clientID, instanceID, args);
+    //    }
+    //    
+    //}
+
+//using Microsoft.AspNetCore.Mvc;
+//using Telerik.Reporting.Services;
+//using Telerik.Reporting.Services.AspNetCore;
+
+//[Route("api/reports")]
+//public class ReportsController : ReportsControllerBase
+//{
+//    public ReportsController(IWebHostEnvironment environment)
+//        : base(new ReportsServiceConfiguration
+//        {
+//            ReportSourceResolver = new UriReportSourceResolver(environment.ContentRootPath + "/Reports")
+//                .AddFallbackResolver(new TypeReportSourceResolver()),
+//            Storage = new FileStorage(),
+//        })
+//    { }
+//}

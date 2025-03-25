@@ -1,0 +1,160 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class VisibleFieldsController : BaseController
+    {
+        private readonly IVisibleFieldsServices _VisibleFieldsServices;
+        private readonly ILogger<VisibleFieldsController> _logger;
+
+        public VisibleFieldsController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<VisibleFieldsController> logger, IVisibleFieldsServices VisibleFieldsServices)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _VisibleFieldsServices = VisibleFieldsServices;
+        }
+
+        [HttpGet, Route("GetVisibleFieldsbyid/{ModuleId}/{TransactionId}")]
+        [Authorize]
+        public async Task<ActionResult<VisibleFieldsViewModel>> GetVisibleFieldsById(Int16 ModuleId, Int16 TransactionId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.VisibleFields, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var VisibleFieldsViewModel = await _VisibleFieldsServices.GetVisibleFieldsByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ModuleId, TransactionId, headerViewModel.UserId);
+
+                        if (VisibleFieldsViewModel == null)
+                            return NotFound(GenerateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, VisibleFieldsViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenerateMessage.AuthenticationFailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetVisibleFieldsbyidV1/{ModuleId}")]
+        [Authorize]
+        public async Task<ActionResult<VisibleFieldsViewModel>> GetVisibleFieldsById_V1(Int16 ModuleId, Int16 TransactionId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.VisibleFields, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var VisibleFieldsViewModel = await _VisibleFieldsServices.GetVisibleFieldsByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, ModuleId, headerViewModel.UserId);
+
+                        if (VisibleFieldsViewModel == null)
+                            return NotFound(GenerateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, VisibleFieldsViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenerateMessage.AuthenticationFailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, new SqlResponse { Result = -1, Message = "An error occurred while processing your request", Data = null });
+            }
+        }
+
+        [HttpPost, Route("SaveVisibleFields")]
+        [Authorize]
+        public async Task<ActionResult> SaveVisibleFields([FromBody] List<VisibleFieldsViewModel> VisibleFieldsViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                // Validate headers
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                // Check user group rights
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.VisibleFields, headerViewModel.UserId);
+
+                if (userGroupRight == null || !userGroupRight.IsCreate)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                // Validate input data
+                if (VisibleFieldsViewModel == null || !VisibleFieldsViewModel.Any())
+                    return NotFound(GenerateMessage.datanotfound);
+
+                // Map the view model to the entity
+                var VisibleFieldsEntities = VisibleFieldsViewModel.Select(item => new S_VisibleFields
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    ModuleId = item.ModuleId,
+                    TransactionId = item.TransactionId,
+                    M_ProductId = item.M_ProductId,
+                    M_QTY = item.M_QTY,
+                    M_BillQTY = item.M_BillQTY,
+                    M_UomId = item.M_UomId,
+                    M_UnitPrice = item.M_UnitPrice,
+                    M_Remarks = item.M_Remarks,
+                    M_GstId = item.M_GstId,
+                    M_DeliveryDate = item.M_DeliveryDate,
+                    M_DepartmentId = item.M_DepartmentId,
+                    M_EmployeeId = item.M_EmployeeId,
+                    M_PortId = item.M_PortId,
+                    M_VesselId = item.M_VesselId,
+                    M_BargeId = item.M_BargeId,
+                    M_VoyageId = item.M_VoyageId,
+                    M_SupplyDate = item.M_SupplyDate,
+                    M_BankId = item.M_BankId,
+                    M_CtyCurr = item.M_CtyCurr,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                }).ToList();
+
+                // Save the mapped entities
+                var createdVisibleFields = await _VisibleFieldsServices.SaveVisibleFieldsAsync(headerViewModel.RegId, headerViewModel.CompanyId, VisibleFieldsEntities, headerViewModel.UserId);
+
+                return StatusCode(StatusCodes.Status202Accepted, createdVisibleFields);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving VisibleFields records");
+                return StatusCode(StatusCodes.Status500InternalServerError, new SqlResponse { Result = -1, Message = "An error occurred while processing your request", Data = null });
+            }
+        }
+    }
+}

@@ -1,0 +1,386 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class CreditTermController : BaseController
+    {
+        private readonly ICreditTermService _CreditTermService;
+        private readonly ILogger<CreditTermController> _logger;
+
+        public CreditTermController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CreditTermController> logger, ICreditTermService CreditTermService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CreditTermService = CreditTermService;
+        }
+
+        #region Header
+
+        [HttpGet, Route("GetCreditTerm")]
+        [Authorize]
+        public async Task<ActionResult> GetCreditTerm([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.CreditTerms, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CreditTermData = await _CreditTermService.GetCreditTermListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (CreditTermData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CreditTermData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCreditTermbyid/{CreditTermId}")]
+        [Authorize]
+        public async Task<ActionResult<CreditTermViewModel>> GetCreditTermById(Int16 CreditTermId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.CreditTerms, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var creditTermViewModel = _mapper.Map<CreditTermViewModel>(await _CreditTermService.GetCreditTermByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermId, headerViewModel.UserId));
+
+                        if (creditTermViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, creditTermViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCreditTerm")]
+        [Authorize]
+        public async Task<ActionResult<CreditTermViewModel>> SaveCreditTerm(CreditTermViewModel creditTermViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.CreditTerms, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate || userGroupRight.IsEdit)
+                        {
+                            if (creditTermViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var CreditTermEntity = new M_CreditTerm
+                            {
+                                CreditTermId = creditTermViewModel.CreditTermId,
+                                CompanyId = headerViewModel.CompanyId,
+                                CreditTermCode = creditTermViewModel.CreditTermCode?.Trim() ?? string.Empty,
+                                CreditTermName = creditTermViewModel.CreditTermName?.Trim() ?? string.Empty,
+                                NoDays = creditTermViewModel.NoDays,
+                                Remarks = creditTermViewModel.Remarks?.Trim() ?? string.Empty,
+                                IsActive = creditTermViewModel.IsActive,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var sqlResponse = await _CreditTermService.SaveCreditTermAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermEntity, headerViewModel.UserId);
+                            return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new CreditTerm record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCreditTerm/{CreditTermId}")]
+        [Authorize]
+        public async Task<ActionResult<M_CreditTerm>> DeleteCreditTerm(Int16 CreditTermId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.CreditTerms, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CreditTermToDelete = await _CreditTermService.GetCreditTermByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermId, headerViewModel.UserId);
+
+                            if (CreditTermToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _CreditTermService.DeleteCreditTermAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+
+        #endregion Header
+
+        #region Details
+
+        [HttpGet, Route("GetCreditTermDt")]
+        [Authorize]
+        public async Task<ActionResult> GetCreditTermDt([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.CreditTerms, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CreditTermDtData = await _CreditTermService.GetCreditTermDtListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (CreditTermDtData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CreditTermDtData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCreditTermDtbyid/{CreditTermId}/{FromDay}")]
+        [Authorize]
+        public async Task<ActionResult<CreditTermDtViewModel>> GetCreditTermDtById(Int16 CreditTermId, Int16 FromDay, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.CreditTerms, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var CreditTermDtViewModel = _mapper.Map<CreditTermDtViewModel>(await _CreditTermService.GetCreditTermDtByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermId, FromDay, headerViewModel.UserId));
+
+                        if (CreditTermDtViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CreditTermDtViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCreditTermDt")]
+        [Authorize]
+        public async Task<ActionResult<CreditTermDtViewModel>> SaveCreditTermDt(CreditTermDtViewModel CreditTermDtViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.CreditTerms, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate || userGroupRight.IsEdit)
+                        {
+                            if (CreditTermDtViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var CreditTermDtEntity = new M_CreditTermDt
+                            {
+                                CreditTermId = CreditTermDtViewModel.CreditTermId,
+                                CompanyId = headerViewModel.CompanyId,
+                                FromDay = CreditTermDtViewModel.FromDay,
+                                ToDay = CreditTermDtViewModel.ToDay,
+                                IsEndOfMonth = CreditTermDtViewModel.IsEndOfMonth,
+                                DueDay = CreditTermDtViewModel.DueDay,
+                                NoMonth = CreditTermDtViewModel.NoMonth,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var sqlResponse = await _CreditTermService.SaveCreditTermDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermDtEntity, headerViewModel.UserId);
+                            return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new CreditTermDt record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCreditTermDt/{CreditTermId}/{FromDay}")]
+        [Authorize]
+        public async Task<ActionResult<M_CreditTermDt>> DeleteCreditTermDt(Int16 CreditTermId, Int16 FromDay, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.CreditTerms, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var sqlResponse = await _CreditTermService.DeleteCreditTermDtAsync(headerViewModel.RegId, headerViewModel.CompanyId, CreditTermId, FromDay, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+
+        #endregion Details
+    }
+}

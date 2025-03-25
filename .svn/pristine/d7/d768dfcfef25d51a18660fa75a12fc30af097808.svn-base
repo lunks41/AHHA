@@ -1,0 +1,166 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class CustomerController : BaseController
+    {
+        private readonly ICustomerService _CustomerService;
+        private readonly ILogger<CustomerController> _logger;
+
+        public CustomerController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CustomerController> logger, ICustomerService CustomerService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CustomerService = CustomerService;
+        }
+
+        [HttpGet, Route("GetCustomers")]
+        [Authorize]
+        public async Task<ActionResult> GetCustomer([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                var cacheData = await _CustomerService.GetCustomerListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                if (cacheData == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "success", Data = cacheData.data, TotalRecords = cacheData.totalRecords });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCustomer/{CustomerId}/{CustomerCode}/{CustomerName}")]
+        [Authorize]
+        public async Task<ActionResult<CustomerViewModel>> GetCustomer(Int16 CustomerId, string CustomerCode, string CustomerName, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                var cacheData = await _CustomerService.GetCustomerAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, CustomerCode == "0" ? string.Empty : CustomerCode, CustomerName == "0" ? string.Empty : CustomerName, headerViewModel.UserId);
+
+                if (cacheData == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "Customer not found", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Customer retrieved successfully", Data = cacheData, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving customer by ID: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCustomer")]
+        [Authorize]
+        public async Task<ActionResult<CustomerViewModel>> SaveCustomer(CustomerViewModel customerViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                if (!userGroupRight.IsCreate)
+                    return Unauthorized(GenerateMessage.AuthenticationFailed);
+
+                if (customerViewModel == null)
+                    return BadRequest(GenerateMessage.datanotfound);
+
+                var CustomerEntity = new M_Customer
+                {
+                    CustomerId = customerViewModel.CustomerId,
+                    CompanyId = headerViewModel.CompanyId,
+                    CustomerCode = customerViewModel.CustomerCode?.Trim() ?? string.Empty,
+                    CustomerName = customerViewModel.CustomerName?.Trim() ?? string.Empty,
+                    CustomerOtherName = customerViewModel.CustomerOtherName?.Trim() ?? string.Empty,
+                    CustomerShortName = customerViewModel.CustomerShortName?.Trim() ?? string.Empty,
+                    CustomerRegNo = customerViewModel.CustomerRegNo?.Trim() ?? string.Empty,
+                    CurrencyId = customerViewModel.CurrencyId,
+                    CreditTermId = customerViewModel.CreditTermId,
+                    ParentCustomerId = customerViewModel.ParentCustomerId,
+                    BankId = customerViewModel.BankId,
+                    AccSetupId = customerViewModel.AccSetupId,
+                    SupplierId = customerViewModel.SupplierId,
+                    IsCustomer = customerViewModel.IsCustomer,
+                    IsVendor = customerViewModel.IsVendor,
+                    IsTrader = customerViewModel.IsTrader,
+                    IsSupplier = customerViewModel.IsSupplier,
+                    Remarks = customerViewModel.Remarks?.Trim() ?? string.Empty,
+                    IsActive = customerViewModel.IsActive,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now
+                };
+
+                var sqlResponse = await _CustomerService.SaveCustomerAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerEntity, headerViewModel.UserId);
+
+                return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error creating new Customer record: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Customer record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCustomer/{CustomerId}")]
+        [Authorize]
+        public async Task<ActionResult> DeleteCustomer(Int32 CustomerId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Customer, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                if (!userGroupRight.IsDelete)
+                    return Unauthorized(GenerateMessage.AuthenticationFailed);
+
+                var sqlResponse = await _CustomerService.DeleteCustomerAsync(headerViewModel.RegId, headerViewModel.CompanyId, CustomerId, headerViewModel.UserId);
+
+                return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting customer: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error deleting data");
+            }
+        }
+    }
+}

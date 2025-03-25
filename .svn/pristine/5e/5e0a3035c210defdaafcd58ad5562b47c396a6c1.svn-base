@@ -1,0 +1,199 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class PortRegionController : BaseController
+    {
+        private readonly IPortRegionService _portRegionService;
+        private readonly ILogger<PortRegionController> _logger;
+
+        public PortRegionController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<PortRegionController> logger, IPortRegionService portRegionService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _portRegionService = portRegionService;
+        }
+
+        [HttpGet, Route("getPortRegion")]
+        [Authorize]
+        public async Task<ActionResult> GetPortRegion([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.PortRegion, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var portRegionData = await _portRegionService.GetPortRegionListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        return Ok(portRegionData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("getPortRegionbyid/{PortRegionId}")]
+        [Authorize]
+        public async Task<ActionResult<PortRegionViewModel>> GetPortRegionById(Int16 PortRegionId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.PortRegion, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var portRegionViewModel = await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId);
+
+                        if (portRegionViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, portRegionViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SavePortRegion")]
+        [Authorize]
+        public async Task<ActionResult<PortRegionViewModel>> SavePortRegion(PortRegionViewModel portRegionViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.PortRegion, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (portRegionViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var PortRegionEntity = new M_PortRegion
+                            {
+                                PortRegionId = portRegionViewModel.PortRegionId,
+                                CompanyId = headerViewModel.CompanyId,
+                                PortRegionCode = portRegionViewModel.PortRegionCode?.Trim() ?? string.Empty,
+                                PortRegionName = portRegionViewModel.PortRegionName?.Trim() ?? string.Empty,
+                                CountryId = portRegionViewModel.CountryId,
+                                Remarks = portRegionViewModel.Remarks?.Trim() ?? string.Empty,
+                                IsActive = portRegionViewModel.IsActive,
+                                CreateById = headerViewModel.UserId,
+                            };
+
+                            var sqlResponse = await _portRegionService.SavePortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionEntity, headerViewModel.UserId);
+
+                            return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new PortRegion record");
+            }
+        }
+
+        [HttpDelete, Route("deletePortRegion/{PortRegionId}")]
+        [Authorize]
+        public async Task<ActionResult<M_PortRegion>> DeletePortRegion(Int16 PortRegionId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.PortRegion, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var PortRegionToDelete = _mapper.Map<M_PortRegion>(await _portRegionService.GetPortRegionByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionId, headerViewModel.UserId));
+
+                            if (PortRegionToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _portRegionService.DeletePortRegionAsync(headerViewModel.RegId, headerViewModel.CompanyId, PortRegionToDelete, headerViewModel.UserId);
+
+                            return Ok(sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

@@ -1,0 +1,101 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class DynamicLookupController : BaseController
+    {
+        private readonly IDynamicLookupService _DynamicLookupService;
+        private readonly ILogger<DynamicLookupController> _logger;
+
+        public DynamicLookupController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<DynamicLookupController> logger, IDynamicLookupService DynamicLookupService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _DynamicLookupService = DynamicLookupService;
+        }
+
+        //DynamicLookup screen
+
+        //get --companyid
+        //Save  --company/model
+
+        [HttpGet, Route("GetDynamicLookup")]
+        [Authorize]
+        public async Task<ActionResult<DynamicLookupViewModel>> GetDynamicLookup([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var DynamicLookupViewModel = await _DynamicLookupService.GetDynamicLookupAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                    if (DynamicLookupViewModel == null)
+                        return NotFound(GenerateMessage.datanotfound);
+
+                    return StatusCode(StatusCodes.Status202Accepted, DynamicLookupViewModel);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveDynamicLookup")]
+        [Authorize]
+        public async Task<ActionResult<DynamicLookupViewModel>> SaveDynamicLookup(DynamicLookupViewModel DynamicLookupViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    if (DynamicLookupViewModel == null)
+                        return NotFound(GenerateMessage.datanotfound);
+
+                    var FinEntity = new S_DynamicLookup
+                    {
+                        CompanyId = headerViewModel.CompanyId,
+                        IsBarge = DynamicLookupViewModel.IsBarge,
+                        IsVessel = DynamicLookupViewModel.IsVessel,
+                        IsVoyage = DynamicLookupViewModel.IsVoyage,
+                        IsCustomer = DynamicLookupViewModel.IsCustomer,
+                        IsSupplier = DynamicLookupViewModel.IsSupplier,
+                        IsProduct = DynamicLookupViewModel.IsProduct,
+                        CreateById = headerViewModel.UserId,
+                        EditById = headerViewModel.UserId,
+                        EditDate = DateTime.Now,
+                    };
+
+                    var createdFin = await _DynamicLookupService.SaveDynamicLookupAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
+                    return StatusCode(StatusCodes.Status202Accepted, createdFin);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Fin record");
+            }
+        }
+    }
+}

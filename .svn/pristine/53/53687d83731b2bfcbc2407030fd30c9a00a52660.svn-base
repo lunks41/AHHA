@@ -1,0 +1,269 @@
+﻿using AHHA.Application.CommonServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Admin;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Transactions;
+
+namespace AHHA.Infra.Services.Masters
+{
+    public sealed class EmployeeService : IEmployeeService
+    {
+        private readonly IRepository<M_Employee> _repository;
+        private ApplicationDbContext _context;
+
+        public EmployeeService(IRepository<M_Employee> repository, ApplicationDbContext context)
+        {
+            _repository = repository;
+            _context = context;
+        }
+
+        public async Task<EmployeeViewModelCount> GetEmployeeListAsync(string RegId, Int16 CompanyId, Int16 pageSize, Int16 pageNumber, string searchString, Int16 UserId)
+        {
+            EmployeeViewModelCount countViewModel = new EmployeeViewModelCount();
+            try
+            {
+                var totalcount = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, $"SELECT COUNT(*) AS CountId FROM M_Employee M_Emp INNER JOIN M_Department M_Dep ON M_Dep.DepartmentId = M_Emp.DepartmentId WHERE (M_Emp.EmployeeName LIKE '%{searchString}%' OR M_Emp.EmployeeCode LIKE '%{searchString}%' OR M_Emp.Remarks LIKE '%{searchString}%' OR M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%') AND M_Emp.EmployeeId<>0 AND M_Emp.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Employee}))");
+
+                var result = await _repository.GetQueryAsync<EmployeeViewModel>(RegId, $"SELECT M_Emp.EmployeeId,M_Emp.EmployeeCode,M_Emp.CompanyId,M_Emp.EmployeeName,M_Emp.EmployeeOtherName,M_Emp.EmployeePhoto,M_Emp.EmployeeSignature,M_Dep.DepartmentCode,M_Dep.DepartmentName,M_Emp.EmployeeSex,M_Emp.MartialStatus,M_Emp.EmployeeDOB,M_Emp.EmployeeJoinDate,M_Emp.EmployeeOffEmailAdd,M_Emp.Remarks,M_Emp.IsActive,M_Emp.CreateById,M_Emp.CreateDate,M_Emp.EditById,M_Emp.EditDate,Usr.UserName AS CreateBy,Usr1.UserName AS EditBy FROM M_Employee M_Emp INNER JOIN M_Department M_Dep ON M_Dep.DepartmentId = M_Emp.DepartmentId LEFT JOIN dbo.AdmUser Usr ON Usr.UserId = M_Emp.CreateById LEFT JOIN dbo.AdmUser Usr1 ON Usr1.UserId = M_Emp.EditById WHERE (M_Emp.EmployeeName LIKE '%{searchString}%' OR M_Emp.EmployeeCode LIKE '%{searchString}%' OR M_Emp.Remarks LIKE '%{searchString}%' OR M_Dep.DepartmentName LIKE '%{searchString}%' OR M_Dep.DepartmentCode LIKE '%{searchString}%') AND M_Emp.EmployeeId<>0 AND M_Emp.CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Employee})) ORDER BY M_Emp.EmployeeName");
+
+                countViewModel.responseCode = 200;
+                countViewModel.responseMessage = "success";
+                countViewModel.totalRecords = totalcount == null ? 0 : totalcount.CountId;
+                countViewModel.data = result == null ? null : result.ToList();
+
+                return countViewModel;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Employee,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Employee",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<M_Employee> GetEmployeeByIdAsync(string RegId, Int16 CompanyId, Int16 EmployeeId, Int16 UserId)
+        {
+            try
+            {
+                var result = await _repository.GetQuerySingleOrDefaultAsync<M_Employee>(RegId, $"SELECT EmployeeId,CompanyId,EmployeeCode,EmployeeName,EmployeeOtherName,EmployeePhoto,EmployeeSignature,DepartmentId,EmployeeSex,MartialStatus,EmployeeDOB,EmployeeJoinDate,EmployeeLastDate,EmployeeOffEmailAdd,EmployeeOtherEmailAdd,Remarks,IsActive,CreateById,CreateDate,EditById,EditDate FROM dbo.M_Employee WHERE EmployeeId={EmployeeId} AND CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Master},{(short)E_Master.Employee}))");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new AdmErrorLog
+                {
+                    CompanyId = CompanyId,
+                    ModuleId = (short)E_Modules.Master,
+                    TransactionId = (short)E_Master.Employee,
+                    DocumentId = 0,
+                    DocumentNo = "",
+                    TblName = "M_Employee",
+                    ModeId = (short)E_Mode.View,
+                    Remarks = ex.Message + ex.InnerException,
+                    CreateById = UserId,
+                };
+
+                _context.Add(errorLog);
+                _context.SaveChanges();
+
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<SqlResponse> SaveEmployeeAsync(string RegId, Int16 CompanyId, M_Employee m_Employee, Int16 UserId)
+        {
+            using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                bool IsEdit = false;
+                try
+                {
+                    if (m_Employee.EmployeeId != 0)
+                    {
+                        IsEdit = true;
+                    }
+                    if (IsEdit)
+                    {
+                        var DataExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Employee WHERE EmployeeId<>0 AND EmployeeId={m_Employee.EmployeeId} ");
+
+                        if (DataExist.Count() > 0 && DataExist.ToList()[0].IsExist == 1)
+                        {
+                            var entityHead = _context.Update(m_Employee);
+                            entityHead.Property(b => b.CreateById).IsModified = false;
+                            entityHead.Property(b => b.CompanyId).IsModified = false;
+                        }
+                        else
+                            return new SqlResponse { Result = -1, Message = "User Not Found" };
+                    }
+                    else
+                    {
+                        var codeExist = await _repository.GetQueryAsync<SqlResponseIds>(RegId, $"SELECT 1 AS IsExist FROM dbo.M_Employee WHERE EmployeeId<>0 AND EmployeeCode={m_Employee.EmployeeCode} AND EmployeeName={m_Employee.EmployeeName} ");
+
+                        if (codeExist.Count() > 0 && codeExist.ToList()[0].IsExist == 1)
+                            return new SqlResponse { Result = -1, Message = "Employee Code Same" };
+
+                        //Take the Next Id From SQL
+                        var sqlMissingResponse = await _repository.GetQuerySingleOrDefaultAsync<SqlResponseIds>(RegId, "SELECT ISNULL((SELECT TOP 1 (EmployeeId + 1) FROM dbo.M_Employee WHERE (EmployeeId + 1) NOT IN (SELECT EmployeeId FROM dbo.M_Employee)),1) AS NextId");
+
+                        if (sqlMissingResponse != null && sqlMissingResponse.NextId > 0)
+                        {
+                            m_Employee.EmployeeId = Convert.ToInt16(sqlMissingResponse.NextId);
+                            _context.Add(m_Employee);
+                        }
+                        else
+                            return new SqlResponse { Result = -1, Message = "Internal Server Error" };
+                    }
+
+                    var saveChangeRecord = _context.SaveChanges();
+
+                    #region Save AuditLog
+
+                    if (saveChangeRecord > 0)
+                    {
+                        //Saving Audit log
+                        var auditLog = new AdmAuditLog
+                        {
+                            CompanyId = CompanyId,
+                            ModuleId = (short)E_Modules.Master,
+                            TransactionId = (short)E_Master.Employee,
+                            DocumentId = m_Employee.EmployeeId,
+                            DocumentNo = m_Employee.EmployeeCode,
+                            TblName = "M_Employee",
+                            ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                            Remarks = "Employee Save Successfully",
+                            CreateById = UserId,
+                            CreateDate = DateTime.Now
+                        };
+
+                        _context.Add(auditLog);
+                        var auditLogSave = _context.SaveChanges();
+
+                        if (auditLogSave > 0)
+                        {
+                            TScope.Complete();
+                            return new SqlResponse { Result = 1, Message = "Save Successfully" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponse { Result = 1, Message = "Save Failed" };
+                    }
+
+                    #endregion Save AuditLog
+
+                    return new SqlResponse();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Employee,
+                        DocumentId = m_Employee.EmployeeId,
+                        DocumentNo = m_Employee.EmployeeCode,
+                        TblName = "AdmUser",
+                        ModeId = IsEdit ? (short)E_Mode.Update : (short)E_Mode.Create,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId
+                    };
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw;
+                }
+            }
+        }
+
+        
+
+        public async Task<SqlResponse> DeleteEmployeeAsync(string RegId, Int16 CompanyId, M_Employee Employee, Int16 UserId)
+        {
+            using (var TScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    if (Employee.EmployeeId > 0)
+                    {
+                        var EmployeeToRemove = _context.M_Employee.Where(x => x.EmployeeId == Employee.EmployeeId).ExecuteDelete();
+
+                        if (EmployeeToRemove > 0)
+                        {
+                            var auditLog = new AdmAuditLog
+                            {
+                                CompanyId = CompanyId,
+                                ModuleId = (short)E_Modules.Master,
+                                TransactionId = (short)E_Master.Employee,
+                                DocumentId = Employee.EmployeeId,
+                                DocumentNo = Employee.EmployeeCode,
+                                TblName = "M_Employee",
+                                ModeId = (short)E_Mode.Delete,
+                                Remarks = "Employee Delete Successfully",
+                                CreateById = UserId
+                            };
+                            _context.Add(auditLog);
+                            var auditLogSave = await _context.SaveChangesAsync();
+                            if (auditLogSave > 0)
+                            {
+                                TScope.Complete();
+                                return new SqlResponse { Result = 1, Message = "Delete Successfully" };
+                            }
+                        }
+                        else
+                        {
+                            return new SqlResponse { Result = -1, Message = "Delete Failed" };
+                        }
+                    }
+                    else
+                    {
+                        return new SqlResponse { Result = -1, Message = "EmployeeId Should be zero" };
+                    }
+                    return new SqlResponse();
+                }
+                catch (Exception ex)
+                {
+                    _context.ChangeTracker.Clear();
+
+                    var errorLog = new AdmErrorLog
+                    {
+                        CompanyId = CompanyId,
+                        ModuleId = (short)E_Modules.Master,
+                        TransactionId = (short)E_Master.Employee,
+                        DocumentId = 0,
+                        DocumentNo = "",
+                        TblName = "M_Employee",
+                        ModeId = (short)E_Mode.Delete,
+                        Remarks = ex.Message + ex.InnerException,
+                        CreateById = UserId,
+                    };
+
+                    _context.Add(errorLog);
+                    _context.SaveChanges();
+
+                    throw new Exception(ex.ToString());
+                }
+            }
+        }
+    }
+}

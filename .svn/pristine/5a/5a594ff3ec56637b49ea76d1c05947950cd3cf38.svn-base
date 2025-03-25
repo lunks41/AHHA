@@ -1,0 +1,22 @@
+[
+  {
+    "RegId": "Astar@123",
+    "CompanyName": "AHHA",
+    "ConnectionStringName": "DbConnection"
+  },
+  {
+    "RegId": "Archi@123",
+    "CompanyName": "Archipelago",
+    "ConnectionStringName": "DBConnection_Archi"
+  },
+  {
+    "RegId": "Live@123",
+    "CompanyName": "Live",
+    "ConnectionStringName": "DBConnection_Live"
+  },
+  {
+    "RegId": "AHHA_GEI",
+    "CompanyName": "GEI",
+    "ConnectionStringName": "DBConnection_GEI"
+  }
+]

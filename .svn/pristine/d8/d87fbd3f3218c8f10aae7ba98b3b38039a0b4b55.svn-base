@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Models\**" />
+    <Compile Remove="Validation\**" />
+    <Content Remove="Models\**" />
+    <Content Remove="Validation\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="Validation\**" />
+    <None Remove="Models\**" />
+    <None Remove="Validation\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <TreatAsUsed>true</TreatAsUsed>
+    </PackageReference>
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.0" />
+    <PackageReference Include="System.Threading.AccessControl" Version="9.0.2" />
+    <PackageReference Include="System.Threading.AccessControl" Version="9.0.2" />
+    <PackageReference Include="Telerik.Reporting.Services.AspNetCore.Trial" Version="19.0.25.211" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\Dashboard\" />
+    <Folder Include="Filters\" />
+    <Folder Include="Reports\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AHHA.Infra\AHHA.Infra.csproj" />
+  </ItemGroup>
+
+</Project>

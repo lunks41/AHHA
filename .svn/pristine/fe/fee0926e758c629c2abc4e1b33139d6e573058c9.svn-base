@@ -1,0 +1,223 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class CountryController : BaseController
+    {
+        private readonly ICountryService _countryService;
+        private readonly ILogger<CountryController> _logger;
+
+        public CountryController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CountryController> logger, ICountryService countryService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _countryService = countryService;
+        }
+
+        [HttpGet, Route("GetCountry")]
+        [Authorize]
+        public async Task<ActionResult> GetCountry([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Country, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        ////Get the data from cache memory
+                        //var cacheData = _memoryCache.Get<CountryViewModelCount>("country");
+
+                        //if (cacheData != null)
+                        //    return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                        ////return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        //else
+                        //{
+                        //var expirationTime = DateTimeOffset.Now.SaveSeconds(30);
+
+                        var CountryData = await _countryService.GetCountryListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (CountryData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        //_memoryCache.Set<CountryViewModelCount>("country", cacheData, expirationTime);
+
+                        return StatusCode(StatusCodes.Status202Accepted, CountryData);
+                        //return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        //}
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCountrybyid/{CountryId}")]
+        [Authorize]
+        public async Task<ActionResult<CountryViewModel>> GetCountryById(Int16 CountryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Country, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var countryViewModel = _mapper.Map<CountryViewModel>(await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId));
+
+                        if (countryViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, countryViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCountry")]
+        [Authorize]
+        public async Task<ActionResult<CountryViewModel>> SaveCountry(CountryViewModel country, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Country, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (country == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var countryEntity = new M_Country
+                            {
+                                CountryId = country.CountryId,
+                                CompanyId = headerViewModel.CompanyId,
+                                CountryCode = country.CountryCode?.Trim() ?? string.Empty,
+                                CountryName = country.CountryName?.Trim() ?? string.Empty,
+                                Remarks = country.Remarks?.Trim() ?? string.Empty,
+                                IsActive = country.IsActive,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
+                            };
+
+                            var sqlResponse = await _countryService.SaveCountryAsync(headerViewModel.RegId, headerViewModel.CompanyId, countryEntity, headerViewModel.UserId);
+                            return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new country record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCountry/{CountryId}")]
+        [Authorize]
+        public async Task<ActionResult<M_Country>> DeleteCountry(Int16 CountryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Country, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var CountryToDelete = await _countryService.GetCountryByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryId, headerViewModel.UserId);
+
+                            if (CountryToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _countryService.DeleteCountryAsync(headerViewModel.RegId, headerViewModel.CompanyId, CountryToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Microsoft.Data.SqlClient.SqlException)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   "Country " + GenrateMessage.sql547);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

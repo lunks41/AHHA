@@ -1,0 +1,299 @@
+﻿using AHHA.API.Controllers;
+using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.CB;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.CB;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.CB;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.CBI.Controllers.Accounts.CB
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class CBPettyCashController : BaseController
+    {
+        private readonly ICBPettyCashService _CBPettyCashService;
+        private readonly ILogger<CBPettyCashController> _logger;
+
+        public CBPettyCashController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<CBPettyCashController> logger, ICBPettyCashService CBPettyCashService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _CBPettyCashService = CBPettyCashService;
+        }
+
+        [HttpGet, Route("GetCBPettyCash")]
+        [Authorize]
+        public async Task<ActionResult> GetCBPettyCash([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBPayment, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _CBPettyCashService.GetCBPettyCashListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString?.Trim(), headerViewModel.fromDate, headerViewModel.toDate, headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetCBPettyCash: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetCBPettyCashbyIdNo/{PaymentId}/{PaymentNo}")]
+        [Authorize]
+        public async Task<ActionResult<CBPettyCashViewModel>> GetCBPettyCashByIdNo(string PaymentId, string PaymentNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if ((PaymentId == "0" && PaymentNo == ""))
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBPayment, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var CBPettyCashViewModel = await _CBPettyCashService.GetCBPettyCashByIdNoAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(PaymentId) ? 0 : PaymentId?.Trim()),
+                    PaymentNo, headerViewModel.UserId
+                );
+
+                if (CBPettyCashViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = CBPettyCashViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetCBPettyCashById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("SaveCBPettyCash")]
+        [Authorize]
+        public async Task<ActionResult<CBPettyCashHdViewModel>> SaveCBPettyCash(
+            CBPettyCashHdViewModel CBPettyCashViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (CBPettyCashViewModel == null)
+                    return NotFound(GenerateMessage.datanotfound);
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.CB,
+                    (int)E_CB.CBPayment,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                // Header Data Mapping
+                var CBPettyCashEntity = new CBPettyCashHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    PaymentId = CBPettyCashViewModel.PaymentId != null ? Convert.ToInt64(CBPettyCashViewModel.PaymentId) : 0,
+                    PaymentNo = CBPettyCashViewModel.PaymentNo?.Trim() ?? string.Empty,
+                    ReferenceNo = CBPettyCashViewModel.ReferenceNo?.Trim() ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(CBPettyCashViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(CBPettyCashViewModel.AccountDate),
+                    CurrencyId = CBPettyCashViewModel.CurrencyId,
+                    ExhRate = CBPettyCashViewModel.ExhRate,
+                    CtyExhRate = CBPettyCashViewModel.CtyExhRate,
+                    PaymentTypeId = CBPettyCashViewModel.PaymentTypeId,
+                    BankId = CBPettyCashViewModel.BankId,
+                    ChequeNo = CBPettyCashViewModel.ChequeNo,
+                    ChequeDate = DateHelperStatic.ParseClientDate(CBPettyCashViewModel.ChequeDate),
+                    BankChgAmt = CBPettyCashViewModel.BankChgAmt,
+                    BankChgLocalAmt = CBPettyCashViewModel.BankChgLocalAmt,
+                    TotAmt = CBPettyCashViewModel.TotAmt,
+                    TotLocalAmt = CBPettyCashViewModel.TotLocalAmt,
+                    TotCtyAmt = CBPettyCashViewModel.TotCtyAmt,
+                    GstClaimDate = DateHelperStatic.ParseClientDate(CBPettyCashViewModel.GstClaimDate),
+                    GstAmt = CBPettyCashViewModel.GstAmt,
+                    GstLocalAmt = CBPettyCashViewModel.GstLocalAmt,
+                    GstCtyAmt = CBPettyCashViewModel.GstCtyAmt,
+                    TotAmtAftGst = CBPettyCashViewModel.TotAmtAftGst,
+                    TotLocalAmtAftGst = CBPettyCashViewModel.TotLocalAmtAftGst,
+                    TotCtyAmtAftGst = CBPettyCashViewModel.TotCtyAmtAftGst,
+                    Remarks = CBPettyCashViewModel.Remarks?.Trim() ?? string.Empty,
+                    PayeeTo = CBPettyCashViewModel.PayeeTo?.Trim() ?? string.Empty,
+                    ModuleFrom = CBPettyCashViewModel.ModuleFrom?.Trim() ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var CBPettyCashDtEntities = CBPettyCashViewModel.data_details?.Select(item => new CBPettyCashDt
+                {
+                    PaymentId = item.PaymentId != null ? Convert.ToInt64(item.PaymentId) : 0,
+                    PaymentNo = item.PaymentNo,
+                    ItemNo = item.ItemNo,
+                    SeqNo = item.SeqNo,
+                    GLId = item.GLId,
+                    TotAmt = item.TotAmt,
+                    TotLocalAmt = item.TotLocalAmt,
+                    TotCtyAmt = item.TotCtyAmt,
+                    Remarks = item.Remarks?.Trim() ?? string.Empty,
+                    GstId = item.GstId,
+                    GstPercentage = item.GstPercentage,
+                    GstAmt = item.GstAmt,
+                    GstLocalAmt = item.GstLocalAmt,
+                    GstCtyAmt = item.GstCtyAmt,
+                    DepartmentId = item.DepartmentId,
+                    EmployeeId = item.EmployeeId,
+                    PortId = item.PortId,
+                    VesselId = item.VesselId,
+                    BargeId = item.BargeId,
+                    VoyageId = item.VoyageId,
+                    EditVersion = item.EditVersion,
+                }).ToList();
+
+                var sqlResponse = await _CBPettyCashService.SaveCBPettyCashAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    CBPettyCashEntity,
+                    CBPettyCashDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _CBPettyCashService.GetCBPettyCashByIdNoAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                     new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("DeleteCBPettyCash")]
+        [Authorize]
+        public async Task<ActionResult<CBPettyCashViewModel>> DeleteCBPettyCash(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBPayment, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _CBPettyCashService.DeleteCBPettyCashAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _CBPettyCashService.GetCBPettyCashByIdNoAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteCBPettyCash: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        [HttpGet, Route("GetHistoryCBPettyCashbyId/{PaymentId}")]
+        [Authorize]
+        public async Task<ActionResult<CBPettyCashViewModel>> GetHistoryCBPettyCashbyId(string PaymentId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (PaymentId == null || PaymentId == "" || PaymentId == "0")
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.CB, (Int32)E_CB.CBPayment, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var CBPettyCashViewModel = await _CBPettyCashService.GetHistoryCBPettyCashByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(PaymentId) ? 0 : PaymentId?.Trim()), string.Empty, headerViewModel.UserId);
+
+                if (CBPettyCashViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = CBPettyCashViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+    }
+}

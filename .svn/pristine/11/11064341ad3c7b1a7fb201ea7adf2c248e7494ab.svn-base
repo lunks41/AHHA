@@ -1,0 +1,184 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class BargeController : BaseController
+    {
+        private readonly IBargeService _BargeService;
+        private readonly ILogger<BargeController> _logger;
+
+        public BargeController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BargeController> logger, IBargeService BargeService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _BargeService = BargeService;
+        }
+
+        [HttpGet, Route("GetBarge")]
+        [Authorize]
+        public async Task<ActionResult> GetBarge([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (headerViewModel == null || !ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (short)E_Modules.Master, (short)E_Master.Barge, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+
+                var cacheData = await _BargeService.GetBargeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                if (cacheData == null)
+                {
+                    return NotFound(GenrateMessage.datanotfound);
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, cacheData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetBargebyid/{BargeId}")]
+        [Authorize]
+        public async Task<ActionResult<BargeViewModel>> GetBargeById(short bargeId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (headerViewModel == null || !ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    return NoContent();
+                }
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (short)E_Modules.Master, (short)E_Master.Barge, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+
+                var bargeViewModel = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, bargeId, headerViewModel.UserId);
+
+                if (bargeViewModel == null)
+                {
+                    return NotFound(GenrateMessage.datanotfound);
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, bargeViewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveBarge")]
+        [Authorize]
+        public async Task<ActionResult<BargeViewModel>> SaveBarge(BargeViewModel barge, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (headerViewModel == null || !ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    return NoContent();
+                }
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Barge, headerViewModel.UserId);
+
+                if (userGroupRight == null || !userGroupRight.IsCreate)
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+
+                if (barge == null)
+                {
+                    return NotFound(GenrateMessage.datanotfound);
+                }
+
+                var bargeEntity = new M_Barge
+                {
+                    BargeId = barge.BargeId,
+                    CompanyId = headerViewModel.CompanyId,
+                    BargeCode = barge.BargeCode?.Trim() ?? string.Empty,
+                    BargeName = barge.BargeName?.Trim() ?? string.Empty,
+                    CallSign = barge.CallSign?.Trim() ?? string.Empty,
+                    IMOCode = barge.IMOCode?.Trim() ?? string.Empty,
+                    GRT = barge.GRT?.Trim() ?? string.Empty,
+                    LicenseNo = barge.LicenseNo?.Trim() ?? string.Empty,
+                    BargeType = barge.BargeType?.Trim() ?? string.Empty,
+                    Flag = barge.Flag?.Trim() ?? string.Empty,
+                    IsActive = barge.IsActive,
+                    Remarks = barge.Remarks?.Trim() ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now
+                };
+
+                var sqlResponse = await _BargeService.SaveBargeAsync(headerViewModel.RegId, headerViewModel.CompanyId, bargeEntity, headerViewModel.UserId);
+
+                return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Barge record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteBarge/{bargeId}")]
+        [Authorize]
+        public async Task<ActionResult<BargeViewModel>> DeleteBarge(short bargeId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (headerViewModel == null || !ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    return NoContent();
+                }
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (short)E_Modules.Master, (short)E_Master.Barge, headerViewModel.UserId);
+
+                if (userGroupRight == null || !userGroupRight.IsDelete)
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+
+                var bargeToDelete = await _BargeService.GetBargeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, bargeId, headerViewModel.UserId);
+
+                if (bargeToDelete == null)
+                {
+                    return NotFound(GenrateMessage.datanotfound);
+                }
+
+                var sqlResponse = await _BargeService.DeleteBargeAsync(headerViewModel.RegId, headerViewModel.CompanyId, bargeToDelete, headerViewModel.UserId);
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error deleting data");
+            }
+        }
+    }
+}

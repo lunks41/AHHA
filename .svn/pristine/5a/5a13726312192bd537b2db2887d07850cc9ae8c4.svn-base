@@ -1,0 +1,205 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class COACategory3Controller : BaseController
+    {
+        private readonly ICOACategory3Service _COACategory3Service;
+        private readonly ILogger<COACategory3Controller> _logger;
+
+        public COACategory3Controller(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<COACategory3Controller> logger, ICOACategory3Service COACategory3Service)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _COACategory3Service = COACategory3Service;
+        }
+
+        [HttpGet, Route("GetCOACategory3")]
+        [Authorize]
+        public async Task<ActionResult> GetCOACategory3([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.COACategory3, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _COACategory3Service.GetCOACategory3ListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetCOACategory3byid/{COACategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<COACategoryViewModel>> GetCOACategory3ById(Int16 COACategoryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.COACategory3, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var COACategoryViewModel = _mapper.Map<COACategoryViewModel>(await _COACategory3Service.GetCOACategory3ByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId));
+
+                        if (COACategoryViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, COACategoryViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveCOACategory3")]
+        [Authorize]
+        public async Task<ActionResult<COACategoryViewModel>> SaveCOACategory3(COACategoryViewModel cOACategoryViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.COACategory3, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (cOACategoryViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var COACategory3Entity = new M_COACategory3
+                            {
+                                COACategoryId = cOACategoryViewModel.COACategoryId,
+                                CompanyId = headerViewModel.CompanyId,
+                                COACategoryCode = cOACategoryViewModel.COACategoryCode?.Trim() ?? string.Empty,
+                                COACategoryName = cOACategoryViewModel.COACategoryName?.Trim() ?? string.Empty,
+                                SeqNo = cOACategoryViewModel.SeqNo,
+                                Remarks = cOACategoryViewModel.Remarks?.Trim() ?? string.Empty,
+                                IsActive = cOACategoryViewModel.IsActive,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
+                            };
+
+                            var sqlResponse = await _COACategory3Service.SaveCOACategory3Async(headerViewModel.RegId, headerViewModel.CompanyId, COACategory3Entity, headerViewModel.UserId);
+                            return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new COACategory3 record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteCOACategory3/{COACategoryId}")]
+        [Authorize]
+        public async Task<ActionResult<M_COACategory3>> DeleteCOACategory3(Int16 COACategoryId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.COACategory3, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var COACategory3ToDelete = await _COACategory3Service.GetCOACategory3ByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, COACategoryId, headerViewModel.UserId);
+
+                            if (COACategory3ToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _COACategory3Service.DeleteCOACategory3Async(headerViewModel.RegId, headerViewModel.CompanyId, COACategory3ToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

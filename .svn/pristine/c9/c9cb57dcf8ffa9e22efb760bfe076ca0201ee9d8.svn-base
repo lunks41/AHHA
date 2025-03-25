@@ -1,0 +1,288 @@
+﻿using AHHA.API.Controllers;
+using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.GL;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.GL;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.GL;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+
+namespace AHHA.GLI.Controllers.Accounts.GL
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class GLContraController : BaseController
+    {
+        private readonly IGLContraService _GLContraService;
+        private readonly ILogger<GLContraController> _logger;
+
+        public GLContraController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<GLContraController> logger, IGLContraService GLContraService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _GLContraService = GLContraService;
+        }
+
+        [HttpGet, Route("GetGLContra")]
+        [Authorize]
+        public async Task<ActionResult> GetGLContra([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.GL, (Int32)E_GL.JournalEntry, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _GLContraService.GetGLContraListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString?.Trim(), headerViewModel.fromDate, headerViewModel.toDate, headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetGLContra: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetGLContrabyIdNo/{ContraId}/{ContraNo}")]
+        [Authorize]
+        public async Task<ActionResult<GLContraViewModel>> GetGLContraByIdNo(string ContraId, string ContraNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if ((ContraId == "0" && ContraNo == ""))
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.GL, (Int32)E_GL.JournalEntry, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var GLContraViewModel = await _GLContraService.GetGLContraByIdNoAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(ContraId) ? 0 : ContraId?.Trim()),
+                    ContraNo, headerViewModel.UserId
+                );
+
+                if (GLContraViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = GLContraViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetGLContraById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("SaveGLContra")]
+        [Authorize]
+        public async Task<ActionResult<GLContraHdViewModel>> SaveGLContra(
+            GLContraHdViewModel GLContraViewModel,
+            [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (GLContraViewModel == null)
+                    return NotFound(GenrateMessage.datanotfound);
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.GL,
+                    (int)E_GL.JournalEntry,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenrateMessage.authenticationfailed);
+
+                // Header Data Mapping
+                var GLContraEntity = new GLContraHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    ContraId = GLContraViewModel.ContraId != null ? Convert.ToInt64(GLContraViewModel.ContraId) : 0,
+                    ContraNo = GLContraViewModel.ContraNo?.Trim() ?? string.Empty,
+                    ReferenceNo = GLContraViewModel.ReferenceNo?.Trim() ?? string.Empty,
+                    TrnDate = DateHelperStatic.ParseClientDate(GLContraViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(GLContraViewModel.AccountDate),
+                    SupplierId = GLContraViewModel.SupplierId,
+                    CustomerId = GLContraViewModel.CustomerId,
+                    CurrencyId = GLContraViewModel.CurrencyId,
+                    ExhRate = GLContraViewModel.ExhRate,
+                    TotAmt = GLContraViewModel.TotAmt,
+                    TotLocalAmt = GLContraViewModel.TotLocalAmt,
+                    ExhGainLoss = GLContraViewModel.ExhGainLoss,
+                    Remarks = GLContraViewModel.Remarks?.Trim() ?? string.Empty,
+                    ModuleFrom = GLContraViewModel.ModuleFrom?.Trim() ?? string.Empty,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                // Details Mapping
+                var GLContraDtEntities = GLContraViewModel.data_details?.Select(item => new GLContraDt
+                {
+                    ContraId = item.ContraId != null ? Convert.ToInt64(item.ContraId) : 0,
+                    ContraNo = item.ContraNo,
+                    ItemNo = item.ItemNo,
+                    ModuleId = item.ModuleId,
+                    TransactionId = item.TransactionId,
+                    DocumentId = Convert.ToInt64(string.IsNullOrEmpty(item.DocumentId) ? 0 : item.DocumentId?.Trim()),
+                    DocumentNo = item.DocumentNo,
+                    DocReferenceNo = item.DocReferenceNo,
+                    DocCurrencyId = item.DocCurrencyId,
+                    DocExhRate = item.DocExhRate,
+                    DocAccountDate = DateHelperStatic.ParseClientDate(item.DocAccountDate),
+                    DocDueDate = DateHelperStatic.ParseClientDate(item.DocDueDate),
+                    DocTotAmt = item.DocTotAmt,
+                    DocTotLocalAmt = item.DocTotLocalAmt,
+                    DocBalAmt = item.DocBalAmt,
+                    DocBalLocalAmt = item.DocBalLocalAmt,
+                    AllocAmt = item.AllocAmt,
+                    AllocLocalAmt = item.AllocLocalAmt,
+                    DocAllocAmt = item.DocAllocAmt,
+                    DocAllocLocalAmt = item.DocAllocLocalAmt,
+                    CentDiff = item.CentDiff,
+                    ExhGainLoss = item.ExhGainLoss,
+                }).ToList();
+
+                var sqlResponse = await _GLContraService.SaveGLContraAsync(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    GLContraEntity,
+                    GLContraDtEntities,
+                    headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _GLContraService.GetGLContraByIdNoAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                     new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpPost, Route("DeleteGLContra")]
+        [Authorize]
+        public async Task<ActionResult<GLContraViewModel>> DeleteGLContra(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.GL, (Int32)E_GL.JournalEntry, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _GLContraService.DeleteGLContraAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId),
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _GLContraService.GetGLContraByIdNoAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteGLContra: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        [HttpGet, Route("GetHistoryGLContrabyId/{ContraId}")]
+        [Authorize]
+        public async Task<ActionResult<GLContraViewModel>> GetHistoryGLContrabyId(string ContraId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ContraId == null || ContraId == "" || ContraId == "0")
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.GL, (Int32)E_GL.JournalEntry, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var GLContraViewModel = await _GLContraService.GetHistoryGLContraByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(ContraId) ? 0 : ContraId?.Trim()), string.Empty, headerViewModel.UserId);
+
+                if (GLContraViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = GLContraViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+    }
+}

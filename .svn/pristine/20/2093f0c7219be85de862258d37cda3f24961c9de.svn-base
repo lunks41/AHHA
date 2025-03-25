@@ -1,0 +1,203 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class DocumentTypeController : BaseController
+    {
+        private readonly IDocumentTypeService _DocumentTypeService;
+        private readonly ILogger<DocumentTypeController> _logger;
+
+        public DocumentTypeController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<DocumentTypeController> logger, IDocumentTypeService DocumentTypeService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _DocumentTypeService = DocumentTypeService;
+        }
+
+        [HttpGet, Route("GetDocumentType")]
+        [Authorize]
+        public async Task<ActionResult> GetDocumentType([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.DocumentType, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var cacheData = await _DocumentTypeService.GetDocumentTypeListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString.Trim(), headerViewModel.UserId);
+
+                        if (cacheData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, cacheData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetDocumentTypebyid/{DocTypeId}")]
+        [Authorize]
+        public async Task<ActionResult<DocumentTypeViewModel>> GetDocumentTypeById(Int16 DocTypeId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.DocumentType, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var DocumentTypeViewModel = _mapper.Map<DocumentTypeViewModel>(await _DocumentTypeService.GetDocumentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DocTypeId, headerViewModel.UserId));
+
+                        if (DocumentTypeViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, DocumentTypeViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveDocumentType")]
+        [Authorize]
+        public async Task<ActionResult<DocumentTypeViewModel>> SaveDocumentType(DocumentTypeViewModel DocumentType, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.DocumentType, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (DocumentType == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var DocumentTypeEntity = new M_DocumentType
+                            {
+                                DocTypeId = DocumentType.DocTypeId,
+                                CompanyId = headerViewModel.CompanyId,
+                                DocTypeCode = DocumentType.DocTypeCode?.Trim() ?? string.Empty,
+                                DocTypeName = DocumentType.DocTypeName?.Trim() ?? string.Empty,
+                                Remarks = DocumentType.Remarks?.Trim() ?? string.Empty,
+                                IsActive = DocumentType.IsActive,
+                                CreateById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                                EditById = headerViewModel.UserId,
+                            };
+
+                            var sqlResponse = await _DocumentTypeService.SaveDocumentTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, DocumentTypeEntity, headerViewModel.UserId);
+                            return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new DocumentType record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteDocumentType/{DocTypeId}")]
+        [Authorize]
+        public async Task<ActionResult<M_DocumentType>> DeleteDocumentType(Int16 DocTypeId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.DocumentType, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var DocumentTypeToDelete = await _DocumentTypeService.GetDocumentTypeByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, DocTypeId, headerViewModel.UserId);
+
+                            if (DocumentTypeToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _DocumentTypeService.DeleteDocumentTypeAsync(headerViewModel.RegId, headerViewModel.CompanyId, DocumentTypeToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

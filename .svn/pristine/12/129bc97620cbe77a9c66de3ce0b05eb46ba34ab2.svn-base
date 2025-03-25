@@ -1,0 +1,160 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AHHA.Infra.Services.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class BankController : BaseController
+    {
+        private readonly IBankService _BankService;
+        private readonly ILogger<BankController> _logger;
+
+        public BankController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<BankController> logger, IBankService BankService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _BankService = BankService;
+        }
+
+        [HttpGet, Route("GetBanks")]
+        [Authorize]
+        public async Task<ActionResult> GetBank([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Bank, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                var cacheData = await _BankService.GetBankListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                if (cacheData == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "success", Data = cacheData.data, TotalRecords = cacheData.totalRecords });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetBank/{BankId}/{BankCode}/{BankName}")]
+        [Authorize]
+        public async Task<ActionResult<BankViewModel>> GetBank(Int16 BankId, string BankCode, string BankName, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Bank, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                var cacheData = await _BankService.GetBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, BankCode == "0" ? string.Empty : BankCode, BankName == "0" ? string.Empty : BankName, headerViewModel.UserId);
+
+                if (cacheData == null)
+                    return Ok(new SqlResponse { Result = -1, Message = "Bank not found", Data = null, TotalRecords = 0 });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Bank retrieved successfully", Data = cacheData, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving Bank by ID: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveBank")]
+        [Authorize]
+        public async Task<ActionResult<BankViewModel>> SaveBank(BankViewModel BankViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Bank, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                if (!userGroupRight.IsCreate)
+                    return Unauthorized(GenerateMessage.AuthenticationFailed);
+
+                if (BankViewModel == null)
+                    return BadRequest(GenerateMessage.DataNotFound);
+
+                var BankEntity = new M_Bank
+                {
+                    BankId = BankViewModel.BankId,
+                    CompanyId = headerViewModel.CompanyId,
+                    BankCode = BankViewModel.BankCode?.Trim() ?? string.Empty,
+                    BankName = BankViewModel.BankName?.Trim() ?? string.Empty,
+                    CurrencyId = BankViewModel.CurrencyId,
+                    AccountNo = BankViewModel.AccountNo?.Trim() ?? string.Empty,
+                    SwiftCode = BankViewModel.SwiftCode?.Trim() ?? string.Empty,
+                    Remarks1 = BankViewModel.Remarks1?.Trim() ?? string.Empty,
+                    Remarks2 = BankViewModel.Remarks2?.Trim() ?? string.Empty,
+                    GLId = BankViewModel.GLId,
+                    IsActive = BankViewModel.IsActive,
+                    IsOwnBank = BankViewModel.IsOwnBank,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now
+                };
+
+                var sqlResponse = await _BankService.SaveBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankEntity, headerViewModel.UserId);
+
+                return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error creating new Bank record: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Bank record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteBank/{BankId}")]
+        [Authorize]
+        public async Task<ActionResult> DeleteBank(Int16 BankId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Bank, headerViewModel.UserId);
+                if (userGroupRight == null)
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                if (!userGroupRight.IsDelete)
+                    return Unauthorized(GenerateMessage.AuthenticationFailed);
+
+                var sqlResponse = await _BankService.DeleteBankAsync(headerViewModel.RegId, headerViewModel.CompanyId, BankId, headerViewModel.UserId);
+
+                return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting Bank: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error deleting data");
+            }
+        }
+    }
+}

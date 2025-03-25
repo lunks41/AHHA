@@ -1,0 +1,207 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Masters;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Masters;
+using AHHA.Core.Models.Masters;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Masters
+{
+    [Route("api/Master")]
+    [ApiController]
+    public class VoyageController : BaseController
+    {
+        private readonly IVoyageService _VoyageService;
+        private readonly ILogger<VoyageController> _logger;
+
+        public VoyageController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<VoyageController> logger, IVoyageService VoyageService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _VoyageService = VoyageService;
+        }
+
+        [HttpGet, Route("GetVoyage")]
+        [Authorize]
+        public async Task<ActionResult> GetVoyage([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Voyage, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        //_logger.LogWarning("Warning: Some simple condition is met."); // Log a warning
+
+                        var voyageData = await _VoyageService.GetVoyageListAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString, headerViewModel.UserId);
+
+                        if (voyageData == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, voyageData);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NotFound(GenrateMessage.authenticationfailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                 "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet, Route("GetVoyagebyid/{VoyageId}")]
+        [Authorize]
+        public async Task<ActionResult<VoyageViewModel>> GetVoyageById(Int16 VoyageId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Voyage, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        var VoyageViewModel = _mapper.Map<VoyageViewModel>(await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId));
+
+                        if (VoyageViewModel == null)
+                            return NotFound(GenrateMessage.datanotfound);
+
+                        return StatusCode(StatusCodes.Status202Accepted, VoyageViewModel);
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveVoyage")]
+        [Authorize]
+        public async Task<ActionResult<VoyageViewModel>> SaveVoyage(VoyageViewModel voyageViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Voyage, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (voyageViewModel == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var VoyageEntity = new M_Voyage
+                            {
+                                CompanyId = headerViewModel.CompanyId,
+                                VoyageId = voyageViewModel.VoyageId,
+                                VoyageNo = voyageViewModel.VoyageNo?.Trim() ?? string.Empty,
+                                ReferenceNo = voyageViewModel.ReferenceNo?.Trim() ?? string.Empty,
+                                VesselId = voyageViewModel.VesselId,
+                                BargeId = voyageViewModel.BargeId,
+                                Remarks = voyageViewModel.Remarks?.Trim() ?? string.Empty,
+                                IsActive = voyageViewModel.IsActive,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now
+                            };
+
+                            var sqlResponse = await _VoyageService.SaveVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageEntity, headerViewModel.UserId);
+                            return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = null, TotalRecords = 0 });
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Voyage record");
+            }
+        }
+
+        [HttpDelete, Route("DeleteVoyage/{VoyageId}")]
+        [Authorize]
+        public async Task<ActionResult<M_Voyage>> DeleteVoyage(Int16 VoyageId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Master, (Int16)E_Master.Voyage, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsDelete)
+                        {
+                            var VoyageToDelete = await _VoyageService.GetVoyageByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageId, headerViewModel.UserId);
+
+                            if (VoyageToDelete == null)
+                                return NotFound(GenrateMessage.datanotfound);
+
+                            var sqlResponse = await _VoyageService.DeleteVoyageAsync(headerViewModel.RegId, headerViewModel.CompanyId, VoyageToDelete, headerViewModel.UserId);
+
+                            return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+                        }
+                        else
+                        {
+                            return NotFound(GenrateMessage.authenticationfailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenrateMessage.authenticationfailed);
+                    }
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
+    }
+}

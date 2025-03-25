@@ -1,0 +1,103 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class FinanceSettingController : BaseController
+    {
+        private readonly IFinanceSettingService _FinanceSettingService;
+        private readonly ILogger<FinanceSettingController> _logger;
+
+        public FinanceSettingController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<FinanceSettingController> logger, IFinanceSettingService FinanceSettingService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _FinanceSettingService = FinanceSettingService;
+        }
+
+        //get --companyid
+        //upsert  --company/model
+
+        [HttpGet, Route("GetFinSetting")]
+        [Authorize]
+        public async Task<ActionResult<FinanceSettingViewModel>> GetFinSetting([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var finSettingViewModel = await _FinanceSettingService.GetFinSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                    if (finSettingViewModel == null)
+                        return NotFound(GenerateMessage.datanotfound);
+
+                    return StatusCode(StatusCodes.Status202Accepted, finSettingViewModel);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveFinSetting")]
+        [Authorize]
+        public async Task<ActionResult<FinanceSettingViewModel>> SaveFinSetting(FinanceSettingViewModel finSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    if (finSettingViewModel == null)
+                        return NotFound(GenerateMessage.datanotfound);
+
+                    var FinEntity = new S_FinSettings
+                    {
+                        CompanyId = headerViewModel.CompanyId,
+                        Base_CurrencyId = finSettingViewModel.Base_CurrencyId,
+                        Local_CurrencyId = finSettingViewModel.Local_CurrencyId,
+                        ExhGainLoss_GlId = finSettingViewModel.ExhGainLoss_GlId,
+                        BankCharge_GlId = finSettingViewModel.BankCharge_GlId,
+                        ProfitLoss_GlId = finSettingViewModel.ProfitLoss_GlId,
+                        RetEarning_GlId = finSettingViewModel.RetEarning_GlId,
+                        SaleGst_GlId = finSettingViewModel.SaleGst_GlId,
+                        PurGst_GlId = finSettingViewModel.PurGst_GlId,
+                        SaleDef_GlId = finSettingViewModel.SaleDef_GlId,
+                        PurDef_GlId = finSettingViewModel.PurDef_GlId,
+                        CreateById = headerViewModel.UserId,
+                        EditById = headerViewModel.UserId,
+                        EditDate = DateTime.Now,
+                    };
+
+                    var createdFin = await _FinanceSettingService.SaveFinSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
+                    return StatusCode(StatusCodes.Status202Accepted, createdFin);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Fin record");
+            }
+        }
+    }
+}

@@ -1,0 +1,311 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.AR;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AR;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.AR;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Accounts.AR
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class ARReceiptController : BaseController
+    {
+        private readonly IARReceiptService _ARReceiptService;
+        private readonly ILogger<ARReceiptController> _logger;
+
+        public ARReceiptController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<ARReceiptController> logger, IARReceiptService ARReceiptService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _ARReceiptService = ARReceiptService;
+        }
+
+        [HttpGet, Route("GetARReceipt")]
+        [Authorize]
+        public async Task<ActionResult> GetARReceipt([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Receipt, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _ARReceiptService.GetARReceiptListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber, headerViewModel.searchString?.Trim(),
+                    headerViewModel.fromDate, headerViewModel.toDate,
+                     headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetARReceipt: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetARReceiptbyIdNo/{ReceiptId}/{ReceiptNo}")]
+        [Authorize]
+        public async Task<ActionResult<ARReceiptViewModel>> GetARReceiptByIdNo(string ReceiptId, string ReceiptNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ReceiptId == "0" && ReceiptNo == "")
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Receipt, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arReceiptViewModel = await _ARReceiptService.GetARReceiptByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(ReceiptId) ? 0 : ReceiptId?.Trim()),
+                    ReceiptNo, headerViewModel.UserId
+                );
+
+                if (arReceiptViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = arReceiptViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetARReceiptById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        //SAVE ONE ARReceipt BY INVOICEID
+        [HttpPost, Route("SaveARReceipt")]
+        [Authorize]
+        public async Task<ActionResult<ARReceiptViewModel>> SaveARReceipt(ARReceiptViewModel aRReceiptViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (aRReceiptViewModel == null)
+                    return NotFound(GenerateMessage.datanotfound);
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.AR,
+                    (int)E_AR.Receipt,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                //Header Data Mapping
+                var ARReceiptEntity = new ArReceiptHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    ReceiptId = Convert.ToInt64(string.IsNullOrEmpty(aRReceiptViewModel.ReceiptId) ? 0 : aRReceiptViewModel.ReceiptId?.Trim()),
+                    ReceiptNo = aRReceiptViewModel.ReceiptNo,
+                    ReferenceNo = aRReceiptViewModel.ReferenceNo == null ? string.Empty : aRReceiptViewModel.ReferenceNo,
+                    TrnDate = DateHelperStatic.ParseClientDate(aRReceiptViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(aRReceiptViewModel.AccountDate),
+                    BankId = Convert.ToInt16(aRReceiptViewModel.BankId),
+                    PaymentTypeId = Convert.ToInt16(aRReceiptViewModel.PaymentTypeId),
+                    ChequeNo = aRReceiptViewModel.ChequeNo,
+                    ChequeDate = DateHelperStatic.ParseClientDate(aRReceiptViewModel.ChequeDate),
+                    CustomerId = aRReceiptViewModel.CustomerId,
+                    CurrencyId = aRReceiptViewModel.CurrencyId,
+                    ExhRate = aRReceiptViewModel.ExhRate,
+                    TotAmt = aRReceiptViewModel.TotAmt,
+                    TotLocalAmt = aRReceiptViewModel.TotLocalAmt,
+                    UnAllocTotAmt = aRReceiptViewModel.UnAllocTotAmt,
+                    UnAllocTotLocalAmt = aRReceiptViewModel.UnAllocTotLocalAmt,
+                    RecCurrencyId = aRReceiptViewModel.RecCurrencyId,
+                    RecExhRate = aRReceiptViewModel.RecExhRate,
+                    RecTotAmt = aRReceiptViewModel.RecTotAmt,
+                    RecTotLocalAmt = aRReceiptViewModel.RecTotLocalAmt,
+                    ExhGainLoss = aRReceiptViewModel.ExhGainLoss,
+                    AllocTotAmt = aRReceiptViewModel.AllocTotAmt,
+                    AllocTotLocalAmt = aRReceiptViewModel.AllocTotLocalAmt,
+                    BankChargeGLId = aRReceiptViewModel.BankChargeGLId,
+                    BankChargesAmt = aRReceiptViewModel.BankChargesAmt,
+                    BankChargesLocalAmt = aRReceiptViewModel.BankChargesLocalAmt,
+                    Remarks = aRReceiptViewModel.Remarks == null ? string.Empty : aRReceiptViewModel.Remarks,
+                    ModuleFrom = aRReceiptViewModel.ModuleFrom == null ? string.Empty : aRReceiptViewModel.ModuleFrom,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                //Details Table data mapping
+                var ARReceiptDtEntities = new List<ArReceiptDt>();
+
+                if (aRReceiptViewModel.data_details != null)
+                {
+                    foreach (var item in aRReceiptViewModel.data_details)
+                    {
+                        var ARReceiptDtEntity = new ArReceiptDt
+                        {
+                            CompanyId = headerViewModel.CompanyId,
+                            ReceiptId = Convert.ToInt64(string.IsNullOrEmpty(item.ReceiptId) ? 0 : item.ReceiptId?.Trim()),
+                            ReceiptNo = item.ReceiptNo,
+                            ItemNo = item.ItemNo,
+                            TransactionId = item.TransactionId,
+                            DocumentId = Convert.ToInt64(string.IsNullOrEmpty(item.DocumentId) ? 0 : item.DocumentId?.Trim()),
+                            DocumentNo = item.DocumentNo,
+                            ReferenceNo = item.ReferenceNo,
+                            DocCurrencyId = item.DocCurrencyId,
+                            DocExhRate = item.DocExhRate,
+                            DocAccountDate = DateHelperStatic.ParseClientDate(item.DocAccountDate),
+                            DocDueDate = DateHelperStatic.ParseClientDate(item.DocDueDate),
+                            DocTotAmt = item.DocTotAmt,
+                            DocTotLocalAmt = item.DocTotLocalAmt,
+                            DocBalAmt = item.DocBalAmt,
+                            DocBalLocalAmt = item.DocBalLocalAmt,
+                            AllocAmt = item.AllocAmt,
+                            AllocLocalAmt = item.AllocLocalAmt,
+                            DocAllocAmt = item.DocAllocAmt,
+                            DocAllocLocalAmt = item.DocAllocLocalAmt,
+                            CentDiff = item.CentDiff,
+                            ExhGainLoss = item.ExhGainLoss,
+                            EditVersion = item.EditVersion,
+                        };
+
+                        ARReceiptDtEntities.Add(ARReceiptDtEntity);
+                    }
+                }
+
+                var sqlResponse = await _ARReceiptService.SaveARReceiptAsync(
+                   headerViewModel.RegId,
+                   headerViewModel.CompanyId,
+                   ARReceiptEntity,
+                   ARReceiptDtEntities,
+                   headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _ARReceiptService.GetARReceiptByIdAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new ARReceipt record");
+            }
+        }
+
+        [HttpPost, Route("DeleteARReceipt")]
+        [Authorize]
+        public async Task<ActionResult<ARReceiptViewModel>> DeleteARReceipt(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Receipt, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _ARReceiptService.DeleteARReceiptAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId), deleteViewModel.DocumentNo,
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _ARReceiptService.GetARReceiptByIdAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteARReceipt: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        [HttpGet, Route("GetHistoryARReceiptbyId/{ReceiptId}")]
+        [Authorize]
+        public async Task<ActionResult<ARInvoiceViewModel>> GetHistoryARReceiptbyId(string ReceiptId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ReceiptId == null || ReceiptId == "" || ReceiptId == "0")
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AR, (Int32)E_AR.Receipt, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arReceiptViewModel = await _ARReceiptService.GetHistoryARReceiptByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(ReceiptId) ? 0 : ReceiptId?.Trim()), string.Empty, headerViewModel.UserId);
+
+                if (arReceiptViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = arReceiptViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+    }
+}

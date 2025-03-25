@@ -1,0 +1,349 @@
+using AHHA.API.Extensions;
+using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using System.Text;
+using Telerik.Reporting.Cache.File;
+using Telerik.Reporting.Services;
+using Telerik.Reporting.Services.AspNetCore;
+//using Telerik.Reporting.Cache.Database;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog for structured logging
+builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
+
+#region Service Configuration
+
+// Add options and memory cache (required for IP rate limiting)
+builder.Services.AddOptions();
+builder.Services.AddMemoryCache();
+
+// -----------------------------
+// Configure IP Rate Limiting
+// -----------------------------
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IClientPolicyStore, MemoryCacheClientPolicyStore>();
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+// -----------------------------
+// Additional Logging and Custom Services
+// -----------------------------
+builder.Services.AddLogging();
+builder.Services.RegisterService(builder.Configuration); // From your API Extensions folder
+
+// -----------------------------
+// Configure CORS
+// -----------------------------
+builder.Services.AddCors(c =>
+{
+    c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
+
+builder.Services.AddControllers();
+builder.Services.AddRazorPages().AddNewtonsoftJson();
+
+// -----------------------------
+// Configure JWT Authentication
+// -----------------------------
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = builder.Configuration["JWT:ValidAudience"],
+            ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
+        };
+    });
+
+// -----------------------------
+// Add Controllers and Razor Pages (with Newtonsoft.Json support)
+// -----------------------------
+builder.Services.AddControllers();
+builder.Services.AddRazorPages().AddNewtonsoftJson();
+
+// -----------------------------
+// Configure Swagger/OpenAPI
+// -----------------------------
+builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+    c.IgnoreObsoleteActions();
+    c.IgnoreObsoleteProperties();
+    c.CustomSchemaIds(type => type.FullName);
+});
+
+// -----------------------------
+// Configure Telerik Reporting Services
+// -----------------------------
+var reportsPath = Path.Combine(builder.Environment.ContentRootPath, "Reports");
+//var reportsPath = Path.Combine(builder.Environment.ContentRootPath, "..", "..", "..", "..", "Report Designer", "Examples");
+
+// Configure dependencies for ReportsController.
+builder.Services.TryAddSingleton<IReportServiceConfiguration>(sp =>
+    new ReportServiceConfiguration
+    {
+        // The default ReportingEngineConfiguration will be initialized from appsettings.json or appsettings.{EnvironmentName}.json:
+        ReportingEngineConfiguration = sp.GetService<IConfiguration>(),
+        // In case the ReportingEngineConfiguration needs to be loaded from a specific configuration file, use the approach below:
+        //ReportingEngineConfiguration = ResolveSpecificReportingConfiguration(sp.GetService<IWebHostEnvironment>()),
+        HostAppId = "ReportingNet6",
+        Storage = new FileStorage(),
+        ReportSourceResolver = new UriReportSourceResolver(System.IO.Path.Combine(sp.GetService<IWebHostEnvironment>().ContentRootPath, "Reports"))
+    });
+
+#endregion Service Configuration
+
+var app = builder.Build();
+
+// Enable CORS
+//app.UseCors("AllowAll");
+app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+// -----------------------------
+// Middleware Pipeline Configuration
+// -----------------------------
+
+// Redirect HTTP to HTTPS
+app.UseHttpsRedirection();
+
+// Serve static files
+app.UseStaticFiles();
+
+// Enable routing
+app.UseTelerikReporting();
+app.UseRouting();
+
+// Apply IP rate limiting (should be placed before authentication/authorization)
+app.UseIpRateLimiting();
+
+// Enable authentication and authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Enable Swagger and Swagger UI (after routing, before mapping endpoints)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AHHA API V1");
+});
+
+// Map controllers and Razor Pages
+app.MapControllers();
+app.MapRazorPages();
+
+app.Run();
+
+/// <summary>
+/// Uncomment the lines to enable tracing in the current application.
+/// The trace log will be persisted in a file named log.txt in the application root directory.
+/// </summary>
+static void EnableTracing()
+{
+    // System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(File.CreateText("log.txt")));
+    // System.Diagnostics.Trace.AutoFlush = true;
+}
+
+/// <summary>
+/// Loads a reporting configuration from a specific JSON-based configuration file.
+/// </summary>
+/// <param name="environment">The current web hosting environment used to obtain the content root path</param>
+/// <returns>IConfiguration instance used to initialize the Reporting engine</returns>
+static IConfiguration ResolveSpecificReportingConfiguration(IWebHostEnvironment environment)
+{
+    var reportingConfigFileName = Path.Combine(environment.ContentRootPath, "reportingAppSettings.json");
+    return new ConfigurationBuilder()
+        .AddJsonFile(reportingConfigFileName, optional: true)
+        .Build();
+}
+
+
+
+
+//using AHHA.API.Controllers.Report;
+//using AHHA.API.ExceptionHandling;
+//using AHHA.API.Extensions;
+//using AspNetCoreRateLimit;
+//using Microsoft.AspNetCore.Authentication.JwtBearer;
+//using Microsoft.AspNetCore.Diagnostics;
+//using Microsoft.Extensions.DependencyInjection.Extensions;
+//using Microsoft.IdentityModel.Tokens;
+//using Serilog;
+//using System.Text;
+//using Telerik.Reporting.Cache.File;
+//using Telerik.Reporting.Services;
+//using Telerik.WebReportDesigner.Services;
+
+//var builder = WebApplication.CreateBuilder(args);
+
+//builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
+
+//#region Caching & IP Rate Limiting
+
+//var configuration = builder.Configuration;
+
+//// needed to load configuration from appsettings.json
+//builder.Services.AddOptions();
+
+//// needed to store rate limit counters and ip rules
+//builder.Services.AddMemoryCache();
+
+////Implementing IP Rate Limiting : IP rate limiting is a crucial aspect of web application security that helps prevent abuse, protect against brute force attacks, and ensure fair resource usage. In this article, we will walk through the process of implementing IP rate limiting in an ASP.NET Core MVC application using middleware and the AspNetCoreRateLimit library
+
+////In Production we have to un-committee code
+//////load general configuration from appsettings.json
+////builder.Services.Configure<IpRateLimitOptions>(configuration.GetSection("IpRateLimiting"));
+//////load ip rules from appsettings.json
+////builder.Services.Configure<IpRateLimitPolicies>(configuration.GetSection("IpRateLimitPolicies"));
+
+//builder.Services.AddInMemoryRateLimiting();
+
+//// inject counter and rules distributed cache stores
+//builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+//builder.Services.AddSingleton<IClientPolicyStore, MemoryCacheClientPolicyStore>();
+//builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+//builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+//builder.Services.AddSingleton<IExceptionHandler, GlobalExcaptionHandler>();
+//builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+//#endregion Caching & IP Rate Limiting
+
+//builder.Services.AddLogging();
+//builder.Services.RegisterService(builder.Configuration);//From API Exenstions Folder
+//// Add services to the container.
+//builder.Services.AddCors(c =>
+//{
+//    c.AddPolicy("AllowAll", options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+//});
+
+//#region JWT Token
+
+//// Configuring JWT authentication
+//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//    .AddJwtBearer(options =>
+//    {
+//        options.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidateIssuer = true,
+//            ValidateAudience = true,
+//            ValidateLifetime = true,
+//            ValidateIssuerSigningKey = true,
+//            ValidAudience = configuration["JWT:ValidAudience"],
+//            ValidIssuer = configuration["JWT:ValidIssuer"],
+//            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
+//        };
+//    });
+
+////builder.Services.AddAuthentication("ApiKey")
+////        .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>("ApiKey", null);
+
+////builder.Services.AddAuthorization(options =>
+////{
+////    options.AddPolicy("ApiKeyOrBearer", policy =>
+////    {
+////        policy.AddAuthenticationSchemes("Bearer", "ApiKey");
+////        policy.RequireAuthenticatedUser();
+////    });
+////});
+
+//#endregion JWT Token
+
+//builder.Services.AddControllers();
+//builder.Services.AddRazorPages().AddNewtonsoftJson();
+
+////var reportsPath = Path.Combine(builder.Environment.ContentRootPath, "..", "..", "..", "..", "Report Designer", "Examples");
+//// Define the path for your reports. Adjust as needed.
+//string reportsPath = Path.Combine(builder.Environment.ContentRootPath, "Reports");
+//if (!Directory.Exists(reportsPath))
+//{
+//    throw new DirectoryNotFoundException($"Reports directory not found: {reportsPath}");
+//}
+
+//// Configure dependencies for ReportsController.
+//builder.Services.TryAddSingleton<IReportServiceConfiguration>(sp =>
+//{
+//    var config = new ReportServiceConfiguration
+//    {
+//        HostAppId = "Net8RestServiceWithCors",
+//        Storage = new FileStorage(),
+//        ReportSourceResolver = new TypeReportSourceResolver()
+//                                .AddFallbackResolver(new UriReportSourceResolver(reportsPath))
+//    };
+//    Console.WriteLine($"Reports Path: {reportsPath}");
+//    return config;
+//});
+
+////builder.Services.AddSingleton<IReportServiceConfiguration>(sp => { return new ReportServiceConfiguration { ReportingEngineConfiguration = sp.GetService<IConfiguration>(), HostAppId = "TelerikReportingApp", Storage = new FileStorage(), ReportSourceResolver = new UriReportSourceResolver(System.IO.Path.Combine(sp.GetService<IWebHostEnvironment>().ContentRootPath, "Reports")) }; });
+
+//// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+//builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGen();
+
+//var app = builder.Build();
+
+//// Configure the HTTP request pipeline.
+//app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+////if (app.Environment.IsDevelopment())
+////{
+//app.UseSwagger();
+//app.UseSwaggerUI(c =>
+//{
+//    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AHHA API V1");
+//});
+////}
+
+//app.UseHttpsRedirection();
+//app.UseStaticFiles();
+//app.UseIpRateLimiting();
+
+//app.UseRouting();
+//app.UseAuthentication();
+//app.UseAuthorization();
+//app.UseEndpoints(endpoints =>
+//{
+//    endpoints.MapControllers();
+//});
+
+////Use for Global Excaption Handlers
+////app.UseMiddleware<GlobalExcaptionHandler>();
+//app.MapControllers();
+////app.MapTelerikReporting();
+
+//app.Run();
+
+///// <summary>
+///// Uncomment the lines to enable tracing in the current application.
+///// The trace log will be persisted in a file named log.txt in the application root directory.
+///// </summary>
+//static void EnableTracing()
+//{
+//    // System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(File.CreateText("log.txt")));
+//    // System.Diagnostics.Trace.AutoFlush = true;
+//}
+
+///// <summary>
+///// Loads a reporting configuration from a specific JSON-based configuration file.
+///// </summary>
+///// <param name="environment">The current web hosting environment used to obtain the content root path</param>
+///// <returns>IConfiguration instance used to initialize the Reporting engine</returns>
+//static IConfiguration ResolveSpecificReportingConfiguration(IWebHostEnvironment environment)
+//{
+//    // If a specific configuration needs to be passed to the reporting engine, add it through a new IConfiguration instance.
+//    var reportingConfigFileName = Path.Combine(environment.ContentRootPath, "reportingAppSettings.json");
+//    return new ConfigurationBuilder()
+//        .AddJsonFile(reportingConfigFileName, true)
+//        .Build();
+//}

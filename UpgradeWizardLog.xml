@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="_UpgradeWizard_Files\UpgradeWizardLog.xslt"?>
+<log>
+  <event>Get project references.</event>
+  <event action="Analyze" type="Success" name="Assembly References" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.API\AHHA.API.csproj" />
+  <event action="Analyze" type="Success" name="AHHA.API" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.API\AHHA.API.csproj" />
+  <event>Get project references.</event>
+  <event action="Analyze" type="Success" name="Assembly References" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.Domain\AHHA.Core.csproj" />
+  <event action="Analyze" type="Success" name="AHHA.Core" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.Domain\AHHA.Core.csproj" />
+  <event>Get project references.</event>
+  <event action="Analyze" type="Success" name="Assembly References" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.Infra\AHHA.Infra.csproj" />
+  <event action="Analyze" type="Success" name="AHHA.Infra" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.Infra\AHHA.Infra.csproj" />
+  <event>Get project references.</event>
+  <event action="Analyze" type="Success" name="Assembly References" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.Application\AHHA.Application.csproj" />
+  <event action="Analyze" type="Success" name="AHHA.Application" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.Application\AHHA.Application.csproj" />
+  <event action="Analyze" type="Success" name="AHHA" path="D:\Proj\Ravi Sir\AHHA_NET_API\AHHA.sln" />
+</log>

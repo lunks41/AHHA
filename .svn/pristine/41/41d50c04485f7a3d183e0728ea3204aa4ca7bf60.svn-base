@@ -1,0 +1,102 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Setting;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Setting;
+using AHHA.Core.Models.Setting;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Setting
+{
+    [Route("api/Setting")]
+    [ApiController]
+    public class UserSettingController : BaseController
+    {
+        private readonly IUserSettingService _UserSettingService;
+        private readonly ILogger<UserSettingController> _logger;
+
+        public UserSettingController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<UserSettingController> logger, IUserSettingService UserSettingService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _UserSettingService = UserSettingService;
+        }
+
+        //get --companyid
+        //upsert  --company/model
+
+        [HttpGet, Route("GetUserSetting")]
+        [Authorize]
+        public async Task<ActionResult<UserSettingViewModel>> GetUserSetting([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    var UserSettingViewModel = await _UserSettingService.GetUserSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId);
+
+                    if (UserSettingViewModel == null)
+                        return NotFound(GenerateMessage.datanotfound);
+
+                    return StatusCode(StatusCodes.Status202Accepted, UserSettingViewModel);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost, Route("SaveUserSetting")]
+        [Authorize]
+        public async Task<ActionResult<UserSettingViewModel>> SaveUserSetting(UserSettingViewModel UserSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                {
+                    if (UserSettingViewModel == null)
+                        return NotFound(GenerateMessage.datanotfound);
+
+                    var FinEntity = new S_UserSettings
+                    {
+                        CompanyId = headerViewModel.CompanyId,
+                        UserId = headerViewModel.UserId,
+                        Trn_Grd_TotRec = UserSettingViewModel.Trn_Grd_TotRec,
+                        M_Grd_TotRec = UserSettingViewModel.M_Grd_TotRec,
+                        Ar_IN_GLId = UserSettingViewModel.Ar_IN_GLId,
+                        Ar_CN_GLId = UserSettingViewModel.Ar_CN_GLId,
+                        Ar_DN_GLId = UserSettingViewModel.Ar_DN_GLId,
+                        Ap_IN_GLId = UserSettingViewModel.Ap_IN_GLId,
+                        Ap_CN_GLId = UserSettingViewModel.Ap_CN_GLId,
+                        Ap_DN_GLId = UserSettingViewModel.Ap_DN_GLId,
+                        CreateById = headerViewModel.UserId,
+                        EditById = headerViewModel.UserId,
+                        EditDate = DateTime.Now,
+                    };
+
+                    var createdFin = await _UserSettingService.SaveUserSettingAsync(headerViewModel.RegId, headerViewModel.CompanyId, FinEntity, headerViewModel.UserId);
+                    return StatusCode(StatusCodes.Status202Accepted, createdFin);
+                }
+                else
+                {
+                    return NoContent();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Fin record");
+            }
+        }
+    }
+}

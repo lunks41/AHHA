@@ -1,0 +1,306 @@
+﻿using AHHA.Application.IServices;
+using AHHA.Application.IServices.Accounts.AP;
+using AHHA.Core.Common;
+using AHHA.Core.Entities.Accounts.AP;
+using AHHA.Core.Helper;
+using AHHA.Core.Models.Account;
+using AHHA.Core.Models.Account.AP;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace AHHA.API.Controllers.Accounts.AP
+{
+    [Route("api/Account")]
+    [ApiController]
+    public class APRefundController : BaseController
+    {
+        private readonly IAPRefundService _APRefundService;
+        private readonly ILogger<APRefundController> _logger;
+
+        public APRefundController(IMemoryCache memoryCache, IMapper mapper, IBaseService baseServices, ILogger<APRefundController> logger, IAPRefundService APRefundService)
+    : base(memoryCache, mapper, baseServices)
+        {
+            _logger = logger;
+            _APRefundService = APRefundService;
+        }
+
+        [HttpGet, Route("GetAPRefund")]
+        [Authorize]
+        public async Task<ActionResult> GetAPRefund([FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AP, (Int32)E_AR.Refund, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var cacheData = await _APRefundService.GetAPRefundListAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    headerViewModel.pageSize, headerViewModel.pageNumber,
+                    headerViewModel.searchString?.Trim(), headerViewModel.fromDate, headerViewModel.toDate, headerViewModel.UserId
+                );
+
+                if (cacheData == null)
+                    return NotFound("Data not found");
+
+                var sqlResponse = new SqlResponse
+                {
+                    Result = 1,
+                    Message = "Success",
+                    Data = cacheData.data,
+                    TotalRecords = cacheData.totalRecords
+                };
+
+                return Ok(sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetAPRefund: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        [HttpGet, Route("GetAPRefundbyIdNo/{RefundId}/{RefundNo}")]
+        [Authorize]
+        public async Task<ActionResult<APRefundViewModel>> GetAPRefundByIdNo(string RefundId, string RefundNo, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (RefundId == "0" && RefundNo == "")
+                    return NotFound("Invalid Id");
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AP, (Int32)E_AR.Refund, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arRefundViewModel = await _APRefundService.GetAPRefundByIdAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(string.IsNullOrEmpty(RefundId) ? 0 : RefundId?.Trim()),
+                    RefundNo, headerViewModel.UserId
+                );
+
+                if (arRefundViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = arRefundViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetAPRefundById: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+
+        //SAVE ONE APRefund BY INVOICEID
+        [HttpPost, Route("SaveAPRefund")]
+        [Authorize]
+        public async Task<ActionResult<APRefundViewModel>> SaveAPRefund(APRefundViewModel aRRefundViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (aRRefundViewModel == null)
+                    return NotFound(GenerateMessage.DataNotFound);
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return NoContent();
+
+                var userGroupRight = ValidateScreen(
+                    headerViewModel.RegId,
+                    headerViewModel.CompanyId,
+                    (short)E_Modules.AP,
+                    (int)E_AR.Refund,
+                    headerViewModel.UserId);
+
+                if (userGroupRight == null || (!userGroupRight.IsCreate && !userGroupRight.IsEdit))
+                    return NotFound(GenerateMessage.AuthenticationFailed);
+
+                //Header Data Mapping
+                var APRefundEntity = new ApRefundHd
+                {
+                    CompanyId = headerViewModel.CompanyId,
+                    RefundId = Convert.ToInt64(string.IsNullOrEmpty(aRRefundViewModel.RefundId) ? 0 : aRRefundViewModel.RefundId?.Trim()),
+                    RefundNo = aRRefundViewModel.RefundNo,
+                    ReferenceNo = aRRefundViewModel.ReferenceNo == null ? string.Empty : aRRefundViewModel.ReferenceNo,
+                    TrnDate = DateHelperStatic.ParseClientDate(aRRefundViewModel.TrnDate),
+                    AccountDate = DateHelperStatic.ParseClientDate(aRRefundViewModel.AccountDate),
+                    BankId = Convert.ToInt16(aRRefundViewModel.BankId),
+                    PaymentTypeId = Convert.ToInt16(aRRefundViewModel.PaymentTypeId),
+                    ChequeNo = aRRefundViewModel.ChequeNo,
+                    ChequeDate = DateHelperStatic.ParseClientDate(aRRefundViewModel.ChequeDate),
+                    SupplierId = aRRefundViewModel.SupplierId,
+                    CurrencyId = aRRefundViewModel.CurrencyId,
+                    ExhRate = aRRefundViewModel.ExhRate,
+                    TotAmt = aRRefundViewModel.TotAmt,
+                    TotLocalAmt = aRRefundViewModel.TotLocalAmt,
+                    RecCurrencyId = aRRefundViewModel.RecCurrencyId,
+                    RecExhRate = aRRefundViewModel.RecExhRate,
+                    RecTotAmt = aRRefundViewModel.RecTotAmt,
+                    RecTotLocalAmt = aRRefundViewModel.RecTotLocalAmt,
+                    ExhGainLoss = aRRefundViewModel.ExhGainLoss,
+                    BankChargeGLId = aRRefundViewModel.BankChargeGLId,
+                    BankChargesAmt = aRRefundViewModel.BankChargesAmt,
+                    BankChargesLocalAmt = aRRefundViewModel.BankChargesLocalAmt,
+                    Remarks = aRRefundViewModel.Remarks == null ? string.Empty : aRRefundViewModel.Remarks,
+                    ModuleFrom = aRRefundViewModel.ModuleFrom == null ? string.Empty : aRRefundViewModel.ModuleFrom,
+                    CreateById = headerViewModel.UserId,
+                    EditById = headerViewModel.UserId,
+                    EditDate = DateTime.Now,
+                };
+
+                //Details Table data mapping
+                var APRefundDtEntities = new List<ApRefundDt>();
+
+                if (aRRefundViewModel.data_details != null)
+                {
+                    foreach (var item in aRRefundViewModel.data_details)
+                    {
+                        var APRefundDtEntity = new ApRefundDt
+                        {
+                            CompanyId = headerViewModel.CompanyId,
+                            RefundId = Convert.ToInt64(string.IsNullOrEmpty(item.RefundId) ? 0 : item.RefundId?.Trim()),
+                            RefundNo = item.RefundNo,
+                            ItemNo = item.ItemNo,
+                            TransactionId = item.TransactionId,
+                            DocumentId = Convert.ToInt64(string.IsNullOrEmpty(item.DocumentId) ? 0 : item.DocumentId?.Trim()),
+                            DocumentNo = item.DocumentNo,
+                            ReferenceNo = item.ReferenceNo,
+                            DocCurrencyId = item.DocCurrencyId,
+                            DocExhRate = item.DocExhRate,
+                            DocAccountDate = DateHelperStatic.ParseClientDate(item.DocAccountDate),
+                            DocDueDate = DateHelperStatic.ParseClientDate(item.DocDueDate),
+                            DocTotAmt = item.DocTotAmt,
+                            DocTotLocalAmt = item.DocTotLocalAmt,
+                            DocBalAmt = item.DocBalAmt,
+                            DocBalLocalAmt = item.DocBalLocalAmt,
+                            AllocAmt = item.AllocAmt,
+                            AllocLocalAmt = item.AllocLocalAmt,
+                            DocAllocAmt = item.DocAllocAmt,
+                            DocAllocLocalAmt = item.DocAllocLocalAmt,
+                            CentDiff = item.CentDiff,
+                            ExhGainLoss = item.ExhGainLoss,
+                            EditVersion = item.EditVersion,
+                        };
+
+                        APRefundDtEntities.Add(APRefundDtEntity);
+                    }
+                }
+
+                var sqlResponse = await _APRefundService.SaveAPRefundAsync(
+                   headerViewModel.RegId,
+                   headerViewModel.CompanyId,
+                   APRefundEntity,
+                   APRefundDtEntities,
+                   headerViewModel.UserId);
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _APRefundService.GetAPRefundByIdAsync(
+                        headerViewModel.RegId,
+                        headerViewModel.CompanyId,
+                        sqlResponse.Result,
+                        string.Empty,
+                        headerViewModel.UserId);
+
+                    return Ok(new SqlResponse { Result = 1, Message = sqlResponse.Message, Data = customerModel, TotalRecords = 0 });
+                }
+
+                return StatusCode(StatusCodes.Status202Accepted, sqlResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new APRefund record");
+            }
+        }
+
+        [HttpPost, Route("DeleteAPRefund")]
+        [Authorize]
+        public async Task<ActionResult<APRefundViewModel>> DeleteAPRefund(DeleteViewModel deleteViewModel, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AP, (Int32)E_AR.Refund, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                if (!userGroupRight.IsDelete)
+                    return Forbid("You do not have permission to delete");
+
+                if (string.IsNullOrEmpty(deleteViewModel.DocumentId))
+                    return NotFound("Data not found");
+
+                var sqlResponse = await _APRefundService.DeleteAPRefundAsync(
+                    headerViewModel.RegId, headerViewModel.CompanyId,
+                    Convert.ToInt64(deleteViewModel.DocumentId), deleteViewModel.DocumentNo,
+                    deleteViewModel.CancelRemarks, headerViewModel.UserId
+                );
+
+                if (sqlResponse.Result > 0)
+                {
+                    var customerModel = await _APRefundService.GetAPRefundByIdAsync(
+                        headerViewModel.RegId, headerViewModel.CompanyId,
+                        Convert.ToInt64(deleteViewModel.DocumentId), string.Empty, headerViewModel.UserId
+                    );
+
+                    return Ok(new SqlResponse { Result = sqlResponse.Result, Message = sqlResponse.Message, Data = customerModel });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in DeleteAPRefund: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Internal Server Error");
+            }
+        }
+
+        [HttpGet, Route("GetHistoryAPRefundbyId/{RefundId}")]
+        [Authorize]
+        public async Task<ActionResult<APRefundViewModel>> GetHistoryAPRefundbyId(string RefundId, [FromHeader] HeaderViewModel headerViewModel)
+        {
+            try
+            {
+                if (RefundId == null || RefundId == "" || RefundId == "0")
+                    return NoContent();
+
+                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
+                    return BadRequest("Invalid headers");
+
+                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.AP, (Int32)E_AR.Refund, headerViewModel.UserId);
+
+                if (userGroupRight == null)
+                    return Unauthorized("Authentication failed");
+
+                var arRefundViewModel = await _APRefundService.GetHistoryAPRefundByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, Convert.ToInt64(string.IsNullOrEmpty(RefundId) ? 0 : RefundId?.Trim()), string.Empty, headerViewModel.UserId);
+
+                if (arRefundViewModel == null)
+                    return StatusCode(StatusCodes.Status200OK, new SqlResponse { Result = 0, Message = "Data does not exist", Data = null });
+
+                return Ok(new SqlResponse { Result = 1, Message = "Success", Data = arRefundViewModel });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new SqlResponse { Result = -1, Message = "Internal Server Error", Data = null });
+            }
+        }
+    }
+}
