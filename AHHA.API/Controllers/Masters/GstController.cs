@@ -306,7 +306,7 @@ namespace AHHA.API.Controllers.Masters
                             {
                                 GstId = GstDt.GstId,
                                 CompanyId = headerViewModel.CompanyId,
-                                GstPercentahge = GstDt.GstPercentahge,
+                                GstPercentage = GstDt.GstPercentage,
                                 ValidFrom = GstDt.ValidFrom,
                                 CreateById = headerViewModel.UserId,
                                 EditById = headerViewModel.UserId,

@@ -178,7 +178,7 @@ namespace AHHA.API.Controllers.Accounts.AP
                             ReferenceNo = item.ReferenceNo,
                             DocCurrencyId = item.DocCurrencyId,
                             DocExhRate = item.DocExhRate,
-                            DocAcctDate = DateHelperStatic.ParseClientDate(item.DocAcctDate),
+                            DocAccountDate = DateHelperStatic.ParseClientDate(item.DocAccountDate),
                             DocDueDate = DateHelperStatic.ParseClientDate(item.DocDueDate),
                             DocTotAmt = item.DocTotAmt,
                             DocTotLocalAmt = item.DocTotLocalAmt,

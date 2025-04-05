@@ -3313,7 +3313,7 @@ namespace AHHA.Infra.Migrations
                     b.Property<DateTime?>("EditDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("GstPercentahge")
+                    b.Property<decimal>("GstPercentage")
                         .HasColumnType("decimal(4,2)");
 
                     b.HasKey("GstId", "CompanyId", "ValidFrom");

@@ -7,7 +7,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using System.Reflection;
 
 namespace AHHA.API.Controllers.Setting
 {
@@ -133,6 +132,7 @@ namespace AHHA.API.Controllers.Setting
                     null => Ok(new SqlResponse { Result = -1, Message = "failed", Data = null, TotalRecords = 0 }),
                     _ => Ok(new SqlResponse { Result = 1, Message = "Success", Data = cacheData, TotalRecords = 0 })
                 };
+
             }
             catch (Exception ex)
             {
@@ -142,80 +142,72 @@ namespace AHHA.API.Controllers.Setting
             }
         }
 
+        //Save the data
         [HttpPost, Route("SaveNumberFormat")]
         [Authorize]
         public async Task<ActionResult<NumberSettingViewModel>> SaveNumberFormat(NumberSettingViewModel numberSettingViewModel, [FromHeader] HeaderViewModel headerViewModel)
         {
             try
             {
-                // Validate headers
-                if (!ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
-                    return BadRequest("Invalid headers");
-
-                var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int32)E_Setting.DocumentNo, headerViewModel.UserId);
-
-                if (userGroupRight == null)
-                    return Unauthorized("Authentication failed");
-
-                if (userGroupRight == null || !userGroupRight.IsCreate)
+                if (ValidateHeaders(headerViewModel.RegId, headerViewModel.CompanyId, headerViewModel.UserId))
                 {
-                    _logger.LogWarning("Authorization failed for user: {UserId}", headerViewModel.UserId);
-                    return Unauthorized(GenerateMessage.AuthenticationFailed);
+                    var userGroupRight = ValidateScreen(headerViewModel.RegId, headerViewModel.CompanyId, (Int16)E_Modules.Setting, (Int16)E_Setting.DocumentNo, headerViewModel.UserId);
+
+                    if (userGroupRight != null)
+                    {
+                        if (userGroupRight.IsCreate)
+                        {
+                            if (numberSettingViewModel == null)
+                                return NotFound(GenerateMessage.DataNotFound);
+
+                            var NumberFormatEntity = new S_NumberFormat
+                            {
+                                NumberId = numberSettingViewModel.NumberId,
+                                CompanyId = headerViewModel.CompanyId,
+                                ModuleId = numberSettingViewModel.ModuleId,
+                                TransactionId = numberSettingViewModel.TransactionId,
+                                Prefix = numberSettingViewModel.Prefix,
+                                PrefixSeq = numberSettingViewModel.PrefixSeq,
+                                PrefixDelimiter = numberSettingViewModel.PrefixDelimiter,
+                                IncludeYear = numberSettingViewModel.IncludeYear,
+                                YearSeq = numberSettingViewModel.YearSeq,
+                                YearFormat = numberSettingViewModel.YearFormat,
+                                YearDelimiter = numberSettingViewModel.YearDelimiter,
+                                IncludeMonth = numberSettingViewModel.IncludeMonth,
+                                MonthSeq = numberSettingViewModel.MonthSeq,
+                                MonthFormat = numberSettingViewModel.MonthFormat,
+                                MonthDelimiter = numberSettingViewModel.MonthDelimiter,
+                                NoDIgits = numberSettingViewModel.NoDIgits,
+                                DIgitSeq = numberSettingViewModel.DIgitSeq,
+                                ResetYearly = numberSettingViewModel.ResetYearly,
+                                CreateById = headerViewModel.UserId,
+                                EditById = headerViewModel.UserId,
+                                EditDate = DateTime.Now,
+                            };
+
+                            var createdNumberFormat = await _NumberFormatServices.SaveNumberFormatAsync(headerViewModel.RegId, headerViewModel.CompanyId, NumberFormatEntity, headerViewModel.UserId);
+                            return StatusCode(StatusCodes.Status202Accepted, createdNumberFormat);
+                        }
+                        else
+                        {
+                            return NotFound(GenerateMessage.AuthenticationFailed);
+                        }
+                    }
+                    else
+                    {
+                        return NotFound(GenerateMessage.AuthenticationFailed);
+                    }
                 }
-
-                // Validate input model
-                if (numberSettingViewModel == null)
-                    return NotFound(GenerateMessage.DataNotFound);
-
-                // Map to entity
-                var NumberFormatEntity = new S_NumberFormat
+                else
                 {
-                    NumberId = numberSettingViewModel.NumberId,
-                    CompanyId = headerViewModel.CompanyId,
-                    ModuleId = numberSettingViewModel.ModuleId,
-                    TransactionId = numberSettingViewModel.TransactionId,
-                    Prefix = numberSettingViewModel.Prefix,
-                    PrefixSeq = numberSettingViewModel.PrefixSeq,
-                    PrefixDelimiter = numberSettingViewModel.PrefixDelimiter,
-                    IncludeYear = numberSettingViewModel.IncludeYear,
-                    YearSeq = numberSettingViewModel.YearSeq,
-                    YearFormat = numberSettingViewModel.YearFormat,
-                    YearDelimiter = numberSettingViewModel.YearDelimiter,
-                    IncludeMonth = numberSettingViewModel.IncludeMonth,
-                    MonthSeq = numberSettingViewModel.MonthSeq,
-                    MonthFormat = numberSettingViewModel.MonthFormat,
-                    MonthDelimiter = numberSettingViewModel.MonthDelimiter,
-                    NoDIgits = numberSettingViewModel.NoDIgits,
-                    DIgitSeq = numberSettingViewModel.DIgitSeq,
-                    ResetYearly = numberSettingViewModel.ResetYearly,
-                    CreateById = headerViewModel.UserId,
-                    EditById = headerViewModel.UserId,
-                    EditDate = DateTime.Now,
-                };
-
-                // Save the number format
-                var createdNumberFormat = await _NumberFormatServices.SaveNumberFormatAsync(headerViewModel.RegId, headerViewModel.CompanyId, NumberFormatEntity, headerViewModel.UserId);
-
-                if (createdNumberFormat.Result <= 0)
-                {
-                    _logger.LogWarning("Failed to save number format for CompanyId: {CompanyId}, RegId: {RegId}", headerViewModel.CompanyId, headerViewModel.RegId);
-                    return Ok(new SqlResponse { Result = -1, Message = "Failed", Data = null, TotalRecords = 0 });
+                    return NoContent();
                 }
-
-                // Retrieve cached data
-                var cacheData = await _NumberFormatServices.GetNumberFormatByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId,
-                    numberSettingViewModel.ModuleId, numberSettingViewModel.TransactionId, headerViewModel.UserId);
-
-                return cacheData switch
-                {
-                    null => Ok(new SqlResponse { Result = -1, Message = "Failed", Data = null, TotalRecords = 0 }),
-                    _ => Ok(new SqlResponse { Result = 1, Message = "Success", Data = cacheData, TotalRecords = 0 })
-                };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating new NumberFormat record");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error");
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new NumberFormat record");
             }
         }
     }

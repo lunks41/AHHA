@@ -28,8 +28,8 @@ namespace AHHA.Infra.Services.Setting
         {
             try
             {
-                var result = await _repository.GetQuerySingleOrDefaultAsync<FinanceSettingViewModel>(RegId, $"SELECT TOP 1 Base_CurrencyId,Local_CurrencyId,ExhGain_GlId,ExhLoss_GlId,BankCharge_GlId,ProfitLoss_GlId,RetEarning_GlId,SaleGst_GlId,PurGst_GlId,SaleDef_GlId,PurDef_GlId FROM dbo.S_FinSettings WHERE CompanyId IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Setting},{(short)E_Setting.FinSetting}))");
-              
+                var result = await _repository.GetQuerySingleOrDefaultAsync<FinanceSettingViewModel>(RegId, $"SELECT TOP 1 Base_CurrencyId,Local_CurrencyId,ExhGain_GlId,ExhLoss_GlId,BankCharge_GlId,ProfitLoss_GlId,RetEarning_GlId,SaleGst_GlId,PurGst_GlId,SaleDef_GlId,PurDef_GlId FROM dbo.S_FinSettings WHERE CompanyId={CompanyId} ");
+                //IN (SELECT distinct CompanyId FROM Fn_Adm_GetShareCompany({CompanyId},{(short)E_Modules.Setting},{(short)E_Setting.FinSetting}))
 
                 return result;
             }

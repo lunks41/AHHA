@@ -20,7 +20,7 @@ namespace AHHA.Core.Models.Account.GL
         [Column(TypeName = "decimal(18,10)")]
         public decimal DocExhRate { get; set; }
 
-        public string DocAcctDate
+        public string DocAccountDate
         {
             get { return DateHelperStatic.FormatDate(_docaccountDate); }
             set { _docaccountDate = DateHelperStatic.ParseDBDate(value); }

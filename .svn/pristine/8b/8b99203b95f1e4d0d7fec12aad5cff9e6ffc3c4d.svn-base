@@ -3,7 +3,6 @@ using AHHA.Application.IServices.Admin;
 using AHHA.Core.Common;
 using AHHA.Core.Entities.Admin;
 using AHHA.Core.Models.Admin;
-using AHHA.Infra.Services.Admin;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -110,19 +109,7 @@ namespace AHHA.API.Controllers.Admin
                 // Save the mapped entities
                 var createdUserGroupRights = await _UserGroupRightsService.SaveUserGroupRightsAsync(headerViewModel.RegId, headerViewModel.CompanyId, UserGroupRightsEntities, userGroupRightsViewModels.First().UserGroupId, headerViewModel.UserId);
 
-                if (createdUserGroupRights.Result <= 0)
-                {
-                    _logger.LogWarning("Failed to save number format for CompanyId: {CompanyId}, RegId: {RegId}", headerViewModel.CompanyId, headerViewModel.RegId);
-                    return Ok(new SqlResponse { Result = -1, Message = "Failed", Data = null, TotalRecords = 0 });
-                }
-
-                var cacheData = await _UserGroupRightsService.GetUserGroupRightsByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, userGroupRightsViewModels[0].UserGroupId, headerViewModel.UserId);
-
-                return cacheData switch
-                {
-                    null => Ok(new SqlResponse { Result = -1, Message = "Failed", Data = null, TotalRecords = 0 }),
-                    _ => Ok(new SqlResponse { Result = 1, Message = "Success", Data = cacheData, TotalRecords = 0 })
-                };
+                return StatusCode(StatusCodes.Status202Accepted, createdUserGroupRights);
             }
             catch (Exception ex)
             {

@@ -103,19 +103,7 @@ namespace AHHA.API.Controllers.Admin
                 // Save the mapped entities
                 var createdUserRights = await _UserRightsService.SaveUserRightsAsync(headerViewModel.RegId, headerViewModel.CompanyId, userRightsEntities, userRightsViewModels.First().UserId, headerViewModel.UserId);
 
-                if (createdUserRights.Result <= 0)
-                {
-                    _logger.LogWarning("Failed to save number format for CompanyId: {CompanyId}, RegId: {RegId}", headerViewModel.CompanyId, headerViewModel.RegId);
-                    return Ok(new SqlResponse { Result = -1, Message = "Failed", Data = null, TotalRecords = 0 });
-                }
-
-                var cacheData = await _UserRightsService.GetUserRightsByIdAsync(headerViewModel.RegId, headerViewModel.CompanyId, userRightsViewModels[0].UserId, headerViewModel.UserId);
-
-                return cacheData switch
-                {
-                    null => Ok(new SqlResponse { Result = -1, Message = "Failed", Data = null, TotalRecords = 0 }),
-                    _ => Ok(new SqlResponse { Result = 1, Message = "Success", Data = cacheData, TotalRecords = 0 })
-                };
+                return StatusCode(StatusCodes.Status202Accepted, createdUserRights);
             }
             catch (Exception ex)
             {

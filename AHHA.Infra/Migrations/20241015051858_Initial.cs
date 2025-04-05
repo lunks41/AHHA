@@ -1529,7 +1529,7 @@ namespace AHHA.Infra.Migrations
                     GstId = table.Column<short>(type: "smallint", nullable: false),
                     CompanyId = table.Column<short>(type: "smallint", nullable: false),
                     ValidFrom = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    GstPercentahge = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
+                    GstPercentage = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
                     CreateById = table.Column<short>(type: "smallint", nullable: false),
                     EditById = table.Column<short>(type: "smallint", nullable: true),
                     EditDate = table.Column<DateTime>(type: "datetime2", nullable: true)

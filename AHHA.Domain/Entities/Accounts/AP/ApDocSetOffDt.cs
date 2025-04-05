@@ -15,7 +15,7 @@ namespace AHHA.Core.Entities.Accounts.AP
         public string DocumentNo { get; set; }
         public Int16 DocCurrencyId { get; set; }
         public decimal DocExhRate { get; set; }
-        public DateTime DocAcctDate { get; set; }
+        public DateTime DocAccountDate { get; set; }
         public DateTime DocDueDate { get; set; }
         public decimal DocTotAmt { get; set; }
         public decimal DocTotLocalAmt { get; set; }

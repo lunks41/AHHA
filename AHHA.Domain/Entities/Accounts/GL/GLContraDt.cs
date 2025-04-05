@@ -19,7 +19,7 @@ namespace AHHA.Core.Entities.Accounts.GL
         [Column(TypeName = "decimal(18,10)")]
         public decimal DocExhRate { get; set; }
 
-        public DateTime DocAcctDate { get; set; }
+        public DateTime DocAccountDate { get; set; }
         public DateTime DocDueDate { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
